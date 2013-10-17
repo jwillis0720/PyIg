@@ -55,7 +55,8 @@ Have defaults
     -rm --reward_match
         Reward for nucleotide match
     
-    pyigblast -q query.fasta -d database/ -i internal -a optional/ -x /bin/igblastn -o blast_output -e 1E-15 -w 4 -pm 3 -rm 5
+    pyigblast -q query.fasta -d database/ -i internal -a optional/ -x /bin/igblastn -o blast_output -e 1E-15 
+    -w 4 -pm 3 -rm 5
 
 IgBlast Specific Arguments
 --------
@@ -91,15 +92,16 @@ Have defaults
     -z --zip
         Zip up all output files
     -c --concatenate
-        Turn off automatic concatenation of result files. Pyigblast splits up files across processors, if you want them to be
-        put back together.
+        Turn off automatic concatenation of result files. Pyigblast splits up files across processors, 
+        if you want them to be put back together.
     -j, --json
         Use the JSON output option that will format the text driven igblast output to a json document
     -jp --json_prefix
         The prefix for json_output files
     
     pyigblast -q query.fasta -d database/ -i internal -a optional/ -x /bin/igblastn -o blast_output -e 1E-15 
-     -w 4 -pm 3 -rm 5 -or human -nV 2 -nD 2 -nJ 1 -dgm 5 -s imgt -sT -f format_templat.txt -z -c -j -jp my_json_file.txt
+     -w 4 -pm 3 -rm 5 -or human -nV 2 -nD 2 -nJ 1 -dgm 5 -s imgt -sT -f format_templat.txt -z -c -j 
+     -jp my_json_file.txt
 
 Formatting File
 ---------------
