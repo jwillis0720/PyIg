@@ -19,6 +19,7 @@ arg_parser = blastargument_parser()
 arg_dict = arg_parser.return_parsed_args()
 
 
+
 def split_file(num_procs):
         '''Split the file name by the number of processors you specify
 
@@ -85,8 +86,11 @@ def run(file_num):
     concat_bool = arg_parser.args.concatenate
     blast_out = file_num + ".blast_out"
     zip_out = file_num + "blast_out.gz"
-    json_out = arg_parser.args.json_prefix + file_num + ".json"
+    json_out = os.path.dirname(file_num) + "/" +arg_parser.args.json_prefix + "_" + os.path.basename(file_num) + ".json"
+
     if json_bool and zip_bool:
+        #print json_out, blast_out, file_num
+        #sys.exit()
         output_parser.igblast_output(blast_out, json_out, gz=zip_bool)
         if concat_bool:
             os.remove(blast_out)
@@ -114,7 +118,7 @@ def run(file_num):
         os.remove(file_num)
 
 
-def concat_files():
+def concat_files(c_name):
     '''goes through output formats and concats all files'''
     # concat all files and remove them after
     zip_bool = arg_parser.args.zip
@@ -122,9 +126,9 @@ def concat_files():
     concat_bool = arg_parser.args.concatenate
     json_out = arg_parser.args.json_prefix
     global_prefix = arg_dict['-out']
-    common_name = arg_dict['-query']
+    common_name = c_name
     if zip_bool and json_bool and concat_bool:
-        zipped_and_json = glob.glob("*" + common_name + "*" + "json.gz")
+        zipped_and_json = glob.glob(os.path.dirname(common_name)+"/*" +  os.path.basename(common_name) + "*" + "json.gz")
         with gzip.open(json_out + ".json.gz", 'wb') as gf:
             for file in zipped_and_json:
                 f_in = gzip.open(file, 'rb')
@@ -165,8 +169,9 @@ def main():
     num_procs = arg_parser.args.num_procs - 1
     mp_pool = mp.Pool(processes=num_procs)
     entry_num = split_file(num_procs)
+    common_name = arg_dict['-query']
     tmp_file = glob.glob(arg_dict['-query'] + "*.tmp.fasta")
     mp_pool.map(run, tmp_file)
-    concat_files()
+    concat_files(common_name)
     then = time()
     print "Process of {0} seqeunces using {1} processors took {2} seconds".format(entry_num, num_procs, then - now)
