@@ -6,6 +6,8 @@ import os
 import output_parser
 import sys
 import gzip
+from time import time
+
 
 try:
     import Bio

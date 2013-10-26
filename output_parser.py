@@ -5,7 +5,7 @@ try:
 	from Bio.Seq import Seq
 	from Bio.Alphabet import IUPAC
 except ImportError:
-	print "Need Biopython to use the IgBlast output parser class"
+	print ("Need Biopython to use the IgBlast output parser class")
 
 
 class igblast_output():
