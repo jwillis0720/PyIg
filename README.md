@@ -151,28 +151,3 @@ The format file, just comment out to remove from output:
     #sstrand # Subject Strand
     #qcovs # Query Coverage Per Subject
     #qcovhsp # Query Coverage Per HSP
-
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-Major commits
-=========
-
-8/6/2013 Full functionality with multiprocessing and a formatting template
-
-8/7/2013 Can run on blue cluster
-
-8/9/2013 Parses output from igblast into python classes
-
-8/16/2013 Parses to JSON, zips, and cleans up directories
