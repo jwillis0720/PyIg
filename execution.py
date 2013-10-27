@@ -14,137 +14,153 @@ except ImportError("Trouble Installing BioPython:"):
     print ("Can't find BioPython Module in this path. PyIgBlast is dependent on Biopython")
     sys.exit()
 
-class execute():
-	'''A class encapsulating all the file handling'''
-	def __init__(self):
-		
-		#set up instance
-		self.arg_parser_instance = blastargument_parser()
-		self.arg_dict = self.arg_parser_instance.return_parsed_args()
-		
-		#instance variables needed from argument parsed
-		self.processors  = self.arg_parser_instance.return_number_procs() - 1
-		_pool = mp.Pool(processes=self.processors)
-		self.file_name = self.arg_dict['-query']
-		self.file_path = os.path.dirname(self.file_name)
-		self.file_base_name = os.path.basename(self.file_name).split('.')[0]
-		
-		#split fasta file up
-		split_fasta(self.processors,self.file_name,suffix="tmp.fasta")
-		self.split_up_starting_files = glob.glob(self.file_name+"*"+"tmp.fasta")
+arg_parser_instance = blastargument_parser()
+arg_dict = arg_parser_instance.return_parsed_args()
 
-		#translation?
-		self.translation_bool = self.arg_parser_instance.return_translation_bool()
+def run_mp_and_delete(file_dict):
+	#bools
+	_json_bool = file_dict['json_bool']
+	_concat_bool = file_dict['concat_bool']
+	_zip_bool = file_dict['zip_bool']
 
-		#output options
-		self.zip_bool = self.arg_parser_instance.return_zip_bool()
-		self.concat_bool = self.arg_parser_instance.return_concat_bool()
-		self.json_bool = self.arg_parser_instance.return_json_bool()
-		self.json_prefix = self.arg_parser_instance.return_json_prefix()
-		self.output_prefix = self.arg_parser_instance.return_output_prefix()
-		
-		#run_protocol
-		_pool.map(self._run_mp_and_delete,self.split_up_starting_files)
+	#file name outputs
+	_blast_out = file_dict['split_file'] + ".blast_out"
+	_json_out = file_dict['split_file'] + ".json"
+	_zip_out = file_dict['split_file'] + ".json.gz"
 
-		print _pool, self.split_up_starting_files
-		#concat
-		if self.concat_bool:
-			self._concat()
+	_file = file_dict['split_file']
 
-	def _concat(self):
+	#set the filename in the instance:
+	arg_dict['-query'] = _file
+	arg_dict['-out'] = _blast_out
 
-		_json_file = self.json_prefix
-		_out_file = self.output_prefix
+	#set up the command line
+	_cline = arg_parser_instance.return_command_line_from_dict(arg_dict)
+	
+	if file_dict['translation_bool']:
+		_cline.append("-show_translation")
 
-		if self.zip_bool and self.json_bool:
-			_zipped_and_json = glob.glob(self.file_name+"*.json.gz")
-			with gzip.open(_json_file+".json.gz",'wb') as gf:
-				for file in _zipped_and_json:
-					f_in = gzip.open(file,'rb')
-					gf.writelines(f_in)
-					f_in.close()
-					os.remove(file)
+	#and call igblast
+	sp.call(_cline)
 
-		elif self.json_bool and not self.zip_bool:
-			_just_json = glob.glob(self.file_name+"*.json")
-			with gzip.open(_json_file+".json",'w') as gf:
-				for file in _just_json:
-					f_in = open(file,'r')
-					gf.writelines(f_in)
-					f_in.close()
-					os.remove(file)
-
-		elif self.zip_bool and not self.json_bool:
-			_zipped_only = glob.glob(self.file_name+"*.blast_out.gz")
-			with gzip.open(_out_file+".blast_out.gz",'wb') as gf:
-				for file in _zipped_only:
-					f_in = gzip.open(file,'rb')
-					gf.writelines(f_in)
-					f_in.close()
-					os.remove(file)
-
-		elif not self.zip_bool and not self.json_bool:
-			_blast_out = glob.glob(self.file_name+"*.blast_out")
-			with open(_out_file+".blast_out",'w') as gf:
-				for file in _blast_out:
-					f_in = open(file,'r')
-					gf.writelines(f_in)
-					f_in.close()
-					os.remove(file)
-
-
-
-
-	def _run_mp_and_delete(self,_file):
-		#file name outputs
-		_blast_out = _file + ".blast_out"
-		_json_out = _file + ".json"
-		_zip_out = _file + ".json.gz"
-
-		#set the filename in the instance:
-		self.arg_dict['-query'] = _file
-		self.arg_dict['-out'] = _blast_out
-
-		#set up the command line
-		_cline = self.arg_parser_instance.return_command_line_from_dict(self.arg_dict)
-
-		if self.translation_bool:
-			_cline.append("-show_translation")
-		
-		#and call igblast
-		sp.call(_cline)
-
-		#and now to zip up that instances file based on options
-		#Case 1: We want json and we want it zipped
-		if self.json_bool and self.zip_bool:
-			output_parser.igblast_output(_blast_out,_json_out,gz=self.zip_bool)
-			#Remove old garbage Case
-			if self.concat_bool:
-				os.remove(_blast_out)
-				os.remove(_file)
-		
-		#Case 2: We want json, but don't want it zipped, and we want anciallary files:
-		elif self.json_bool and not self.concat_bool:
-			output_parser.igblast_output(_blast_out,_json_out,gz=self.zip_bool)
-
-		#Case 3: We want everything zipped but not turned into json
-		elif self.zip_bool and not self.json_bool:
-			f_in = open(_blast_out,'rb')
-			f_out = gzip.open(_zip_out,'wb')
-			f_out.writelines(f_in)
-			f_out.close()
-			f_in.close()
-			#get rid of garbage
-			if concat_bool:
-				os.remove(_file)
-				os.remove(_blast_out)
-		
-		#Case 4: Only want blast output, but remove split fasta
-		elif not self.zip_bool and not self.json_bool and self.concat_bool:
+	#and now to zip up that instances file based on options
+	#Case 1: We want json and we want it zipped
+	if _json_bool and _zip_bool:
+		output_parser.igblast_output(_blast_out,_json_out,gz=_zip_bool)
+		#Remove old garbage Case
+		if _concat_bool:
+			os.remove(_blast_out)
 			os.remove(_file)
 
+	#Case 2: We want json, but don't want it zipped, and we want anciallary files:
+	elif _json_bool and not _concat_bool:
+		output_parser.igblast_output(_blast_out,_json_out,gz=_zip_bool)
+
+	#Case 3: We want everything zipped but not turned into json
+	elif _zip_bool and not _json_bool:
+		f_in = open(_blast_out,'rb')
+		f_out = gzip.open(_zip_out,'wb')
+		f_out.writelines(f_in)
+		f_out.close()
+		f_in.close()
+		#get rid of garbage
+		if concat_bool:
+			os.remove(_file)
+			os.remove(_blast_out)
+
+	#Case 4: Only want blast output, but remove split fasta
+	elif not _zip_bool and not _json_bool and _concat_bool:
+		os.remove(_file)
+
+def concat(_manager_dict):
+		
+		json_file = _manager_dict['json_prefix']
+		out_file = _manager_dict['output_prefix']
+		zip_bool = _manager_dict['zip_bool']
+		json_bool = _manager_dict['json_bool']
+		file_name = _manager_dict['file']
+
+		if zip_bool and json_bool:
+			zipped_and_json = glob.glob(file_name+"*.json.gz")
+			with gzip.open(json_file+".json.gz",'wb') as gf:
+				for file in zipped_and_json:
+					f_in = gzip.open(file,'rb')
+					gf.writelines(f_in)
+					f_in.close()
+					os.remove(file)
+
+		elif json_bool and not zip_bool:
+			just_json = glob.glob(file_name+"*.json")
+			with gzip.open(json_file+".json",'w') as gf:
+				for file in just_json:
+					f_in = open(file,'r')
+					gf.writelines(f_in)
+					f_in.close()
+					os.remove(file)
+
+		elif zip_bool and not json_bool:
+			zipped_only = glob.glob(file_name+"*.blast_out.gz")
+			with gzip.open(out_file+".blast_out.gz",'wb') as gf:
+				for file in zipped_only:
+					f_in = gzip.open(file,'rb')
+					gf.writelines(f_in)
+					f_in.close()
+					os.remove(file)
+
+		elif not zip_bool and not json_bool:
+			blast_out = glob.glob(file_name+"*.blast_out")
+			with open(out_file+".blast_out",'w') as gf:
+				for file in blast_out:
+					f_in = open(file,'r')
+					gf.writelines(f_in)
+					f_in.close()
+					os.remove(file)
 
 
+def execute():
+	'''A function encapsulating all the file handling'''	
+	#variables
+	processors  = arg_parser_instance.return_number_procs() - 1
+	pool = mp.Pool(processes=processors)
+	file_name = arg_dict['-query']
+	path = os.path.dirname(file_name)
+	base_name = os.path.basename(file_name).split('.')[0]
+	
+	#split fasta file up
+	split_fasta(processors,file_name,suffix="tmp.fasta")
+	split_up_starting_files=glob.glob(file_name+"*"+"tmp.fasta")
+	
+
+	#translation?
+	translation_bool = arg_parser_instance.return_translation_bool()
+	
+	#output options
+	zip_bool = arg_parser_instance.return_zip_bool()
+	concat_bool = arg_parser_instance.return_concat_bool()
+	json_bool = arg_parser_instance.return_json_bool()
+	json_prefix = arg_parser_instance.return_json_prefix()
+	output_prefix = arg_parser_instance.return_output_prefix()
+	
+	#manager_dict
+	_manager_list = []
+	_manager_dict = {}
+	for _file in split_up_starting_files:
+		_manager_dict['file'] = file_name
+		_manager_dict['split_file'] = _file
+		_manager_dict['zip_bool'] = zip_bool
+		_manager_dict['concat_bool'] = concat_bool
+		_manager_dict['json_prefix'] = json_prefix
+		_manager_dict['output_prefix'] = output_prefix
+		_manager_dict['translation_bool'] = translation_bool
+		_manager_dict['json_bool'] = json_bool
+		_manager_list.append(_manager_dict)
+		_manager_dict = {}
+
+	#run_protocol
+	pool.map(run_mp_and_delete,_manager_list)
+
+	if concat_bool:
+		concat(_manager_list[0])
 
 if __name__ == '__main__':
-	ex = execute()
+	execute()
