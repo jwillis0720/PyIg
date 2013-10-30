@@ -1,6 +1,7 @@
 import sys
 import json
 import gzip
+from cdr_analyzer import cdr_analyzer
 try:
 	from Bio.Seq import Seq
 	from Bio.Alphabet import IUPAC
@@ -350,8 +351,12 @@ class single_blast_entry():
         #	print self.cdr3_partial
         	self.json_dictionary["partial_cdr3_aa"] = self.cdr3_partial
 
+
+        self.json_dictionary = cdr_analyzer(self.json_dictionary).return_json_dict_with_cdr3_analysis()
+
         # convert dictionary to json object
         self.json = json.dumps(self.json_dictionary, sort_keys=1)
+
 
         # and finally return the object
         return self.json
