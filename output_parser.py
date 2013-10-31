@@ -22,6 +22,14 @@ class igblast_output():
         breaker = True
         query_holder = []
         self.fasta_files = fasta_files
+        _end_dict = {}
+        try:
+            for line in open('human_germ_properties.txt').readlines():
+                line_split = line.split()
+                _end_dict[line_split[0]] = int(line_split[1])
+        except IOError:
+            print "Cant open human_germ_properties.txt, need this file to process CDR3 regions"
+            sys.exit()
         if gz:
             z = gzip.open(output_file+".gz",'wb')
         else:
@@ -32,24 +40,26 @@ class igblast_output():
                     breaker = False
                     if query_holder:
                         f.write(
-                            single_blast_entry(query_holder,self.fasta_files).return_json_document())
+                            single_blast_entry(query_holder,self.fasta_files,_end_dict).return_json_document())
                         f.write("\n")
                     query_holder = []
                     continue
                 if not breaker:
                     query_holder.append(line)
-            f.write(single_blast_entry(query_holder,self.fasta_files).return_json_document())
+            f.write(single_blast_entry(query_holder,self.fasta_files,_end_dict).return_json_document())
             f.write("\n")
 
 class single_blast_entry():
     '''The helper class to parse an individual blast result'''
 
-    def __init__(self, query,fasta_files):
+    def __init__(self, query,fasta_files,end_translation_dictionaries):
         _rearrangment_breaker = False
         _junction_breaker = False
         _fields_breaker = False
 
         self.fasta_files = fasta_files
+        #Where to end translation for CDR3 loops specified in an output file
+        self.end_translation_dictionaries = end_translation_dictionaries
 
         # initalize the fields, some can be empty on crappy reads
         # basic
@@ -68,7 +78,7 @@ class single_blast_entry():
         self.junction_detail = ""
         self.cdr1_alignment_summary = ""
         self.cdr2_alignment_summary = ""
-        self.cdr3_alignment_summsary = ""
+        self.cdr3_alignment_summary = ""
         self.fr1_alignment_summary = ""
         self.fr2_alignment_summary = ""
         self.fr3_alignment_summary = ""
@@ -470,15 +480,13 @@ class single_blast_entry():
         self.json_dictionary['j_hits'] = self.j_hits_array
 
         if self.json_dictionary["productive"].lower()  == "yes":
-        #	print self.query
-        #	print self.cdr3_partial
         	self.json_dictionary["partial_cdr3_aa"] = self.cdr3_partial
 
-        cdr_analyzer(self.json_dictionary,self.full_query_seq).return_json_dict_with_cdr_analysis() 
+        self.json_dictionary = cdr_analyzer(self.json_dictionary,self.full_query_seq,self.end_translation_dictionaries).return_json_dict_with_cdr_analysis() 
 
 
         # convert dictionary to json object
-        self.json = json.dumps(self.json_dictionary, sort_keys=1, indent=4)
+        self.json = json.dumps(self.json_dictionary, sort_keys=1)
 
         # and finally return the object
         return self.json

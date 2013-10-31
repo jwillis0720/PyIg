@@ -168,9 +168,9 @@ def execute():
 		_manager_dict = {}
 
 	#run_protocol
-	for i in _manager_list:
-		run_mp_and_delete(i)
-	#pool.map(run_mp_and_delete,_manager_list)
+	#for i in _manager_list:
+	#	run_mp_and_delete(i)
+	pool.map(run_mp_and_delete,_manager_list)
 
 	if concat_bool:
 		concat(_manager_list[0])
