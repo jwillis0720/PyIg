@@ -28,7 +28,7 @@ positive # Number of positive-scoring matches
 gapopen # Number of gap openings
 gaps # Total number of gaps
 ppos # Percentage of positive-scoring matche
-#frames # Query and subject frames separated by a '/'
+frames # Query and subject frames separated by a '/'
 qframe # Query frame
 sframe # Subject frame
 #btop # Blast traceback operations (BTOP)

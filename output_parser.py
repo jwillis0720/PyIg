@@ -2,6 +2,7 @@ import sys
 import json
 import gzip
 from cdr_analyzer import cdr_analyzer
+
 try:
 	from Bio.Seq import Seq
 	from Bio.Alphabet import IUPAC
@@ -17,9 +18,10 @@ class igblast_output():
     output - string for the filename to the output
     '''
 
-    def __init__(self, file, output_file, gz=False):
+    def __init__(self, file, output_file, fasta_files,gz=False):
         breaker = True
         query_holder = []
+        self.fasta_files = fasta_files
         if gz:
             z = gzip.open(output_file+".gz",'wb')
         else:
@@ -30,26 +32,29 @@ class igblast_output():
                     breaker = False
                     if query_holder:
                         f.write(
-                            single_blast_entry(query_holder).return_json_document())
+                            single_blast_entry(query_holder,self.fasta_files).return_json_document())
                         f.write("\n")
                     query_holder = []
                     continue
                 if not breaker:
                     query_holder.append(line)
-            f.write(single_blast_entry(query_holder).return_json_document())
+            f.write(single_blast_entry(query_holder,self.fasta_files).return_json_document())
             f.write("\n")
 
 class single_blast_entry():
     '''The helper class to parse an individual blast result'''
 
-    def __init__(self, query):
+    def __init__(self, query,fasta_files):
         _rearrangment_breaker = False
         _junction_breaker = False
         _fields_breaker = False
 
+        self.fasta_files = fasta_files
+
         # initalize the fields, some can be empty on crappy reads
         # basic
         self.query = ""
+        self.full_query_seq = ""
         self.domain_classification = ""
 
         # title fields
@@ -61,8 +66,12 @@ class single_blast_entry():
         # summaries
         self.rearrangment_summary = ""
         self.junction_detail = ""
+        self.cdr1_alignment_summary = ""
+        self.cdr2_alignment_summary = ""
+        self.cdr3_alignment_summsary = ""
+        self.fr1_alignment_summary = ""
+        self.fr2_alignment_summary = ""
         self.fr3_alignment_summary = ""
-        self.cdr3_alignment_sumary = ""
         self.total_alignment_summary = ""
 
         # hits
@@ -97,10 +106,36 @@ class single_blast_entry():
                 self.alignment_summary_titles = line.strip().split(
                     "(")[1].split(")")[0].split(",")
                 self.alignment_summary_titles = self.alignment_summary_titles
-            if line.startswith("FR3-IMGT"):
+                self.alignment_summary_titles = [x.strip() for x in self.alignment_summary_titles]
+            try:
+                if line.split()[0].split('-')[0] == "FWR1":
+                    self.fr1_alignment_summary = line.strip().split()[1:]
+                if line.split()[0].split('-')[0] == "CDR1":
+                    self.cdr1_alignment_summary = line.strip().split()[1:]
+                if line.split()[0].split('-')[0] == "FWR2":
+                    self.fr2_alignment_summary = line.strip().split()[1:]
+                if line.split()[0].split('-')[0] == "CDR2":
+                    self.cdr2_alignment_summary = line.strip().split()[1:]
+                if line.split()[0].split('-')[0] == "FWR3":
+                    self.fr3_alignment_summary = line.strip().split()[1:]
+                if line.split()[0].split('-')[0] == "CDR3":
+                    self.cdr3_alignment_summary = line.strip('\t').split()[1:]
+                if line.split()[0].split('-')[0] == "Total":
+                    self.total_alignment_summary = line.strip().split()[1:]
+            except IndexError:
+                pass
+            if line.startswith("FWR1"):
+                self.fr1_alignment_summary = line.strip().split()[1:]
+            if line.startswith("CDR1"):
+                self.cdr1_alignment_summary = line.strip().split()[1:]
+            if line.startswith("FWR2"):
+                self.fr2_alignment_summary = line.strip().split()[1:]
+            if line.startswith("CDR2"):
+                self.cdr2_alignment_summary = line.strip().split()[1:]
+            if line.startswith("FWR3"):
                 self.fr3_alignment_summary = line.strip().split()[1:]
-            if line.startswith("CDR3-IMGT"):
-                self.cdr3_alignment_sumary = line.strip().split()[2:]
+            if line.startswith("CDR3"):
+                self.cdr3_alignment_summary = line.strip().split('\t')[1:]
             if line.startswith("Total"):
                 self.total_alignment_summary = line.strip().split()[1:]
             if "# Fields:" in line:
@@ -113,7 +148,7 @@ class single_blast_entry():
                     self.hits_d.append(line)
                 elif line.startswith("J"):
                     self.hits_j.append(line)
-
+        self.full_query_seq = self.fasta_files[self.query]
         self.process()
 
     def process(self):
@@ -121,7 +156,11 @@ class single_blast_entry():
             self.query] = {"domain_classification": self.domain_classification,
                            "rearrangement": self.parse_rearranment(),
                            "junction": self.parse_junction(),
+                           "fr1_align": self.parse_fr1_align(),
+                           "fr2_align": self.parse_fr2_align(),
                            "fr3_align": self.parse_fr3_align(),
+                           "cdr1_align": self.parse_cdr1_align(),
+                           "cdr2_align": self.parse_cdr2_align(),
                            "cdr3_align": self.parse_cdr3_align(),
                            "total_align": self.parse_total_align(),
                            "v_hits": self.parse_v_hits(),
@@ -161,6 +200,30 @@ class single_blast_entry():
                		self.junction_together += value
         return _return_dict
 
+    def parse_fr1_align(self):
+            _return_dict = {}
+            for title, value in zip(self.alignment_summary_titles, self.fr1_alignment_summary):
+                try:
+                    _return_dict[title] = int(value)
+                except ValueError:
+                    try:
+                        _return_dict[title] = float(value)
+                    except ValueError:
+                        _return_dict[title] = value
+            return _return_dict
+
+    def parse_fr2_align(self):
+            _return_dict = {}
+            for title, value in zip(self.alignment_summary_titles, self.fr2_alignment_summary):
+                try:
+                    _return_dict[title] = int(value)
+                except ValueError:
+                    try:
+                        _return_dict[title] = float(value)
+                    except ValueError:
+                        _return_dict[title] = value
+            return _return_dict
+
     def parse_fr3_align(self):
         _return_dict = {}
         for title, value in zip(self.alignment_summary_titles, self.fr3_alignment_summary):
@@ -173,9 +236,33 @@ class single_blast_entry():
                     _return_dict[title] = value
         return _return_dict
 
+    def parse_cdr1_align(self):
+        _return_dict = {}
+        for title, value in zip(self.alignment_summary_titles, self.cdr1_alignment_summary):
+            try:
+                _return_dict[title] = int(value)
+            except ValueError:
+                try:
+                    _return_dict[title] = float(value)
+                except ValueError:
+                    _return_dict[title] = value
+        return _return_dict
+    
+    def parse_cdr2_align(self):
+        _return_dict = {}
+        for title, value in zip(self.alignment_summary_titles, self.cdr2_alignment_summary):
+            try:
+                _return_dict[title] = int(value)
+            except ValueError:
+                try:
+                    _return_dict[title] = float(value)
+                except ValueError:
+                    _return_dict[title] = value
+        return _return_dict
+ 
     def parse_cdr3_align(self):
         _return_dict = {}
-        for title, value in zip(self.alignment_summary_titles, self.cdr3_alignment_sumary):
+        for title, value in zip(self.alignment_summary_titles, self.cdr3_alignment_summary):
             try:
                 _return_dict[title] = int(value)
             except ValueError:
@@ -309,12 +396,48 @@ class single_blast_entry():
                 self.json_dictionary[junction_title] = "N/A"
 
         # alignment_summary will be empty if it is empty, no need for try and
-        if self.blast_dict[self.query]['fr3_align'] and self.blast_dict[self.query]['cdr3_align'] and self.blast_dict[self.query]['total_align']:
-            self.alignment_summaries = {"fr3_align": self.blast_dict[self.query]['fr3_align'], "cdr3_align": self.blast_dict[
-                self.query]['cdr3_align'], "total_align": self.blast_dict[self.query]['total_align']}
+        self.alignment_summaries = {}
+        if self.blast_dict[self.query]['fr1_align']:
+            self.alignment_summaries['fr1_align'] = self.blast_dict[self.query]['fr1_align']
+
         else:
-            self.alignment_summaries = {
-                "fr3_align": "N/A", "cdr3_align": "N/A", "total_align": "N/A"}
+            self.alignment_summaries['fr1_align'] = 'N/A'
+
+        if self.blast_dict[self.query]['cdr1_align']:
+            self.alignment_summaries['cdr1_align'] = self.blast_dict[self.query]['cdr1_align']
+
+        else:
+            self.alignment_summaries['cdr1_align'] = 'N/A'
+        
+        if self.blast_dict[self.query]['fr2_align']:
+            self.alignment_summaries['fr2_align'] = self.blast_dict[self.query]['fr2_align']
+
+        else:
+            self.alignment_summaries['fr2_align'] = 'N/A'
+
+        if self.blast_dict[self.query]['cdr2_align']:
+            self.alignment_summaries['cdr2_align'] = self.blast_dict[self.query]['cdr2_align']
+
+        else:
+            self.alignment_summaries['cdr2_align'] = 'N/A'
+        
+        if self.blast_dict[self.query]['fr3_align']:
+            self.alignment_summaries['fr3_align'] = self.blast_dict[self.query]['fr3_align']
+
+        else:
+            self.alignment_summaries['fr3_align'] = 'N/A'
+        
+        if self.blast_dict[self.query]['cdr3_align']:
+            self.alignment_summaries['cdr3_align'] = self.blast_dict[self.query]['cdr3_align']
+
+        else:
+            self.alignment_summaries['cdr3_align'] = 'N/A'
+        
+        if self.blast_dict[self.query]['total_align']:
+            self.alignment_summaries['total_align'] = self.blast_dict[self.query]['total_align']
+         
+        else:
+            self.alignment_summaries['total_align'] = 'N/A'
 
         self.json_dictionary['alignment_summaries'] = self.alignment_summaries
 
@@ -351,12 +474,11 @@ class single_blast_entry():
         #	print self.cdr3_partial
         	self.json_dictionary["partial_cdr3_aa"] = self.cdr3_partial
 
+        cdr_analyzer(self.json_dictionary,self.full_query_seq).return_json_dict_with_cdr_analysis() 
 
-        self.json_dictionary = cdr_analyzer(self.json_dictionary).return_json_dict_with_cdr3_analysis()
 
         # convert dictionary to json object
-        self.json = json.dumps(self.json_dictionary, sort_keys=1)
-
+        self.json = json.dumps(self.json_dictionary, sort_keys=1, indent=4)
 
         # and finally return the object
         return self.json
