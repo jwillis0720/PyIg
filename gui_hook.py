@@ -39,18 +39,14 @@ class pyigblast_gui():
 		# and a buttons_frame at the top,
 		# and demo_frame at the bottom
 
-		Label(self.control_frame, text="PyIgBLAST", justify="center",font=("Arial", 24)).pack(side=TOP, anchor=NW)
-		Label(self.control_frame, text="     Jordan Willis", justify="center",font=("Arial", 16)).pack(side=TOP, anchor=NW)
+		Label(self.control_frame, text="PyIgBLAST - GUI", justify="center",font=("Arial", 24)).pack(side=TOP, anchor=NW)
 		
 		# buttons frame
 	
 		self.buttons_frame = Frame(self.control_frame) ###
 		
-		self.buttons_frame.pack(side=LEFT, expand=NO, fill=BOTH, ipadx=5, ipady=5)
-		self.fasta_file = StringVar()
+		self.buttons_frame.pack(side=LEFT, expand=YES, fill=BOTH, ipadx=5, ipady=10)
 		self.fasta_file_button = Button(self.buttons_frame,text="FASTA file",command=self.askopenfile).pack()
-		#self.fasta_file = self.fasta_file_button.get()
-
 
 
 
@@ -76,8 +72,9 @@ class pyigblast_gui():
 		self.cancelButton.bind("<Return>", self.cancelButtonClick)
 		
 	def askopenfile(self):
-		return tkFileDialog.askopenfilename(defaultextension='.fasta',initialdir='.')
-
+			self.fasta_file = tkFileDialog.askopenfilename(defaultextension='.fasta',initialdir='.')
+			for f in open(self.fasta_file):
+				print f
 	def cancelButtonClick(self, event):
 		self.myParent.destroy()
 
