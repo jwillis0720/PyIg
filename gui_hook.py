@@ -18,8 +18,6 @@ class pyigblast_gui():
 
 
 		# set up Tkinter variables, to be controlled by the radio buttons
-		self.button_name = StringVar()
-		self.button_name.set("C")
 
 
 		# -------------- end constants ----------------
@@ -28,12 +26,13 @@ class pyigblast_gui():
 		self.myParent.geometry("750x750")
 
 		### Our topmost frame is called myContainer1
-		self.container = Frame(parent) ### Frame is a class in tkinter
-		self.container.pack(expand=YES, fill=BOTH)
+		self.container = Frame(parent,bg='red') ### Frame is a class in tkinter
+		self.container.pack(side=TOP,fill=X)
 
 		# control frame - all the options for pyigblast
 		self.control_frame = Frame(self.container) ###
-		self.control_frame.pack(side=TOP, expand=YES,  padx=10, pady=5, ipadx=5, ipady=5)
+		self.control_frame.pack(side=TOP,padx=10,pady=20,fill=BOTH)
+		#self.control_frame.pack(side=LEFT, expand=YES, fill=BOTH, padx=10, pady=5, ipadx=5, ipady=5)
 
 		# inside control_frame we create a header label
 		# and a buttons_frame at the top,
@@ -41,12 +40,9 @@ class pyigblast_gui():
 
 		Label(self.control_frame, text="PyIgBLAST - GUI", justify="center",font=("Arial", 24)).pack(side=TOP, anchor=NW)
 		
-		# buttons frame
-	
-		self.buttons_frame = Frame(self.control_frame) ###
-		
-		self.buttons_frame.pack(side=LEFT, expand=YES, fill=BOTH, ipadx=5, ipady=10)
-		self.fasta_file_button = Button(self.buttons_frame,text="FASTA file",command=self.askopenfile).pack()
+		#necessary
+		self.necessary_frame = Frame(self.control_frame).pack(side=TOP,fill=BOTH,expand=YES,padx=10,pady=10) ###
+		self.fasta_file_button = Button(self.necessary_frame,text="FASTA file",command=self.askopenfile).pack(side=TOP, anchor=NW)
 
 
 
@@ -58,24 +54,22 @@ class pyigblast_gui():
 		#self.demo_frame.pack(side=BOTTOM, expand=YES, fill=BOTH)
 
 
-		self.cancelButtonFrame = Frame(self.container)
-		self.cancelButtonFrame.pack(side=BOTTOM, expand=YES, anchor=SW)
-		self.cancelButton = Button(self.cancelButtonFrame,
-			text="Cancel", background="red",
-			width=button_width,
-			padx=button_padx,
-			pady=button_pady
-			)
+		# self.cancelButtonFrame = Frame(self.container)
+		# self.cancelButtonFrame.pack(side=TOP)
+		# self.cancelButton = Button(self.cancelButtonFrame,
+		# 	text="Cancel", background="red",
+		# 	width=button_width,
+		# 	padx=button_padx,
+		# 	pady=button_pady
+		# 	)
 		
-		self.cancelButton.pack(side=BOTTOM, anchor=S)
-		self.cancelButton.bind("<Button-1>", self.cancelButtonClick)
-		self.cancelButton.bind("<Return>", self.cancelButtonClick)
+		# self.cancelButton.pack(side=BOTTOM, anchor=SW)
+		# self.cancelButton.bind("<Button-1>", self.cancelButtonClick)
+		# self.cancelButton.bind("<Return>", self.cancelButtonClick)
 		
 	def askopenfile(self):
 			self.fasta_file = tkFileDialog.askopenfilename(defaultextension='.fasta',initialdir='.')
-			for f in open(self.fasta_file):
-				print f
-	def cancelButtonClick(self, event):
+	def cancelButtonClick(self,event):
 		self.myParent.destroy()
 
 		### Inside the demo frame, we create top_frame and bottom_frame.
