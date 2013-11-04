@@ -5,6 +5,7 @@ PyIgBlast - Open source parser to call IgBlast and parse results for high-throug
 Uses Python multi-processing to get around bottlenecks of IgBlast multi-threading. 
 Parses blast output to deliminated files (csv,json) for uploading to databases. 
 
+#ONLY BENCHMARKED WITH HUMAN HEAVY SO FAR
 
 Requires
 =========
