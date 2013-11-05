@@ -134,6 +134,7 @@ class Demo:
     def quitcmd (self):
         """Quit our mainloop. It is up to you to call root.destroy() after."""
         self.exit = 0
+        self.destroy()
 
     def loop(self):
         """This is an explict replacement for _tkinter mainloop()

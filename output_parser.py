@@ -5,6 +5,7 @@ from cdr_analyzer import cdr_analyzer
 
 try:
 	from Bio.Seq import Seq
+    from Bio import SeqIO
 	from Bio.Alphabet import IUPAC
 except ImportError:
 	print ("Need Biopython to use the IgBlast output parser class")
@@ -493,4 +494,8 @@ class single_blast_entry():
 
 if __name__ == '__main__':
 	to_convert = sys.argv[1]
-	igblast_output(to_convert,"test_out.json")
+    raw_fasta = sys.argv[2]
+    original = {}
+    for s in SeqIO.parse(raw_fasta,'fasta'):
+        original[str(s.id)] = str(s.seq) 
+	igblast_output(to_convert,"test_out.json",original)
