@@ -11,12 +11,16 @@ class pyigblast_gui():
 		self.exit = -1
 		self.dir = None
 
-		self.argument_dict = {'query':''}
+		
 
 		#local
 		_program_name = sys.argv[0]
-		_directory_name = os.path.dirname(_program_name)
+		_directory_name = os.path.dirname(os.path.abspath(_program_name))
 
+		self.argument_dict = {
+								'query':'',
+								'database':	_directory_name+"/directory/"}
+	
 	def MainMenu(self):
 		main_menu = Tix.Frame(self.root,bd=2,relief=RAISED)
 		author_label = Tix.Label(main_menu,text="Jordan Willis")
@@ -43,9 +47,50 @@ class pyigblast_gui():
 		self.input_frame = Tix.LabelFrame(f_and_d_page,options=options)
 		self.input_frame.pack(side=TOP,expand=0,fill=BOTH)
 		self.make_fasta_entry()
-		
+		self.sub_notebook = Tix.NoteBook(f_and_d_page, ipadx=5, ipady=5,width=250)
+		self.sub_notebook.add('database',label="Germline Database", underline=0,
+			createcmd=lambda self=self,nb=self.sub_notebook,name='database': self.sub_notebook_database(nb,name))
+		self.sub_notebook.add('i_database',label="Internal Database",underline=0,
+			createcmd=lambda self=self,nb=self.sub_notebook,name='i_database': self.sub_notebook_i_database(nb,name))
+		self.sub_notebook.add('aux_database',label="Auxillary Database",underline=0,
+			createcmd=lambda self=self,nb=self.sub_notebook,name='aux_database': self.sub_notebook_aux_database(nb,name))
+		self.sub_notebook.pack(side=LEFT,expand=1,fill=BOTH)
+		self.filler = Tix.Frame(f_and_d_page,padx=5,pady=5,width=500).pack(side=LEFT,fill=BOTH,expand=1)
 		#self.input_frame.grid(in_=f_and_d_page,row=0,column=0,columnspan=2)
 	
+	def sub_notebook_database(self,nb, name):
+		notebook_frame = nb.page(name)
+		msg = Tix.Message(notebook_frame,relief=Tix.FLAT, width=500,
+			text='This directory contains all the germline files compiled to blast database formats. If you haven\'t created one or downloaded a new one. Leave it at the default')
+		self.blast_dirlist = Tix.DirList(notebook_frame,width=200,height=300)
+		self.blast_dirlist['command']
+		msg.pack(side=Tix.BOTTOM,padx=10,expand=Y,pady=10)
+		self.blast_dirlist.pack(side=Tix.BOTTOM, padx=10, pady=10,expand=Y)
+		current_db = Tix.LabelFrame(notebook_frame,label="Current Selected Database:",width=200,padx=10)
+		current_db.pack(side=BOTTOM,expand=Y)
+		current_db_label = Tix.Message(current_db,relief=SUNKEN,bg='red',text=self.argument_dict['database'],width=500)
+		current_db_label.pack(side=LEFT,pady=30, padx=20)
+	
+	def get_blast_cwd(self,dirlist):
+		print "hello", dirlist
+
+	def sub_notebook_i_database(self,nb, name):
+		notebook_frame = nb.page(name)
+		msg = Tix.Message(notebook_frame,relief=Tix.FLAT, width=500, anchor=Tix.NW,
+			text='This directory contains all the germline files compiled to blast database formats. If you haven\'t created one or downloaded a new one. Leave it at the default')
+		self.internal_dirlist = Tix.DirList(notebook_frame)
+		msg.pack(side=Tix.TOP, expand=1, fill=Tix.BOTH, padx=3, pady=3)
+		self.internal_dirlist.pack(side=Tix.TOP,padx=20, pady=20)
+	
+	def sub_notebook_aux_database(self,nb, name):
+		notebook_frame = nb.page(name)	
+		msg = Tix.Message(notebook_frame,relief=Tix.FLAT, width=500, anchor=Tix.NW,
+			text='This directory contains all the germline files compiled to blast database formats. If you haven\'t created one or downloaded a new one. Leave it at the default')
+		self.aux_dirlist = Tix.DirList(notebook_frame)
+		msg.pack(side=Tix.TOP, expand=1, fill=Tix.BOTH, padx=3, pady=3)
+		self.aux_dirlist.pack(side=Tix.TOP, padx=3, pady=3)
+
+
 	def make_fasta_entry(self):
 		message = Tix.Message(self.input_frame,relief=Tix.FLAT, width=500, anchor=W,
 								text='Enter the entry FASTA file here',font=('Arial',16))
