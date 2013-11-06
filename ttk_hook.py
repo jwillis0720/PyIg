@@ -2,24 +2,24 @@ import os, os.path, sys
 import Tkinter
 import ttk
 import tkFileDialog as filedialog
+import tkMessageBox
 from Tkconstants import *
+from Bio import SeqIO as so
+from vertical_scroll import VerticalScrolledFrame as vsf
 
 class pyigblast_gui():
 	def __init__(self,root):
 		#Initialization
 		self.root = root 
-		self.exit = -1
-		self.dir = None
-
-		
-
-		#local
 		_program_name = sys.argv[0]
 		_directory_name = os.path.dirname(os.path.abspath(_program_name))
 
+		#argument dictionary we will pass to the arg parser eventually
 		self.argument_dict = {
 								'query':'',
-								'database':	_directory_name+"/directory/"}
+								'database':	_directory_name+"/directory/",
+								'in_data': _directory_name+"/internal_data/",
+								'aux_data': _directory_name+"/optional_data/"}
 
 		window_info = self.root.winfo_toplevel()
 		window_info.wm_title('PyIgBLAST - GUI')
@@ -53,56 +53,79 @@ class pyigblast_gui():
 		#first tab
 		f_and_d_frame = ttk.Frame(notebook_frame,name='f_and_d')
 		fasta_input_frame = ttk.LabelFrame(f_and_d_frame)
-		fasta_input_frame.pack(side=TOP,expand=0,fill=BOTH,padx=10)
+		fasta_input_frame.pack(side=TOP,expand=0,fill=X,padx=10)
 		self._make_fasta_entry(fasta_input_frame)
+		
+		#Set up Directory Frame and Labels
+		directories_frame = ttk.LabelFrame(f_and_d_frame)
+		directories_frame.pack(side=LEFT,expand=1,fill=BOTH)
+		directory_label = ttk.Label(directories_frame,font=('Arial',20),text="Directories needed to run blast:")
+		directory_label.pack(side=TOP,fill=X,padx=20,pady=10)
+		self._set_up_directories(directories_frame)
+
+		#place holder
+		filler_frame = ttk.LabelFrame(f_and_d_frame,width=200)
+		filler_frame.pack(side=LEFT,expand=1,fill=BOTH)
+
+		#and add it to the big frame
 		notebook_frame.add(f_and_d_frame,text="Files and Directories",underline=0,padding=2)
-		#self.sub_notebook = ttk.Notebook(f_and_d_page, ipadx=5, ipady=5,width=250)
-		#self.sub_notebook.add('database',label="Germline Database", underline=0,
-		#	createcmd=lambda self=self,nb=self.sub_notebook,name='database': self.sub_notebook_database(nb,name))
-		#self.sub_notebook.add('i_database',label="Internal Database",underline=0,
-		#	createcmd=lambda self=self,nb=self.sub_notebook,name='i_database': self.sub_notebook_i_database(nb,name))
-		#self.sub_notebook.add('aux_database',label="Auxillary Database",underline=0,
-	#		createcmd=lambda self=self,nb=self.sub_notebook,name='aux_database': self.sub_notebook_aux_database(nb,name))
-	#	self.sub_notebook.pack(side=LEFT,expand=1,fill=BOTH)
-	#	self.filler = ttk.Frame(f_and_d_page,padx=5,pady=5,width=500).pack(side=LEFT,fill=BOTH,expand=1)
-		#self.input_frame.grid(in_=f_and_d_page,row=0,column=0,columnspan=2)
-	
-	# def sub_notebook_database(self,nb, name):
-	#	notebook_frame = nb.page(name)
-		# msg = ttk.Message(notebook_frame,relief=ttk.FLAT, width=500,
-		# 	text='This directory contains all the germline files compiled to blast database formats. If you haven\'t created one or downloaded a new one. Leave it at the default')
-		# self.blast_dirlist = ttk.DirList(notebook_frame,width=200,height=300)
-		# self.blast_dirlist['command']
-		# msg.pack(side=ttk.BOTTOM,padx=10,expand=Y,pady=10)
-		# self.blast_dirlist.pack(side=ttk.BOTTOM, padx=10, pady=10,expand=Y)
-		# current_db = ttk.LabelFrame(notebook_frame,label="Current Selected Database:",width=200,padx=10)
-		# current_db.pack(side=BOTTOM,expand=Y)
-		# current_db_label = ttk.Message(current_db,relief=SUNKEN,bg='red',text=self.argument_dict['database'],width=500)
-		# current_db_label.pack(side=LEFT,pady=30, padx=20)
-	
-	# def get_blast_cwd(self,dirlist):
-	# 	print "hello", dirlist
 
-	# def sub_notebook_i_database(self,nb, name):
-	# 	notebook_frame = nb.page(name)
-	# 	msg = ttk.Message(notebook_frame,relief=ttk.FLAT, width=500, anchor=ttk.NW,
-	# 		text='This directory contains all the germline files compiled to blast database formats. If you haven\'t created one or downloaded a new one. Leave it at the default')
-	# 	self.internal_dirlist = ttk.DirList(notebook_frame)
-	# 	msg.pack(side=ttk.TOP, expand=1, fill=ttk.BOTH, padx=3, pady=3)
-	# 	self.internal_dirlist.pack(side=ttk.TOP,padx=20, pady=20)
-	
-	# def sub_notebook_aux_database(self,nb, name):
-	# 	notebook_frame = nb.page(name)	
-	# 	msg = ttk.Message(notebook_frame,relief=ttk.FLAT, width=500, anchor=ttk.NW,
-	# 		text='This directory contains all the germline files compiled to blast database formats. If you haven\'t created one or downloaded a new one. Leave it at the default')
-	# 	self.aux_dirlist = ttk.DirList(notebook_frame)
-	# 	msg.pack(side=ttk.TOP, expand=1, fill=ttk.BOTH, padx=3, pady=3)
-	# 	self.aux_dirlist.pack(side=ttk.TOP, padx=3, pady=3)
+	def _set_up_directories(self,directories_frame):
+		#blast directory
+		blast_directories_frame = ttk.LabelFrame(directories_frame)
+		blast_directories_frame.pack(side=TOP,fill=X,padx=10,expand=1)
+		blast_directories_label = ttk.Label(blast_directories_frame,text="Compiled Blast Directory:",font=('Arial',16))
+		blast_directories_label.pack(side=TOP,anchor=NW)
+		blast_directory_entry = ttk.Entry(blast_directories_frame,width=10)
+		blast_directory_entry.insert(END,self.argument_dict['database'])
+		blast_directory_entry.pack(side=LEFT,expand=1,fill=X,pady=3)
+		blast_directory_button = ttk.Button(blast_directories_frame,text="Browse...",
+			command=lambda type='blast',entry=blast_directory_entry:self._enter_directory(type,entry))
+		blast_directory_button.pack(side=LEFT,fill=X)
+		
+		#internal_blast directory
+		internal_blast_directories_frame = ttk.LabelFrame(directories_frame)
+		internal_blast_directories_frame.pack(side=TOP,fill=X,padx=10,expand=1)
+		internal_blast_directories_label = ttk.Label(internal_blast_directories_frame,text="Internal Blast Directory:",font=('Arial',16))
+		internal_blast_directories_label.pack(side=TOP,anchor=NW)
+		internal_blast_directory_entry = ttk.Entry(internal_blast_directories_frame,width=10)
+		internal_blast_directory_entry.insert(END,self.argument_dict['in_data'])
+		internal_blast_directory_entry.pack(side=LEFT,expand=1,fill=X,pady=3)
+		internal_blast_directory_button = ttk.Button(internal_blast_directories_frame,text="Browse...",
+			command=lambda type='in_data',entry=internal_blast_directory_entry:self._enter_directory(type,entry))
+		internal_blast_directory_button.pack(side=LEFT,fill=X)
 
+		#auxilliary_blast directory
+		aux_blast_directories_frame = ttk.LabelFrame(directories_frame)
+		aux_blast_directories_frame.pack(side=TOP,fill=X,padx=10,expand=1)
+		aux_blast_directories_label = ttk.Label(aux_blast_directories_frame,text="Auxillary Blast Directory:",font=('Arial',16))
+		aux_blast_directories_label.pack(side=TOP,anchor=NW)
+		aux_blast_directory_entry = ttk.Entry(aux_blast_directories_frame,width=10)
+		aux_blast_directory_entry.insert(END,self.argument_dict['aux_data'])
+		aux_blast_directory_entry.pack(side=LEFT,expand=1,fill=X,pady=3)
+		aux_blast_directory_button = ttk.Button(aux_blast_directories_frame,text="Browse...",
+			command=lambda type='aux_data',entry=aux_blast_directory_entry:self._enter_directory(type,entry))
+		aux_blast_directory_button.pack(side=LEFT,fill=X)
+
+	def _enter_directory(self,type,entry):
+		direc = None
+		tkMessageBox.showinfo("Consult:","Please Read the README tab before messing with this option")
+		opts = {'title':"Select FASTA file to open...",
+				'initialdir':entry.get()}
+		direc = filedialog.askdirectory(**opts)
+		if direc:
+			entry.delete(0,END)
+			entry.insert(END,fn)
+			if type == 'blast':
+				self.argument_dict['database'] = str(direc)
+			elif type == 'in_data':
+				self.argument_dict['in_data'] = str(direc)
+			elif type == 'aux_data':
+				self.argument_dict['aux_data'] = str(direct)	
 
 	def _make_fasta_entry(self,fasta_input_frame):
 		message = ttk.Label(fasta_input_frame,relief=FLAT, width=500, anchor=W,
-								text='Enter the entry FASTA file here',font=('Arial',16))
+								text='Enter the entry FASTA file here',font=('Arial',20))
 		fasta_entry = ttk.Entry(fasta_input_frame,width=10)
 		fasta_entry_button = ttk.Button(fasta_input_frame,text="Browse...",
 			command=lambda entry=fasta_entry:self._enter_fasta(entry))
@@ -112,26 +135,33 @@ class pyigblast_gui():
 
 	def _enter_fasta(self,entry):
 		fn = None
+		_not_fasta = True
 		opts = {'title':"Select FASTA file to open...",
 				'initialfile':entry.get()}
-		fn = filedialog.askopenfilename(**opts)
-		if fn:
-			entry.delete(0,END)
-			entry.insert(END,fn)
+		while _not_fasta:
+			fn = filedialog.askopenfilename(**opts)
+			try:
+				so.parse(str(fn),'fasta').next()
+				_not_fasta = False
+				if fn:
+					entry.delete(0,END)
+					entry.insert(END,fn)
+					self.argument_dict['query'] = str(fn)
+			except StopIteration:
+				tkMessageBox.showwarning(
+										"Open file",
+										"Cannot open {0}, it is not a FASTA file\n".format(fn))
 
 	def _create_readme(self,notebook_frame):
 		readme_frame = ttk.Frame(notebook_frame,name="r_frame")
 		#scroled_widget = ttk.ScrolledWindow(readme_frame,scrollbar='auto')
 		#window = scroled.window
-		msg = ttk.Label(readme_frame,text=open('README.md').readlines(),anchor=N)
+		vertical_scroll_frame = vsf(readme_frame)
+		vertical_scroll_frame.pack(side=TOP,expand=1,fill=BOTH,anchor=NW)
+		vsf_label = ttk.Label(vertical_scroll_frame.interior,text=open('README_gui.txt').readlines(),anchor=N)
 		#scroled_widget.pack(side=TOP, fill=BOTH, expand=1)
-		msg.pack(side=TOP,fill=BOTH,expand=1)
+		vsf_label.pack(side=TOP,fill=BOTH,expand=1,anchor=NW)
 		notebook_frame.add(readme_frame,text="Readme",underline=0,padding=2)
-
-	def quitcmd (self):
-		'''Quit our mainloop'''
-		self.root.destory()
-
 
 
 
