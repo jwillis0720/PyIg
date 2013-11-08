@@ -152,6 +152,7 @@ class cdr_analyzer():
 
 		self.unmodified['regions'] = self.frames_and_cdrs
 		self.unmodified['regions_aa'] = self.frames_and_cdrs_aa
+		self.unmodified['raw_seq'] = query_seq
 
 	def return_json_dict_with_cdr_analysis(self):
 		return self.unmodified
