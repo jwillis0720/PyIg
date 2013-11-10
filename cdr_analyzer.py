@@ -1,5 +1,4 @@
-import json
-import sys
+
 try:
     from Bio.Seq import Seq
     from Bio.Alphabet import IUPAC
