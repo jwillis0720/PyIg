@@ -137,12 +137,17 @@ class cdr_analyzer():
             'fw1': self.framework1_seq,
             'cdr1': self.cdr1_seq,
             'cdr3': self.full_cdr3,
-            'fw2':self.framework2_seq, 'cdr2': self.cdr2_seq,
-            'fw3': self.framework3_seq, 'fw4': self.framework4_seq}
+            'fw2': self.framework2_seq,
+            'cdr2': self.cdr2_seq,
+            'fw3': self.framework3_seq,
+            'fw4': self.framework4_seq}
         self.frames_and_cdrs_aa = {
-            'fw1_aa': self.framework1_seq_aa, 'cdr1_aa': self.cdr1_seq_aa,
-            'fw2_aa': self.framework2_seq_aa,'cdr2_aa': self.cdr2_seq_aa,
-            'fw3_aa': self.framework3_seq_aa, 'cdr3_aa': self.full_cdr3_aa,
+            'fw1_aa': self.framework1_seq_aa,
+            'cdr1_aa': self.cdr1_seq_aa,
+            'fw2_aa': self.framework2_seq_aa,
+            'cdr2_aa': self.cdr2_seq_aa,
+            'fw3_aa': self.framework3_seq_aa,
+            'cdr3_aa': self.full_cdr3_aa,
             'fw4_aa': self.framework4_seq_aa}
 
         self.func_seq = self.framework1_seq + self.cdr1_seq + \
@@ -161,7 +166,7 @@ class cdr_analyzer():
         else:
             self.unmodified['productive'] = 'True'
 
-        if str(self.full_cdr3_aa).find('*') != -1 or not str(self.func_seq_aa):
+        if str(self.full_cdr3_aa).find('*') != -1 or not str(self.full_cdr3_aa):
             self.unmodified['productive_cdr3'] = 'False'
         else:
             self.unmodified['productive_cdr3'] = 'True'
