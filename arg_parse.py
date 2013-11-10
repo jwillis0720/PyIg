@@ -193,8 +193,7 @@ class blastargument_parser():
         try:
             shutil.copytree(self.args.internal_data, './internal_data')
         except OSError:
-            print "Internal Data direcotry file exists \
-            in this directory, skipping..."
+            print "Internal Data direcotry file exists in this directory, skipping..."
 
         self.args_dict = {
             '-query': self.args.query,
