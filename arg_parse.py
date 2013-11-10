@@ -11,7 +11,9 @@ class blastargument_parser():
 
     def __init__(self):
         """A customized argument parser that does a LOT of error checking"""
-        self.parser = argparse.ArgumentParser(prog="igblast", formatter_class=argparse.RawTextHelpFormatter, description=textwrap.dedent('''\
+        self.parser = argparse.ArgumentParser(
+            prog="igblast", formatter_class=argparse.RawTextHelpFormatter,
+            description=textwrap.dedent('''\
                                     PyIgBlast
                     __________________________________________________________________________________________\n
                     PyIgBlast calls upon igblastn for nucleotides. Uses multiproecessing to split up fasta file.
@@ -24,78 +26,123 @@ class blastargument_parser():
             title='Necessary', description="These have to be included")
         # query
         neces.add_argument(
-            "-q", "--query", metavar="query.fasta", required=True, type=self._check_if_fasta, help="The fasta file to be input into igBlast")
+            "-q", "--query", metavar="query.fasta", required=True,
+            type=self._check_if_fasta,
+            help="The fasta file to be input into igBlast")
         # database path
         neces.add_argument(
-            "-d", "--db_path", required=True, type=self._check_if_db_exists, help="The database path to the germline repertoire")
+            "-d", "--db_path", required=True,
+            type=self._check_if_db_exists,
+            help="The database path to the germline repertoire")
         # internal_data path
         neces.add_argument(
-            "-i", "--internal_data", required=True, type=self._check_if_db_exists, help="The database path to internal data repertoire")
+            "-i", "--internal_data", required=True,
+            type=self._check_if_db_exists,
+            help="The database path to internal data repertoire")
 
         # recommended options
         recommended = self.parser.add_argument_group(
-            title="\nRecommended", description="Not necessary to run but recommended")
+            title="\nRecommended",
+            description="Not necessary to run but recommended")
         recommended.add_argument(
-            "-a", "--aux_path", type=self._check_if_aux_path_exists, help="The auxilariay path that contains the frame origins of the germline genes for each repertoire, \
+            "-a", "--aux_path", type=self._check_if_aux_path_exists,
+            help="The auxilariay path that contains the frame origins \
+            of the germline genes for each repertoire, \
             helps produce translation and other metrics")
 
         # IGBlast Specif Options
         igspec = self.parser.add_argument_group(
-            title="\nIgBlast Sprecific", description="IgBlast Specific Options with a Default")
+            title="\nIgBlast Sprecific",
+            description="IgBlast Specific Options with a Default")
         igspec.add_argument(
-            "-or", "--organism", default="human", choices=["human", "mouse"], help="The organism repeortire to blast against")
+            "-or", "--organism", default="human",
+            choices=["human", "mouse"],
+            help="The organism repeortire to blast against")
         igspec.add_argument(
-            "-nV", "--num_v", default=3, type=int, help="How many V-genes to match?")
+            "-nV", "--num_v", default=3,
+            type=int, help="How many V-genes to match?")
         igspec.add_argument(
-            "-nD", "--num_d", default=3, type=int, help="How many D-genes to match?")
+            "-nD", "--num_d", default=3,
+            type=int, help="How many D-genes to match?")
         igspec.add_argument(
-            "-nJ", "--num_j", default=3, type=int, help="How many J-genes to match?")
-        igspec.add_argument("-dgm", "--d_gene_matches", default=5, type=int,
-                            help="How many nuclodtieds in the D-gene must match to call it a hit")
+            "-nJ", "--num_j", default=3,
+            type=int, help="How many J-genes to match?")
+        igspec.add_argument("-dgm", "--d_gene_matches",
+                            default=5, type=int,
+                            help="How many nuclodtieds in the D-gene must\
+                             match to call it a hit")
         igspec.add_argument("-s", "--domain", default="imgt", choices=[
-                            "imgt", "kabat"], help="Which classification system do you want")
+                            "imgt", "kabat"],
+                            help="Which classification system do you want")
         igspec.add_argument("-sT", "--show_translation", default=False,
-                            action="store_true", help="Do you want to show the translation of the alignments")
+                            action="store_true",
+                            help="Do you want to show the translation\
+                             of the alignments")
 
         # General Blast Settings
         general = self.parser.add_argument_group(
-            title="\nGeneral Settings", description="General Settings for Blast")
+            title="\nGeneral Settings",
+            description="General Settings for Blast")
         general.add_argument(
             "-x", '--executable', type=self._check_if_executable_exists,
             help="The location of the executable, default is /usr/bin/igblastn")
         general.add_argument(
             "-o", "--out", help="output file prefix", default="igblast_out")
-        general.add_argument("-e", "--e_value", type=str, default="1e-15",
-                             help="Real value for excpectation value threshold in blast, put in scientific notation")
-        general.add_argument("-w", "--word_size", type=int,
-                             default=4, help="Word size for wordfinder algorithm")
-        general.add_argument("-pm", "--penalty_mismatch", type=int,
-                             default=0, help="Penalty for nucleotide mismatch")
         general.add_argument(
-            "-rm", "--reward_match", type=int, default=0, help="Reward for nucleotide match")
-        general.add_argument("-mT", "--max_target_seqs", type=int, default=500,
-                             help="Maximum number of alingned sequences to iterate through at a time")
+            "-e", "--e_value", type=str, default="1e-15",
+            help="Real value for excpectation value threshold in blast,\
+                put in scientific notation")
+        general.add_argument(
+            "-w", "--word_size", type=int, default=4,
+            help="Word size for wordfinder algorithm")
+        general.add_argument(
+            "-pm", "--penalty_mismatch", type=int,
+            default=0, help="Penalty for nucleotide mismatch")
+        general.add_argument(
+            "-rm", "--reward_match", type=int,
+            default=0, help="Reward for nucleotide match")
+        general.add_argument(
+            "-mT", "--max_target_seqs", type=int, default=500,
+            help="Maximum number of alingned sequences to \
+            iterate through at a time")
         general.add_argument(
             "-nP", "--num_procs", type=int, default=cpu_count(),
-            help="How many do you want to split the job across, default is the number of processors")
+            help="How many do you want to split the job across,\
+            default is the number of processors")
 
         formatter = self.parser.add_argument_group(
-            title="Formatting Options", description="Formatting options mostly available"
+            title="Formatting Options",
+            description="Formatting options mostly available"
         )
 
-        formatter.add_argument("-f", "--format_options", type=str, default="default", help="default is a tab seperated format of\n\n\
-         qseqid sseqid pident length mismatch gapopen qstart qend sstart send\n\n\
-         The format file is in the database path as format_template.txt. Uncomment out the metrics you want to use")
-        formatter.add_argument("-z","--zip",default=False,action="store_true",help="Zip up all output files")
-        formatter.add_argument("-c","--concatenate",default=True,action="store_false",help="Turn off automatic concatenation and deletion of temporary files. Files are split up at the beginning to run across multiple processors")
+        formatter.add_argument(
+            "-f", "--format_options", type=str, default="default",
+            help="default is a tab seperated format of\n\n\
+            qseqid sseqid pident length mismatch gapopen \
+            qstart qend sstart send\n\n\
+            The format file is in the database path as format_template.txt.\
+            Uncomment out the metrics you want to use")
+        formatter.add_argument(
+            "-z", "--zip", default=False,
+            action="store_true", help="Zip up all output files")
+        formatter.add_argument(
+            "-c", "--concatenate", default=True, action="store_false",
+            help="Turn off automatic concatenation and \
+                deletion of temporary files.\
+                Files are split up at the beginning to run \
+                across multiple processors")
 
-       
         json_specific = self.parser.add_argument_group(
-            title="\nOutput parsing settings",description = "These are the options for creating a JSON files from the blastoutput that is easily uploaded to a mongo database")
-        json_specific.add_argument("-j","--json",action="store_true",default=False,help="Use the JSON output option that will format the text driven igblast output to a json document")
-        json_specific.add_argument("-jp","--json_prefix",default="igblast_output",help="The prefix for json_output files")
-
-
+            title="\nOutput parsing settings",
+            description="These are the options for creating a JSON files \
+            from the blastoutput that is easily uploaded to a mongo database")
+        json_specific.add_argument(
+            "-j", "--json", action="store_true", default=False,
+            help="Use the JSON output option that will format\
+            the text driven igblast output to a json document")
+        json_specific.add_argument(
+            "-jp", "--json_prefix",
+            default="igblast_output", help="The prefix for json_output files")
 
         # one special boolean case
         self.show_translation = False
@@ -117,8 +164,8 @@ class blastargument_parser():
 
     def _check_if_executable_exists(self, x_path):
         if not os.path.exists(x_path):
-            msg = "path to executable {0} does not exist, use -h for help\n".format(
-                x_path)
+            msg = "path to executable {0} \
+            does not exist, use -h for help\n".format(x_path)
             raise argparse.ArgumentTypeError(msg)
         if not os.access(x_path, os.R_OK):
             msg1 = "executable {0} does not permission to run\n".format(x_path)
@@ -146,7 +193,8 @@ class blastargument_parser():
         try:
             shutil.copytree(self.args.internal_data, './internal_data')
         except OSError:
-            print ("Internal Data direcotry file exists in this directory, skipping...")
+            print "Internal Data direcotry file exists \
+            in this directory, skipping..."
 
         self.args_dict = {
             '-query': self.args.query,
@@ -160,9 +208,12 @@ class blastargument_parser():
             '-evalue': self.args.e_value,
             '-word_size': self.args.word_size,
             '-max_target_seqs': self.args.max_target_seqs,
-            '-germline_db_V': "{0}{1}_gl_V".format(self.args.db_path, self.args.organism),
-            '-germline_db_D': "{0}{1}_gl_D".format(self.args.db_path, self.args.organism),
-            '-germline_db_J': "{0}{1}_gl_J".format(self.args.db_path, self.args.organism)
+            '-germline_db_V': "{0}{1}_gl_V".format(
+                self.args.db_path, self.args.organism),
+            '-germline_db_D': "{0}{1}_gl_D".format(
+                self.args.db_path, self.args.organism),
+            '-germline_db_J': "{0}{1}_gl_J".format(
+                self.args.db_path, self.args.organism)
 
         }
         # add bool opition
@@ -203,7 +254,8 @@ class blastargument_parser():
     def return_command_line_from_dict(self, cline_dict):
         '''return command line as a list to put in subprocess
         --args
-        cline_dict - The command line dictionary to return. We add in the executable'''
+        cline_dict - The command line dictionary to return. \
+        We add in the executable'''
         if self.args.executable:
             cline = [self.args.executable]
         else:

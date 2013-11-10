@@ -5,4 +5,5 @@ cp -r database /Applications/PyIg.app/Contents/MacOS/.
 cp -r internal_data /Applications/PyIg.app/Contents/MacOS/.
 cp -r optional_file /Applications/PyIg.app/Contents/MacOS/.
 cp -r executables/darwin/igblastn /Applications/PyIg.app/Contents/MacOS/.
-cp README_gui.txt /Applications/PyIg.app/Contents/MacOS/.
+cp README_gui.txt /Applications/PyIg.app/Contents/MacOS/
+rm -rf /Application/PyIg/
