@@ -18,10 +18,15 @@ def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
     if not os.path.exists(path):
         os.makedirs(path)
 
+    length_parent_file = 0
+    parent_file = []
     file_prefix = os.path.basename(file_name).split('.fasta')[0]
     print "Counting entries in fasta files..."
-    parent_file = list(Bio.SeqIO.parse(file_name, 'fasta'))
-    length_parent_file = len(parent_file)
+    for i, j in enumerate in Bio.SeqIO.parse(file_name, 'fasta'):
+        if i % 10000:
+            print "coutned {0} entries".format(i)
+        length_parent_file += i
+        parent_file.append(j)
     print "{0} in fasta file".format(length_parent_file)
 
     files_per_tmp = float(length_parent_file) / float(num_procs)
