@@ -631,7 +631,7 @@ class pyigblast_gui():
         _general_options = all_checkboxes['general']
         self.general_class = Checkbar(parent=general_frame, picks=[
                                       (i['formal'], i['default']) for i in _general_options])
-        general_frame.pack(side=TOP, expand=1, fill=X, padx=10)
+        general_frame.pack(side=TOP, expand=1, fill=X, padx=10, pady=10)
 
         # nucleotide
         nucleotide_frame = ttk.LabelFrame(output_fields_frame)
@@ -641,7 +641,7 @@ class pyigblast_gui():
         _nucleotide_options = all_checkboxes['nucleotide']
         self.nucleotide_class = Checkbar(parent=nucleotide_frame, picks=[
             (i['formal'], i['default']) for i in _nucleotide_options])
-        nucleotide_frame.pack(side=TOP, fill=X, expand=1, padx=10)
+        nucleotide_frame.pack(side=TOP, fill=X, expand=1, padx=10, pady=10)
 
         # Translation Specific
         amino_frame = ttk.LabelFrame(output_fields_frame)
@@ -651,7 +651,7 @@ class pyigblast_gui():
         _amino_options = all_checkboxes['amino']
         self.amino_class = Checkbar(parent=amino_frame, picks=[
                                     (i['formal'], i['default']) for i in _amino_options])
-        amino_frame.pack(side=TOP, expand=1, fill=X, padx=10)
+        amino_frame.pack(side=TOP, expand=1, fill=X, padx=10, pady=10)
 
     def _enter_output(self, entry):
         fo = None
@@ -741,7 +741,7 @@ class Checkbar():
             var.set(int(pick[1]))
             chk = ttk.Checkbutton(parent, onvalue=1, offvalue=0, text=pick[
                                   0], variable=var, command=lambda: self.state())
-            chk.pack(side=side, anchor=anchor, expand=YES)
+            chk.pack(side=side, anchor=anchor, expand=YES, pady=10)
             self.vars[pick[0]] = var
 
     def state(self):

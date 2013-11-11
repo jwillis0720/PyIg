@@ -6,7 +6,6 @@ import os
 import output_parser
 import sys
 import gzip
-from time import time
 from split_fasta import split_fasta
 try:
     import Bio
