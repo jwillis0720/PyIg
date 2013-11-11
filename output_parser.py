@@ -4,10 +4,11 @@ import gzip
 from cdr_analyzer import cdr_analyzer
 
 try:
-	from Bio.Seq import Seq
-	from Bio.Alphabet import IUPAC
+    from Bio.Seq import Seq
+    from Bio import SeqIO
+    from Bio.Alphabet import IUPAC
 except ImportError:
-	print ("Need Biopython to use the IgBlast output parser class")
+    print("Need Biopython to use the IgBlast output parser class")
 
 
 class igblast_output():
@@ -18,47 +19,51 @@ class igblast_output():
     output - string for the filename to the output
     '''
 
-    def __init__(self, file, output_file, fasta_files,gz=False):
+    def __init__(self, file, output_file, fasta_files, gz=False):
         breaker = True
         query_holder = []
         self.fasta_files = fasta_files
         _end_dict = {}
         try:
-            for line in open('human_germ_properties.txt').readlines():
+            for line in open('junctional_data/human_germ_properties.txt').readlines():
                 line_split = line.split()
                 _end_dict[line_split[0]] = int(line_split[1])
         except IOError:
-            print "Cant open human_germ_properties.txt, need this file to process CDR3 regions"
+            print "Cant open human_germ_properties.txt, \
+            need this file to process CDR3 regions"
             sys.exit()
         if gz:
-            z = gzip.open(output_file+".gz",'wb')
+            z = gzip.open(output_file + ".gz", 'wb')
         else:
-            z = open(output_file,'w')
+            z = open(output_file, 'w')
         with z as f:
             for line in open(file):
                 if "IGBLASTN" in line:
                     breaker = False
                     if query_holder:
                         f.write(
-                            single_blast_entry(query_holder,self.fasta_files,_end_dict).return_json_document())
+                            single_blast_entry(query_holder, self.fasta_files, _end_dict).return_json_document())
                         f.write("\n")
                     query_holder = []
                     continue
                 if not breaker:
                     query_holder.append(line)
-            f.write(single_blast_entry(query_holder,self.fasta_files,_end_dict).return_json_document())
+            f.write(
+                single_blast_entry(query_holder, self.fasta_files, _end_dict).return_json_document())
             f.write("\n")
 
+
 class single_blast_entry():
+
     '''The helper class to parse an individual blast result'''
 
-    def __init__(self, query,fasta_files,end_translation_dictionaries):
+    def __init__(self, query, fasta_files, end_translation_dictionaries):
         _rearrangment_breaker = False
         _junction_breaker = False
         _fields_breaker = False
 
         self.fasta_files = fasta_files
-        #Where to end translation for CDR3 loops specified in an output file
+        # Where to end translation for CDR3 loops specified in an output file
         self.end_translation_dictionaries = end_translation_dictionaries
 
         # initalize the fields, some can be empty on crappy reads
@@ -116,7 +121,8 @@ class single_blast_entry():
                 self.alignment_summary_titles = line.strip().split(
                     "(")[1].split(")")[0].split(",")
                 self.alignment_summary_titles = self.alignment_summary_titles
-                self.alignment_summary_titles = [x.strip() for x in self.alignment_summary_titles]
+                self.alignment_summary_titles = [
+                    x.strip() for x in self.alignment_summary_titles]
             try:
                 if line.split()[0].split('-')[0] == "FWR1":
                     self.fr1_alignment_summary = line.strip().split()[1:]
@@ -180,16 +186,16 @@ class single_blast_entry():
         self.translate_junction()
 
     def translate_junction(self):
-    	self.cdr3_partial = ""
-    	if self.junction_together:
-    		coding_region = Seq(self.junction_together,IUPAC.ambiguous_dna)
-    		self.cdr3_partial = str(coding_region.translate())
+        self.cdr3_partial = ""
+        if self.junction_together:
+            coding_region = Seq(self.junction_together, IUPAC.ambiguous_dna)
+            self.cdr3_partial = str(coding_region.translate())
 
     def parse_rearranment(self):
         _return_dict = {}
         for title, value in zip(self.rearrangment_summary_titles, self.rearrangment_summary):
             if len(value.split(',')) > 1:
-                #cast multiple entries for tuple, makes them easier for json
+                # cast multiple entries for tuple, makes them easier for json
                 _return_dict[title.strip()] = tuple(value.split(','))
             else:
                 _return_dict[title.strip()] = value
@@ -206,33 +212,33 @@ class single_blast_entry():
                     "(")[1].split(")")[0]
             else:
                 _return_dict[title.strip().lower().replace(" ", "_")] = value
-               	if value != "N/A":
-               		self.junction_together += value
+                if value != "N/A":
+                    self.junction_together += value
         return _return_dict
 
     def parse_fr1_align(self):
-            _return_dict = {}
-            for title, value in zip(self.alignment_summary_titles, self.fr1_alignment_summary):
+        _return_dict = {}
+        for title, value in zip(self.alignment_summary_titles, self.fr1_alignment_summary):
+            try:
+                _return_dict[title] = int(value)
+            except ValueError:
                 try:
-                    _return_dict[title] = int(value)
+                    _return_dict[title] = float(value)
                 except ValueError:
-                    try:
-                        _return_dict[title] = float(value)
-                    except ValueError:
-                        _return_dict[title] = value
-            return _return_dict
+                    _return_dict[title] = value
+        return _return_dict
 
     def parse_fr2_align(self):
-            _return_dict = {}
-            for title, value in zip(self.alignment_summary_titles, self.fr2_alignment_summary):
+        _return_dict = {}
+        for title, value in zip(self.alignment_summary_titles, self.fr2_alignment_summary):
+            try:
+                _return_dict[title] = int(value)
+            except ValueError:
                 try:
-                    _return_dict[title] = int(value)
+                    _return_dict[title] = float(value)
                 except ValueError:
-                    try:
-                        _return_dict[title] = float(value)
-                    except ValueError:
-                        _return_dict[title] = value
-            return _return_dict
+                    _return_dict[title] = value
+        return _return_dict
 
     def parse_fr3_align(self):
         _return_dict = {}
@@ -257,7 +263,7 @@ class single_blast_entry():
                 except ValueError:
                     _return_dict[title] = value
         return _return_dict
-    
+
     def parse_cdr2_align(self):
         _return_dict = {}
         for title, value in zip(self.alignment_summary_titles, self.cdr2_alignment_summary):
@@ -269,7 +275,7 @@ class single_blast_entry():
                 except ValueError:
                     _return_dict[title] = value
         return _return_dict
- 
+
     def parse_cdr3_align(self):
         _return_dict = {}
         for title, value in zip(self.alignment_summary_titles, self.cdr3_alignment_summary):
@@ -343,8 +349,8 @@ class single_blast_entry():
         '''Our Main Function that will return a json type document'''
         # to be converted to a json document
         self.json_dictionary = {}
-        
-        #hits arrays if we have more than one hit we kept in the blast query
+
+        # hits arrays if we have more than one hit we kept in the blast query
         self.v_hits_array = []
         self.j_hits_array = []
         self.d_hits_array = []
@@ -408,44 +414,51 @@ class single_blast_entry():
         # alignment_summary will be empty if it is empty, no need for try and
         self.alignment_summaries = {}
         if self.blast_dict[self.query]['fr1_align']:
-            self.alignment_summaries['fr1_align'] = self.blast_dict[self.query]['fr1_align']
+            self.alignment_summaries[
+                'fr1_align'] = self.blast_dict[self.query]['fr1_align']
 
         else:
             self.alignment_summaries['fr1_align'] = 'N/A'
 
         if self.blast_dict[self.query]['cdr1_align']:
-            self.alignment_summaries['cdr1_align'] = self.blast_dict[self.query]['cdr1_align']
+            self.alignment_summaries[
+                'cdr1_align'] = self.blast_dict[self.query]['cdr1_align']
 
         else:
             self.alignment_summaries['cdr1_align'] = 'N/A'
-        
+
         if self.blast_dict[self.query]['fr2_align']:
-            self.alignment_summaries['fr2_align'] = self.blast_dict[self.query]['fr2_align']
+            self.alignment_summaries[
+                'fr2_align'] = self.blast_dict[self.query]['fr2_align']
 
         else:
             self.alignment_summaries['fr2_align'] = 'N/A'
 
         if self.blast_dict[self.query]['cdr2_align']:
-            self.alignment_summaries['cdr2_align'] = self.blast_dict[self.query]['cdr2_align']
+            self.alignment_summaries[
+                'cdr2_align'] = self.blast_dict[self.query]['cdr2_align']
 
         else:
             self.alignment_summaries['cdr2_align'] = 'N/A'
-        
+
         if self.blast_dict[self.query]['fr3_align']:
-            self.alignment_summaries['fr3_align'] = self.blast_dict[self.query]['fr3_align']
+            self.alignment_summaries[
+                'fr3_align'] = self.blast_dict[self.query]['fr3_align']
 
         else:
             self.alignment_summaries['fr3_align'] = 'N/A'
-        
+
         if self.blast_dict[self.query]['cdr3_align']:
-            self.alignment_summaries['cdr3_align'] = self.blast_dict[self.query]['cdr3_align']
+            self.alignment_summaries[
+                'cdr3_align'] = self.blast_dict[self.query]['cdr3_align']
 
         else:
             self.alignment_summaries['cdr3_align'] = 'N/A'
-        
+
         if self.blast_dict[self.query]['total_align']:
-            self.alignment_summaries['total_align'] = self.blast_dict[self.query]['total_align']
-         
+            self.alignment_summaries['total_align'] = self.blast_dict[
+                self.query]['total_align']
+
         else:
             self.alignment_summaries['total_align'] = 'N/A'
 
@@ -479,11 +492,11 @@ class single_blast_entry():
         self.json_dictionary["d_hits"] = self.d_hits_array
         self.json_dictionary['j_hits'] = self.j_hits_array
 
-        if self.json_dictionary["productive"].lower()  == "yes":
-        	self.json_dictionary["partial_cdr3_aa"] = self.cdr3_partial
+        if self.json_dictionary["productive"].lower() == "yes":
+            self.json_dictionary["partial_cdr3_aa"] = self.cdr3_partial
 
-        self.json_dictionary = cdr_analyzer(self.json_dictionary,self.full_query_seq,self.end_translation_dictionaries).return_json_dict_with_cdr_analysis() 
-
+        self.json_dictionary = cdr_analyzer(
+            self.json_dictionary, self.full_query_seq, self.end_translation_dictionaries).return_json_dict_with_cdr_analysis()
 
         # convert dictionary to json object
         self.json = json.dumps(self.json_dictionary, sort_keys=1)
@@ -492,5 +505,9 @@ class single_blast_entry():
         return self.json
 
 if __name__ == '__main__':
-	to_convert = sys.argv[1]
-	igblast_output(to_convert,"test_out.json")
+    to_convert = sys.argv[1]
+    raw_fasta = sys.argv[2]
+    original = {}
+    for s in SeqIO.parse(raw_fasta, 'fasta'):
+        original[str(s.id)] = str(s.seq)
+    igblast_output(to_convert, "test_out.json", original)
