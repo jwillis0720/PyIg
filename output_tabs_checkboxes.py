@@ -22,18 +22,17 @@ nucleotide = [
 			{'default':1,'formal':'Framework 3 Nuc.','json_key':'regions.fw3'},
 			{'default':1,'formal':'Framework 4 Nuc.','json_key':'regions.fw4'},
 			{'default':1,'formal':'CDR1 Nuc.','json_key':'regions.cdr1'},
-			{'default':1,'formal':'CDR2 Nuc.','json_key':'regions.cdr2'},
-			{'default':1,'formal':'CDR3 Nuc.','json_key':'regions.cdr3'}
-]
+		{'default':1,'formal':'CDR2 Nuc.','json_key':'regions.cdr2'},
+		{'default':1,'formal':'CDR3 Nuc.','json_key':'regions.cdr3'}]
 
-amino = [
-			{'default':1,'formal':'Framework 1 Nuc.','json_key':'regions_aa.fw1_aa'},
-			{'default':1,'formal':'Framework 2 Nuc.','json_key':'regions_aa.fw2_aa'},
-			{'default':1,'formal':'Framework 3 Nuc.','json_key':'regions_aa.fw3_aa'},
-			{'default':1,'formal':'Framework 4 Nuc.','json_key':'regions_aa.fw4_aa'},
-			{'default':1,'formal':'CDR1 1 Nuc.','json_key':'regions_aa.cdr1_aa'},
-			{'default':1,'formal':'CDR1 2 Nuc.','json_key':'regions_aa.cdr2_aa'},
-			{'default':1,'formal':'CDR1 3 Nuc.','json_key':'regions_aa.cdr3_aa'}
+amino =[
+			{'default':1,'formal':'Framework 1 AA','json_key':'regions_aa.fw1_aa'},
+			{'default':1,'formal':'Framework 2 AA','json_key':'regions_aa.fw2_aa'},
+			{'default':1,'formal':'Framework 3 AA','json_key':'regions_aa.fw3_aa'},
+			{'default':1,'formal':'Framework 4 AA','json_key':'regions_aa.fw4_aa'},
+			{'default':1,'formal':'CDR1 1 AA','json_key':'regions_aa.cdr1_aa'},
+			{'default':1,'formal':'CDR1 2 AA','json_key':'regions_aa.cdr2_aa'},
+			{'default':1,'formal':'CDR1 3 AA','json_key':'regions_aa.cdr3_aa'}
 ]
 
 all_checkboxes = {

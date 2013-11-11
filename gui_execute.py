@@ -1,404 +1,170 @@
-import os, os.path, sys
-import Tkinter
-import ttk
-import tkFileDialog as filedialog
-import tkMessageBox
-from Tkconstants import *
-from Bio import SeqIO as so
-from vertical_scroll import VerticalScrolledFrame as vsf
-from output_tabs_checkboxes import all_checkboxes
+from arg_parse import blastargument_parser
+import subprocess as sp
+import multiprocessing as mp
+import glob
+import os
+import output_parser
+import sys
+import gzip
+from time import time
+from split_fasta import split_fasta
 
-class pyigblast_gui():
-	def __init__(self,root):
-		#Initialization
-		self.root = root 
-		_program_name = sys.argv[0]
-		_directory_name = os.path.dirname(os.path.abspath(_program_name))
-		self._user_directory = os.path.expanduser("~")
-		#argument dictionary we will pass to the arg parser eventually
-		self.argument_dict = {
-								'query':'',
-								'database':	_directory_name+"/directory/",
-								'in_data': _directory_name+"/internal_data/",
-								'aux_data': _directory_name+"/optional_data/",
-								'output_file':self._user_directory+"/pyigblast_output",
-								'tmp_data':self._user_directory+"/pyigblast_temporary/"}
-		window_info = self.root.winfo_toplevel()
-		window_info.wm_title('PyIgBLAST - GUI')
-		window_info.geometry('1500x900+10+10')
-		#creates main menu
-		self.MainMenu()
-		#creates main menu notebook inside
-		self.TabNotebook()
-	
-	def MainMenu(self):
-		main_menu = ttk.Frame(self.root)
-		author_label = ttk.Label(main_menu,text="Jordan Willis")
-		university_label = ttk.Label(main_menu,text="Vanderbilt University")
-		exit_button = ttk.Button(main_menu,text="Exit",command=lambda root=self.root:root.destroy())
-		refresh_button = ttk.Button(main_menu,text="Refresh",command=lambda self=self:self._update())
-		author_label.pack(side=LEFT,padx=10,pady=3)
-		refresh_button.pack(side=LEFT,padx=10,expand=YES,pady=3)
-		exit_button.pack(side=LEFT,expand=YES,pady=3)
-		university_label.pack(side=RIGHT,padx=10,pady=3)
-		main_menu.pack(side=BOTTOM,fill=X)
-
-	def TabNotebook(self):
-		main_notebook_frame = ttk.Notebook(self.root, name='main_notebook')
-		main_notebook_frame.enable_traversal()
-		main_notebook_frame.pack(side=TOP,expand=1,fill=BOTH)
-		self._create_files_and_directories(main_notebook_frame)
-		self._create_format_output(main_notebook_frame)
-		self._create_readme(main_notebook_frame)
-
-	def _create_files_and_directories(self,notebook_frame):
-		#This is the first tab that houses files, directories and Options
-		
-		#First frame in the notebook
-		f_and_d_frame = ttk.Frame(notebook_frame,name='f_and_d')
-		fasta_input_frame = ttk.LabelFrame(f_and_d_frame)
-		fasta_input_frame.pack(side=TOP,expand=0,fill=X,padx=10)
-		
-		#put in fasta_entry frame to take in input
-		self._make_fasta_entry(fasta_input_frame)
-		
-		#Set up directory frame within the tab that takes in all the directories needed to run run blast
-		directories_frame = ttk.LabelFrame(f_and_d_frame)
-		directories_frame.pack(side=LEFT,expand=1,fill=BOTH)
-		directory_label = ttk.Label(directories_frame,font=('Arial',20),
-			text="Directories needed to run blast:")
-		directory_label.pack(side=TOP,fill=X,padx=20,pady=10)
-		
-		#set now run functions to place directories within that frame
-		self._set_up_directories(directories_frame)
-
-		#On the other side of this tab we will put in the basic options including output type and blast
-		basic_options_frame = ttk.LabelFrame(f_and_d_frame)
-		basic_options_frame.pack(side=LEFT,expand=1,fill=BOTH)
-		self._set_up_basic_options(basic_options_frame)
-
-		#and add it to the big frame
-		notebook_frame.add(f_and_d_frame,text="Input Options",underline=0,padding=2)
-	
-	def _make_fasta_entry(self,fasta_input_frame):
-		message = ttk.Label(fasta_input_frame,relief=FLAT, width=500, anchor=W,
-								text='Enter the entry FASTA file here',font=('Arial',20))
-		fasta_entry = ttk.Entry(fasta_input_frame,width=10)
-		fasta_entry_button = ttk.Button(fasta_input_frame,text="Browse...",
-			command=lambda entry=fasta_entry:self._enter_fasta(entry))
-		message.pack(side=TOP,expand=1,fill=BOTH,padx=3,pady=3)
-		fasta_entry.pack(side=LEFT,padx=3,expand=1,fill=X,pady=3)
-		fasta_entry_button.pack(side=LEFT,fill=X)
-	
-	def _enter_fasta(self,entry):
-		fn = None
-		_not_fasta = True
-		opts = {'title':"Select FASTA file to open...",
-				'initialfile':entry.get()}
-		while _not_fasta:
-			fn = filedialog.askopenfilename(**opts)
-			try:
-				so.parse(str(fn),'fasta').next()
-				_not_fasta = False
-				if fn:
-					entry.delete(0,END)
-					entry.insert(END,fn)
-					self.argument_dict['query'] = str(fn)
-			except StopIteration:
-				tkMessageBox.showwarning(
-										"Open file",
-										"Cannot open {0}, it is not a FASTA file\n".format(fn))
-
-	def _set_up_directories(self,directories_frame):
-		#blast directory
-		blast_directories_frame = ttk.LabelFrame(directories_frame)
-		blast_directories_frame.pack(side=TOP,fill=X,padx=10,expand=1)
-		blast_directories_label = ttk.Label(blast_directories_frame,text="Compiled Blast Directory:",font=('Arial',16))
-		blast_directories_label.pack(side=TOP,anchor=NW)
-		blast_directory_entry = ttk.Entry(blast_directories_frame,width=10)
-		blast_directory_entry.insert(END,self.argument_dict['database'])
-		blast_directory_entry.pack(side=LEFT,expand=1,fill=X,pady=3)
-		blast_directory_button = ttk.Button(blast_directories_frame,text="Browse...",
-			command=lambda type='blast',entry=blast_directory_entry:self._enter_directory(type,entry))
-		blast_directory_button.pack(side=LEFT,fill=X)
-		
-		#internal_blast directory
-		internal_blast_directories_frame = ttk.LabelFrame(directories_frame)
-		internal_blast_directories_frame.pack(side=TOP,fill=X,padx=10,expand=1)
-		internal_blast_directories_label = ttk.Label(internal_blast_directories_frame,text="Internal Blast Directory:",font=('Arial',16))
-		internal_blast_directories_label.pack(side=TOP,anchor=NW)
-		internal_blast_directory_entry = ttk.Entry(internal_blast_directories_frame,width=10)
-		internal_blast_directory_entry.insert(END,self.argument_dict['in_data'])
-		internal_blast_directory_entry.pack(side=LEFT,expand=1,fill=X,pady=3)
-		internal_blast_directory_button = ttk.Button(internal_blast_directories_frame,text="Browse...",
-			command=lambda type='in_data',entry=internal_blast_directory_entry:self._enter_directory(type,entry))
-		internal_blast_directory_button.pack(side=LEFT,fill=X)
-
-		#auxilliary_blast directory
-		aux_blast_directories_frame = ttk.LabelFrame(directories_frame)
-		aux_blast_directories_frame.pack(side=TOP,fill=X,padx=10,expand=1)
-		aux_blast_directories_label = ttk.Label(aux_blast_directories_frame,text="Auxillary Blast Directory:",font=('Arial',16))
-		aux_blast_directories_label.pack(side=TOP,anchor=NW)
-		aux_blast_directory_entry = ttk.Entry(aux_blast_directories_frame,width=10)
-		aux_blast_directory_entry.insert(END,self.argument_dict['aux_data'])
-		aux_blast_directory_entry.pack(side=LEFT,expand=1,fill=X,pady=3)
-		aux_blast_directory_button = ttk.Button(aux_blast_directories_frame,text="Browse...",
-			command=lambda type='aux_data',entry=aux_blast_directory_entry:self._enter_directory(type,entry))
-		aux_blast_directory_button.pack(side=LEFT,fill=X)
-
-		#auxilliary_blast directory
-		tmp_directories_frame = ttk.LabelFrame(directories_frame)
-		tmp_directories_frame.pack(side=TOP,fill=X,padx=10,expand=1)
-		tmp_directories_label = ttk.Label(tmp_directories_frame,text="Directory to store temporary files in:",
-			font=('Arial',16))
-		tmp_directories_label.pack(side=TOP,anchor=NW)
-		tmp_directory_entry = ttk.Entry(tmp_directories_frame,width=10)
-		tmp_directory_entry.insert(END,self.argument_dict['tmp_data'])
-		tmp_directory_entry.pack(side=LEFT,expand=1,fill=X,pady=3)
-		tmp_directory_button = ttk.Button(tmp_directories_frame,text="Browse...",
-			command=lambda type='tmp_data',entry=tmp_directory_entry:self._enter_directory(type,entry))
-		tmp_directory_button.pack(side=LEFT,fill=X)
-
-	def _enter_directory(self,type,entry):
-		direc = None
-		tkMessageBox.showinfo("Consult:","Please Read the README tab before messing with this option")
-		opts = {'title':"Select FASTA file to open...",
-				'initialdir':entry.get()}
-		direc = filedialog.askdirectory(**opts)
-		if direc:
-			entry.delete(0,END)
-			entry.insert(END,fn)
-			if type == 'blast':
-				self.argument_dict['database'] = str(direc)
-			elif type == 'in_data':
-				self.argument_dict['in_data'] = str(direc)
-			elif type == 'aux_data':
-				self.argument_dict['aux_data'] = str(direct)	
-			elif type == 'tmp_data':
-				self.argument_dict['tmp_data'] = str(direct)
-
-	def _set_up_basic_options(self,basic_options_frame):
-		#basic options
-		
-		#imgt or kabat
-		scheme_frame = ttk.LabelFrame(basic_options_frame)
-		scheme_frame.pack(side=TOP,fill=X,padx=5,pady=5)
-		self._set_up_scheme_frame(scheme_frame)
-		
-		#heavy or light chain
-		chain_type_frame = ttk.LabelFrame(basic_options_frame)
-		chain_type_frame.pack(side=TOP,fill=X,padx=5,pady=5)
-		self._set_up_chain_type_frame(chain_type_frame)
-
-		#heavy or light chain
-		species_type_frame = ttk.LabelFrame(basic_options_frame)
-		species_type_frame.pack(side=TOP,fill=X,padx=5,pady=5)
-		self._set_up_species_type_frame(species_type_frame)
-
-		#output_type
-		output_type_frame = ttk.LabelFrame(basic_options_frame)
-		output_type_frame.pack(side=TOP,fill=X,padx=5,pady=5)
-		self._set_up_output_type_frame(output_type_frame)
-
-		#Number of V D and J genes
-		nvdj_type_frame = ttk.LabelFrame(basic_options_frame)
-		nvdj_type_frame.pack(side=TOP,fill=X,padx=5,pady=5)
-		self._set_up_nvdj_type_frame(nvdj_type_frame)
+try:
+    import Bio
+except ImportError("Trouble Installing BioPython:"):
+    print("Can't find BioPython Module in this path. PyIgBlast is dependent on Biopython")
+    sys.exit()
 
 
-		#zipped
-		zip_bool_type_frame = ttk.LabelFrame(basic_options_frame,text="Zip output file")
-		zip_bool_type_frame.pack(side=BOTTOM,anchor=SW,padx=5,pady=5)
-		self.zip_var = Tkinter.IntVar()
-		self.zip_var.set(1)
-		zip_chk = ttk.Checkbutton(zip_bool_type_frame,onvalue=1,offvalue=0, text="Zip output file",
-			variable=self.zip_var, command=lambda: self.zip_var.get())
-		zip_chk.pack(side=TOP, anchor=SW)
+# def run_mp_and_delete(file_dict):
 
-	def _set_up_scheme_frame(self,scheme_frame):
-		self.scheme_var = Tkinter.StringVar()
-		self.scheme_var.set("imgt")
-		scheme_label = ttk.Label(scheme_frame, text="Scheme output:", font=('Arial',16))
-		scheme_label.pack(side=TOP,anchor=NW)
-		radio_button_imgt = ttk.Radiobutton(scheme_frame,text="IMGT",variable=self.scheme_var,value="imgt")
-		radio_button_imgt.pack(side=LEFT,fill=X,expand=1)
-		radio_button_kabat = ttk.Radiobutton(scheme_frame,text="KABAT",variable=self.scheme_var,value="kabat")
-		radio_button_kabat.pack(side=LEFT,fill=X,expand=1)
+# bools
+#     _json_bool = file_dict['json_bool']
+#     _concat_bool = file_dict['concat_bool']
+#     _zip_bool = file_dict['zip_bool']
 
-	def _set_up_chain_type_frame(self,chain_type_frame):
-		self.chain_var = Tkinter.StringVar()
-		self.chain_var.set("heavy")
-		chain_label = ttk.Label(chain_type_frame, text="Chain Type:", font=('Arial',16))
-		chain_label.pack(side=TOP,anchor=NW)
-		chain_button_heavy = ttk.Radiobutton(chain_type_frame,text="HEAVY",variable=self.chain_var,value="heavy")
-		chain_button_heavy.pack(side=LEFT,fill=X,expand=1)
-		chain_button_light = ttk.Radiobutton(chain_type_frame,text="LIGHT",variable=self.chain_var,value="light")
-		chain_button_light.pack(side=LEFT,fill=X,expand=1)
+#     all_fasta = file_dict['all_fasta']
 
-	def _set_up_species_type_frame(self,species_type_frame):
-		self.species_var = Tkinter.StringVar()
-		self.species_var.set("human")
-		species_label = ttk.Label(species_type_frame, text="Species Type:", font=('Arial',16))
-		species_label.pack(side=TOP,anchor=NW)
-		species_button_human = ttk.Radiobutton(species_type_frame,text="HUMAN",
-			variable=self.species_var,value="human")
-		species_button_human.pack(side=LEFT,fill=X,expand=1)
-		species_button_mouse = ttk.Radiobutton(species_type_frame,text="MOUSE",
-			variable=self.species_var,value="mouse")
-		species_button_mouse.pack(side=LEFT,fill=X,expand=1)
-		species_button_rabbit = ttk.Radiobutton(species_type_frame,text="RABBIT",
-			variable=self.species_var,value="rabbit",state="disabled")
-		species_button_rabbit.pack(side=LEFT,fill=X,expand=1)
-		species_button_rat = ttk.Radiobutton(species_type_frame,text="RAT",
-			variable=self.species_var,value="rat",state="disabled")
-		species_button_rat.pack(side=LEFT,fill=X,expand=1)
+# file name outputs
+#     _blast_out = file_dict['split_file'] + ".blast_out"
+#     _json_out = file_dict['split_file'] + ".json"
+#     _zip_out = file_dict['split_file'] + ".json.gz"
 
-	def _set_up_output_type_frame(self,output_type_frame):
-		self.output_type_var = Tkinter.StringVar()
-		self.output_type_var.set("json")
-		scheme_label = ttk.Label(output_type_frame, text="Output format:", font=('Arial',16))
-		scheme_label.pack(side=TOP,anchor=NW)
-		radio_button_json_output = ttk.Radiobutton(output_type_frame,text="JSON",variable=self.output_type_var,value="json")
-		radio_button_json_output.pack(side=LEFT,fill=X,expand=1)
-		radio_button_csv_output = ttk.Radiobutton(output_type_frame,text="CSV",variable=self.output_type_var,value="csv")
-		radio_button_csv_output.pack(side=LEFT,fill=X,expand=1)
-		radio_button_raw_blast_output = ttk.Radiobutton(output_type_frame,text="BLAST",variable=self.output_type_var,value="blast_out")
-		radio_button_raw_blast_output.pack(side=LEFT,fill=X,expand=1)
+#     _file = file_dict['split_file']
 
-	def _set_up_nvdj_type_frame(self,nvdj_type_frame):
-		self.v_gene_numb = ""
-		numbs = [i for i in xrange(1,4)]
-		v_gene_label = ttk.LabelFrame(nvdj_type_frame,text="V-Gene Matches")
-		v_gene_combo = ttk.Combobox(v_gene_label,values=numbs,textvariable=self.v_gene_numb)
-		v_gene_combo.current(0)
-		v_gene_label.pack(side=LEFT,expand=1,pady=5,padx=20,fill=X)
-		v_gene_combo.pack(side=TOP,expand=1,pady=5,padx=10,fill=X)
+# set the filename in the instance:
+#     arg_dict['-query'] = _file
+#     arg_dict['-out'] = _blast_out
 
-		self.d_gene_numb = ""
-		numbs = [i for i in xrange(1,4)]
-		d_gene_label = ttk.LabelFrame(nvdj_type_frame,text="D-Gene Matches")
-		d_gene_combo = ttk.Combobox(d_gene_label,values=numbs,textvariable=self.d_gene_numb)
-		d_gene_combo.current(0)
-		d_gene_label.pack(side=LEFT,expand=1,pady=5,padx=20,fill=X)
-		d_gene_combo.pack(side=TOP,expand=1,pady=5)
+# set up the command line
+#     _cline = arg_parser_instance.return_command_line_from_dict(arg_dict)
 
-		self.j_gene_numb = ""
-		numbs = [i for i in xrange(1,4)]
-		j_gene_label = ttk.LabelFrame(nvdj_type_frame,text="J-Gene Matches")
-		j_gene_combo = ttk.Combobox(j_gene_label,values=numbs,textvariable=self.j_gene_numb)
-		j_gene_combo.current(0)
-		j_gene_label.pack(side=LEFT,expand=1,pady=5,padx=20,fill=X)
-		j_gene_combo.pack(side=TOP,expand=1,pady=5,padx=10,fill=X)
+#     if file_dict['translation_bool']:
+#         _cline.append("-show_translation")
 
-	def _create_format_output(self,main_notebook_frame):
-		#secon tab
-		#output_format_tab_frame = ttk.Frame(main_notebook_frame,name='output_format')
-		#output_format_tab_frame_inner = ttk.LabelFrame(output_format_tab_frame)
-		output_frame = ttk.LabelFrame(main_notebook_frame)
-		output_frame.pack(side=TOP,expand=1,fill=BOTH,padx=10,pady=10)
-		#output_format_tab_frame_inner.pack(side=TOP,anchor=NW,expand=1,fill=BOTH)
-		self._make_output_file(output_frame)		
-		self._fill_output_format_tab(output_frame)
-		main_notebook_frame.add(output_frame,text="Output Options",underline=0,padding=2)
-	
-	def _make_output_file(self,output_frame):
-		output_file_frame = ttk.LabelFrame(output_frame)
-		output_file_frame.pack(side=TOP,fill=X,padx=10,pady=10)
-		output_file_label = ttk.Label(output_file_frame,text='Enter Output File Name',font=('Arial',26))
-		output_file_label.pack(side=TOP,anchor=NW,padx=5,pady=5)
-		
-		output_file_entry = ttk.Entry(output_file_frame,width=10)
-		output_file_entry.delete(0,END)
-		output_file_entry.insert(END,self.argument_dict['output_file']+"."+str(self.output_type_var.get()))
-		output_file_entry_button = ttk.Button(output_file_frame,text="Browse...",
-			command=lambda entry=output_file_entry:self._enter_output(entry))
-		output_file_entry.pack(side=LEFT,padx=3,expand=1,fill=X,pady=3)
-		output_file_entry_button.pack(side=LEFT,fill=X)
-	
-	def _fill_output_format_tab(self,output_frame):
-		#fill output_format_tab from another dictionary
-		output_fields_frame = ttk.LabelFrame(output_frame)
-		output_fields_top_label = ttk.Label(output_fields_frame,text="Select Output Fields",font=('Arial',20))
-		output_fields_top_label.pack(side=TOP,padx=3,pady=3,anchor=NW)
-		output_fields_frame.pack(side=TOP,fill=BOTH,expand=1,padx=10,pady=10)
+# and call igblast
+#     sp.call(_cline)
 
-		#general options
-		general_frame = ttk.LabelFrame(output_fields_frame)
-		general_label = ttk.Label(general_frame,text="General fields:",font=('Arial',20))
-		general_label.pack(side=TOP,anchor=NW,padx=5,pady=5)
-		_general_options = all_checkboxes['general']
-		general_class = Checkbar(parent=general_frame,picks=[(i['formal'],i['default']) for i in _general_options])
-		general_frame.pack(side=TOP,expand=1,fill=X,padx=10)
+# and now to zip up that instances file based on options
+# Case 1: We want json and we want it zipped
+#     if _json_bool and _zip_bool:
+#         output_parser.igblast_output(_blast_out, _json_out, all_fasta, gz=_zip_bool)
+# Remove old garbage Case
+#         if _concat_bool:
+#             os.remove(_blast_out)
+#             os.remove(_file)
 
-		#nucleotide
-		nucleotide_frame = ttk.LabelFrame(output_fields_frame)
-		nucleotide_label = ttk.Label(nucleotide_frame,font=('Arial',20),
-			text="Nucleotide Specific:")
-		nucleotide_label.pack(side=TOP,anchor=NW,padx=5,pady=5)
-		_nucleotide_options = all_checkboxes['nucleotide']
-		nucleotide_class = Checkbar(parent=nucleotide_frame,picks=[(i['formal'],i['default']) for i in _nucleotide_options])
-		nucleotide_frame.pack(side=TOP,fill=X,expand=1,padx=10)
+#     elif _json_bool and _concat_bool:
+#         output_parser.igblast_output(_blast_out, _json_out, all_fasta, gz=_zip_bool)
+#         os.remove(_file)
+#         os.remove(_blast_out)
 
-		#Translation Specific
-		amino_frame = ttk.LabelFrame(output_fields_frame)
-		amino_label = ttk.Label(amino_frame,font=('Arial',20),
-			text="Translation Specific:")
-		amino_label.pack(side=TOP,anchor=NW,padx=5,pady=5)
-		_amino_options = all_checkboxes['amino']
-		amino_class = Checkbar(parent=amino_frame,picks=[(i['formal'],i['default']) for i in _amino_options])
-		amino_frame.pack(side=TOP,expand=1,fill=X,padx=10)
+# Case 3: We want json, but don't want it zipped, and we want anciallary files:
+#     elif _json_bool and not _concat_bool:
+#         output_parser.igblast_output(_blast_out, _json_out, all_fasta, gz=_zip_bool)
 
-	def _enter_output(self,entry):
-		fo = None
-		opts = {'title':"Select FASTA file to open...",
-				'initialfile':entry.get(),
-				'initialdir':self._user_directory}
-		fo = filedialog.asksaveasfilename(**opts)
-		if fo:
-			entry.delete(0,END)
-			entry.insert(END,fn)
-			self.argument_dict['output_file'] = str(fn)
-			
-	def _create_readme(self,notebook_frame):
-		readme_frame = ttk.Frame(notebook_frame,name="r_frame")
-		#scroled_widget = ttk.ScrolledWindow(readme_frame,scrollbar='auto')
-		#window = scroled.window
-		vertical_scroll_frame = vsf(readme_frame)
-		vertical_scroll_frame.pack(side=TOP,expand=1,fill=BOTH,anchor=NW)
-		vsf_label = ttk.Label(vertical_scroll_frame.interior,text=open('README_gui.txt').readlines(),anchor=N)
-		#scroled_widget.pack(side=TOP, fill=BOTH, expand=1)
-		vsf_label.pack(side=TOP,fill=BOTH,expand=1,anchor=NW)
-		notebook_frame.add(readme_frame,text="Readme",underline=0,padding=2)
+# Case 4: We want everything zipped but not turned into json
+#     elif _zip_bool and not _json_bool:
+#         f_in = open(_blast_out, 'rb')
+#         f_out = gzip.open(_zip_out, 'wb')
+#         f_out.writelines(f_in)
+#         f_out.close()
+#         f_in.close()
+# get rid of garbage
+#         if _concat_bool:
+#             os.remove(_file)
+#             os.remove(_blast_out)
 
-	def _update(self):
-		import ttk_hook
-		ttk_hook.main_refresh(self.root,ttk_hook)
+# Case 5: Only want blast output, but remove split fasta
+#     elif not _zip_bool and not _json_bool and _concat_bool:
+#         os.remove(_file)
 
-def main_refresh(root,ttk_hook):
-	reload(ttk_hook)
-	root.destroy()
-	ttk_hook.main()
 
-def main():
-	root = Tkinter.Tk()
-	pyigblast_class = pyigblast_gui(root)
-	root.mainloop()
+# def concat(_manager_dict):
 
-class Checkbar():
-	def __init__(self, parent=None, picks=[], side=LEFT, anchor=W):
-		self.vars = {}
-		for pick in picks:
-			var = Tkinter.IntVar()
-			var.set(int(pick[1]))
-			chk = ttk.Checkbutton(parent,onvalue=1,offvalue=0, text=pick[0],variable=var,command=lambda:self.state())
-			chk.pack(side=side, anchor=anchor, expand=YES)
-			self.vars[pick[0]] = var
-	def state(self):
-		states_dict = {}
-		for var in self.vars:
-			states_dict[var] = self.vars[var].get()
-		print states_dict
-		return states_dict
+#     json_file = _manager_dict['json_prefix']
+#     out_file = _manager_dict['output_prefix']
+#     zip_bool = _manager_dict['zip_bool']
+#     json_bool = _manager_dict['json_bool']
+#     file_name = _manager_dict['file'].split('.fasta')[0]
+
+#     if zip_bool and json_bool:
+#         zipped_and_json = glob.glob(file_name + "*.json.gz")
+#         with gzip.open(json_file + ".json.gz", 'wb') as gf:
+#             for file in zipped_and_json:
+#                 f_in = gzip.open(file, 'rb')
+#                 gf.writelines(f_in)
+#                 f_in.close()
+#                 os.remove(file)
+
+#     elif json_bool and not zip_bool:
+#         just_json = glob.glob(file_name + "*.json")
+#         with open(json_file + ".json", 'w') as gf:
+#             for file in just_json:
+#                 f_in = open(file, 'r')
+#                 gf.writelines(f_in)
+#                 f_in.close()
+#                 os.remove(file)
+
+#     elif zip_bool and not json_bool:
+#         zipped_only = glob.glob(file_name + "*.blast_out.gz")
+#         with gzip.open(out_file + ".blast_out.gz", 'wb') as gf:
+#             for file in zipped_only:
+#                 f_in = gzip.open(file, 'rb')
+#                 gf.writelines(f_in)
+#                 f_in.close()
+#                 os.remove(file)
+
+#     elif not zip_bool and not json_bool:
+#         blast_out = glob.glob(file_name + "*.blast_out")
+#         with open(out_file + ".blast_out", 'w') as gf:
+#             for file in blast_out:
+#                 f_in = open(file, 'r')
+#                 gf.writelines(f_in)
+#                 f_in.close()
+#                 os.remove(file)
+
+
+def execute(blast_options, outputoptions):
+    '''A function that takes in and executes options from the gui widgets'''
+    # variables
+    processors = outputoptions['num_procs']
+    pool = mp.Pool(processes=processors)
+    file_name = outputoptions['pre_split_up_input']
+    path = outputoptions['tmp_data_directory']
+
+    # split fasta file up
+    all_fasta = split_fasta(processors, path, file_name, suffix=".tmp_fasta")
+    split_up_starting_files = glob.glob(path + file_name.split('.fasta')[0] + "*" + ".tmp_fasta")
+
+    # output options
+    # zip_bool = arg_parser_instance.return_zip_bool()
+    # json_bool = arg_parser_instance.return_json_bool()
+    # json_prefix = arg_parser_instance.return_json_prefix()
+
+    # manager_dict
+    # _manager_list = []
+    # _manager_dict = {}
+    # for _file in split_up_starting_files:
+    #     _manager_dict['file'] = file_name
+    #     _manager_dict['split_file'] = _file
+    #     _manager_dict['zip_bool'] = zip_bool
+    #     _manager_dict['concat_bool'] = concat_bool
+    #     _manager_dict['json_prefix'] = json_prefix
+    #     _manager_dict['output_prefix'] = output_prefix
+    #     _manager_dict['translation_bool'] = translation_bool
+    #     _manager_dict['json_bool'] = json_bool
+    #     _manager_dict['all_fasta'] = all_fasta
+    #     _manager_list.append(_manager_dict)
+    #     _manager_dict = {}
+
+    # run_protocol
+    # for i in _manager_list:
+    # run_mp_and_delete(i)
+    # pool.map(run_mp_and_delete, _manager_list)
+
+    # if concat_bool:
+    #     concat(_manager_list[0])
 
 if __name__ == '__main__':
-	main()
+    execute()
