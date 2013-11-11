@@ -6,9 +6,14 @@ import sys
 
 def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
     '''Split the file name by the number of processors you specify
+     arguments -
+     num_procs - The amount of processors you are running
+     path - the output path you want  the files dumped in
+     suffix - gives the fasta files an identifiable suffix to let you know they are  split
+     '''
 
-    arguments (num_procs - The amount of processors you are running, lets the function know how much to split up the file into with one file per processor)'''
-
+    # return all fasta so we can get the raw sequence from it which blast does not provide.
+    #@todo, find a way to get the memory down in these functions
     all_fasta = {}
     if not os.path.exists(path):
         os.makedirs(path)
