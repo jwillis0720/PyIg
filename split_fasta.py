@@ -1,6 +1,7 @@
 import Bio.SeqIO
 import os
 import os.path
+import sys
 
 
 def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
