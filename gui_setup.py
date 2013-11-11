@@ -50,12 +50,12 @@ class pyigblast_gui():
             main_menu, text="Refresh", command=lambda self=self: self._update())
         run_button = ttk.Button(
             main_menu, text="Run", command=lambda self=self: self.execute())
-        author_label.pack(side=LEFT, padx=10, pady=3)
-        run_button.pack(side=LEFT, padx=10, expand=1, fill=X, pady=3)
-        refresh_button.pack(side=LEFT, padx=10, expand=YES, pady=3)
-        exit_button.pack(side=LEFT, expand=YES, pady=3)
-        university_label.pack(side=RIGHT, padx=10, pady=3)
-        main_menu.pack(side=BOTTOM, fill=X)
+        author_label.pack(side=LEFT, fill=X, padx=10, pady=10)
+        run_button.pack(side=LEFT, expand=1, fill=X, padx=10, pady=10)
+        refresh_button.pack(side=LEFT, expand=1, fill=X, padx=10, pady=10)
+        exit_button.pack(side=LEFT, expand=1, fill=X, padx=10, pady=10)
+        university_label.pack(side=RIGHT, fill=X, padx=10, pady=10)
+        main_menu.pack(side=BOTTOM, fill=X, pady=10)
 
     def TabNotebook(self):
         main_notebook_frame = ttk.Notebook(self.root, name='main_notebook')
@@ -677,8 +677,8 @@ class pyigblast_gui():
         notebook_frame.add(readme_frame, text="Readme", underline=0, padding=2)
 
     def _update(self):
-        import gui_execute
-        gui_execute.main_refresh(self.root, gui_execute)
+        import gui_setup
+        gui_setup.main_refresh(self.root, gui_setup)
 
     def execute(self):
         # okay here we go
@@ -720,10 +720,10 @@ class pyigblast_gui():
         execute(blast_args_dict, output_options_dict)
 
 
-def main_refresh(root, gui_execute):
-    reload(gui_execute)
+def main_refresh(root, gui_setup):
+    reload(gui_setup)
     root.destroy()
-    gui_execute.main()
+    gui_setup.main()
 
 
 def main():
