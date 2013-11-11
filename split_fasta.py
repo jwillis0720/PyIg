@@ -51,3 +51,6 @@ def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
         with open(path + file_prefix + str(file_counter) + suffix, 'w') as f:
             f.write("\n".join(joiner))
     return all_fasta
+
+if __name__ == '__main__':
+    split_fasta(sys.argv[1], os.path.dirname(os.path.abspath(sys.argv[2])), sys.argv[2])
