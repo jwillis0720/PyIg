@@ -23,7 +23,7 @@ def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
     file_prefix = os.path.basename(file_name).split('.fasta')[0]
     print "Counting entries in fasta files..."
     for i, j in enumerate in Bio.SeqIO.parse(file_name, 'fasta'):
-        if i % 10000:
+        if i % 10000 == 0:
             print "coutned {0} entries".format(i)
         length_parent_file += i
         parent_file.append(j)
