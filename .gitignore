@@ -1,6 +1,6 @@
-database/
-internal_data/
-optional_file/
+#database/
+#internal_data/
+#optional_file/
 executables/
 mongo_test/
 *.pyc
