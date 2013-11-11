@@ -17,13 +17,12 @@ def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
     all_fasta = {}
     if not os.path.exists(path):
         os.makedirs(path)
-
     length_parent_file = 0
     parent_file = []
     file_prefix = os.path.basename(file_name).split('.fasta')[0]
     print "Counting entries in fasta files..."
     for i, j in enumerate(Bio.SeqIO.parse(file_name, 'fasta')):
-	if i % 10000 == 0 and i !=0:
+        if i % 10000 == 0 and i != 0:
             print "coutned {0} entries".format(i)
         parent_file.append(j)
     print "{0} in fasta file".format(len(parent_file))
@@ -45,11 +44,11 @@ def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
         # to a file, and then clear
         if num > files_per_tmp:
             joiner.append("")
-            file_name = path+"/"+file_prefix + str(file_counter) + suffix
-	    with open(file_name, 'w') as f:
+            file_name = path + "/" + file_prefix + "_" + str(file_counter) + suffix
+            with open(file_name, 'w') as f:
                 f.write("\n".join(joiner))
-            
-	    # change file name,clear record holder, and change the file
+
+            # change file name,clear record holder, and change the file
             # count
             joiner = []
             file_counter += 1
@@ -60,10 +59,10 @@ def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
         # for left over fasta entries, very important or else they will
         # just hang out in limbo
         joiner.append("")
-	file_name = path+"/"+file_prefix + str(file_counter) + suffix
-	with open(file_name, 'w') as f:
+        file_name = path + "/" + file_prefix + "_" + str(file_counter) + suffix
+        with open(file_name, 'w') as f:
             f.write("\n".join(joiner))
     return all_fasta
 
 if __name__ == '__main__':
-    split_fasta(sys.argv[1], os.path.dirname(os.path.abspath(sys.argv[2])), sys.argv[2])
+    blash = split_fasta(sys.argv[1], os.path.dirname(os.path.abspath(sys.argv[2])), sys.argv[2])

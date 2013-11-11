@@ -91,7 +91,9 @@ def concat(_manager_dict):
     file_name = _manager_dict['file'].split('.fasta')[0]
 
     if zip_bool and json_bool:
+        print file_name
         zipped_and_json = glob.glob(file_name + "*.json.gz")
+        print zipped_and_json
         with gzip.open(json_file + ".json.gz", 'wb') as gf:
             for file in zipped_and_json:
                 f_in = gzip.open(file, 'rb')
@@ -133,13 +135,12 @@ def execute():
     processors = arg_parser_instance.return_number_procs() - 1
     pool = mp.Pool(processes=processors)
     file_name = arg_dict['-query']
-    path = os.path.dirname(file_name)
-    base_name = os.path.basename(file_name).split('.')[0]
+    path = os.path.dirname(os.path.abspath(file_name)) + "/"
 
     # split fasta file up
-    all_fasta = split_fasta(processors, file_name, suffix=".tmp_fasta")
-    split_up_starting_files = glob.glob(file_name.split('.fasta')[0] + "*" + ".tmp_fasta")
-
+    all_fasta = split_fasta(processors, path, file_name, suffix=".tmp_fasta")
+    glob_pattern = path + os.path.basename(file_name).split('.fasta')[0] + "*" + ".tmp_fasta"
+    split_up_starting_files = glob.glob(glob_pattern)
     # translation?
     translation_bool = arg_parser_instance.return_translation_bool()
 
