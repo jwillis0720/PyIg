@@ -22,14 +22,13 @@ def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
     parent_file = []
     file_prefix = os.path.basename(file_name).split('.fasta')[0]
     print "Counting entries in fasta files..."
-    for i, j in enumerate in Bio.SeqIO.parse(file_name, 'fasta'):
-        if i % 10000 == 0:
+    for i, j in enumerate(Bio.SeqIO.parse(file_name, 'fasta')):
+	if i % 10000 == 0 and i !=0:
             print "coutned {0} entries".format(i)
-        length_parent_file += i
         parent_file.append(j)
-    print "{0} in fasta file".format(length_parent_file)
+    print "{0} in fasta file".format(len(parent_file))
 
-    files_per_tmp = float(length_parent_file) / float(num_procs)
+    files_per_tmp = float(len(parent_file)) / float(num_procs)
     print "{0} processors, blasting {1} entries per processor".format(num_procs, files_per_tmp)
 
     # carries all of our records to be written
@@ -46,9 +45,11 @@ def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
         # to a file, and then clear
         if num > files_per_tmp:
             joiner.append("")
-            with open(path + file_prefix + str(file_counter) + suffix, 'w') as f:
+            file_name = path+"/"+file_prefix + str(file_counter) + suffix
+	    with open(file_name, 'w') as f:
                 f.write("\n".join(joiner))
-            # change file name,clear record holder, and change the file
+            
+	    # change file name,clear record holder, and change the file
             # count
             joiner = []
             file_counter += 1
@@ -59,7 +60,8 @@ def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
         # for left over fasta entries, very important or else they will
         # just hang out in limbo
         joiner.append("")
-        with open(path + file_prefix + str(file_counter) + suffix, 'w') as f:
+	file_name = path+"/"+file_prefix + str(file_counter) + suffix
+	with open(file_name, 'w') as f:
             f.write("\n".join(joiner))
     return all_fasta
 
