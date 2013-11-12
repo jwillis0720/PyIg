@@ -15,18 +15,25 @@ class igblast_output():
 
     '''Pass the whole output to this class and it will deal with it
     Args:
-    file - string for the filename to parse
+    blast file - from output format 7 of blastign
+    general_options - The options you want to output for general options passed as a dictionary
+    nuc_options - The nucleotide options you want passed as a dictionary
+    aa_options - The
     output - string for the filename to the output
     '''
 
-    def __init__(self, blast_file, fasta_files, general_options, nuc_options, aa_options, zip_bool=False):
+    def __init__(self, blast_file, general_options,
+                 nuc_options, aa_options, zip_bool=False):
 
+        # The blast file that was output, format it to a handle
         self.blast_file_handle = open(blast_file)
-        self.fasta_files = fasta_files
+        # the file to use that will tell us where the CDR3 ends, pass this to the CDR analyzer
         self.end_dict = {}
+        # these are dictionaries with the options we want to output. See output_tabs checkbozes
         self.general_options = general_options
-        self.nuc_options
-        self.aa_options
+        self.nuc_options = nuc_options
+        self.aa_options = aa_options
+        # bool to tell us if we want the file zipped
         self.zip = zip_bool
         try:
             for line in open('junctional_data/human_germ_properties.txt').readlines():
@@ -36,30 +43,11 @@ class igblast_output():
             print "Cant open human_germ_properties.txt, \
             need this file to process CDR3 regions"
             sys.exit()
-        # if gz:
-        #     z = gzip.open(file + ".gz", 'wb')
-        # else:
-        #     z = open(file, 'w')
-        # with z as f:
-        #     for line in open(file):
-        #         if "IGBLASTN" in line:
-        #             breaker = False
-        #             if query_holder:
-        #                 f.write(
-        #                     single_blast_entry(query_holder, self.fasta_files, _end_dict).return_json_document())
-        #                 f.write("\n")
-        #             query_holder = []
-        #             continue
-        #         if not breaker:
-        #             query_holder.append(line)
-        #     f.write(
-        #         single_blast_entry(query_holder, self.fasta_files, _end_dict).return_json_document())
-        #     f.write("\n")
 
-    def parse_blast_file_to_json(output_file):
+    def parse_blast_file_to_type(self, output_file, o_type="json"):
         _breaker = True
         focus_lines = []
-        if self.gzip:
+        if self.zip:
             json_output_file_handle = gzip.open(output_file + ".gz", 'wb')
         else:
             json_output_file_handle = open(output_file, 'w')
@@ -67,38 +55,44 @@ class igblast_output():
             for line in self.blast_file_handle:
                 if "IGBLASTN" in line:
                     _breaker = False
-                    if query_holder:
-                        sbe = single_blast_entry(focus_lines)
-                        sbe.analyze_blast(self.end_dict)
-                        sbe.analyze_blast(self.fasta_files)
-                        blast_dictionary = sbe.return_blast_dictionary()  # return single blast entry
-                        json_document_trimmed = trim_json(blast_dictionary,
-                                                          self.general_options, self.nuc_option, self.aa_option)  # trim the json according to input
-                        openfile.write(json_document_trimmed + "\n")  # write it out
-                    if not breaker:
+                    if focus_lines:
+                        sbe = single_blast_entry(focus_lines, self.end_dict)
+                        blast_dictionary = sbe.generate_blast_dict()  # return single blast entry
+                        if o_type == "json":
+                            json_document_trimmed = trim_json(blast_dictionary,
+                                                              self.general_options, self.nuc_options, self.aa_options)  # trim the json according to input
+                            openfile.write(json_document_trimmed + "\n")  # write it out
+                        if o_type == "csv":
+                            csv_document_trimmed = trim_csv(blast_dictionary,
+                                                            self.general_options, self.nuc_options, self.aa_options)  # trim the json according to input
+                            openfile.write(csv_document_trimmed + "\n")  # write it out
+                    if not _breaker:
                         focus_lines.append(line)
             # and do it for the end too
-            sbe = single_blast_entry(focus_lines)
-            sbe.analyze_blast(self.end_dict)
-            sbe.analyze_blast(self.fasta_files)
-            blast_dictionary = sbe.return_blast_dictionary()  # return single blast entry
-            json_document_trimmed = trim_json(blast_dictionary,
-                                              self.general_options, self.nuc_option, self.aa_option)  # trim the json according to input
-            openfile.write(json_document_trimmed + "\n")  # write it out
+            sbe = single_blast_entry(focus_lines, self.end_dict)
+            blast_dictionary = sbe.generate_blast_dict()  # return single blast entry
+            if o_type == "json":
+                json_document_trimmed = trim_json(blast_dictionary,
+                                                  self.general_options, self.nuc_options, self.aa_option)  # trim the json according to input
+                openfile.write(json_document_trimmed + "\n")  # write it out
+            elif o_type == "csv":
+                csv_document_trimmed = trim_csv(blast_dictionary,
+                                                self.general_options, self.nuc_options, self.aa_option)  # trim the json according to input
+                openfile.write(csv_document_trimmed + "\n")  # write it out
 
 
 class single_blast_entry():
 
     '''The helper class to parse an individual blast result'''
 
-    def __init__(self, query, fasta_files, end_translation_dictionaries):
+    def __init__(self, single_entry, end_cdr3_dicts):
+        # some breaker options that will tell us when to go on to the next section
         _rearrangment_breaker = False
         _junction_breaker = False
         _fields_breaker = False
 
-        self.fasta_files = fasta_files
         # Where to end translation for CDR3 loops specified in an output file
-        self.end_translation_dictionaries = end_translation_dictionaries
+        self.end_cdr3_dicts = end_cdr3_dicts
 
         # initalize the fields, some can be empty on crappy reads
         # basic
@@ -106,13 +100,16 @@ class single_blast_entry():
         self.full_query_seq = ""
         self.domain_classification = ""
 
-        # title fields
+        # title fields, these are the four sections it divides up to.
+        # The fields are essentially the header to each section.
+        # We could hard code this, but considering that it will be unique to each entry
+        # We should parse it for each entry
         self.rearrangment_summary_titles = ""
         self.alignment_summary_titles = ""
         self.junction_detail_titles = ""
         self.hit_fields = ""
 
-        # summaries
+        # Here is the meat.
         self.rearrangment_summary = ""
         self.junction_detail = ""
         self.cdr1_alignment_summary = ""
@@ -128,35 +125,56 @@ class single_blast_entry():
         self.hits_d = []  # to be parsed in another function
         self.hits_j = []  # to be parsed in another function
 
-        # will hold everything
-        self.blast_dict = {}
-        for line in query:
+        for line in single_entry:
             if "Query" in line:
+                # this will be the id field which blast calls the quey
                 self.query = line.split(":")[1].strip()
+
             if "Domain classification requested:" in line:
+                # imgt or kabat
                 self.domain_classification = line.split(":")[1].strip()
+
             if "rearrangement summary" in line:
+                '''Okay we found rearrangement summary fields, that means
+                the next line will be the actually rearrangment summary.
+                So we turn the "breaker on" The rearrangment is just basic info
+                returned like the top matches and if was productive etc'''
                 self.rearrangment_summary_titles = line.strip().split(
                     "(")[2].split(")")[0].split(",")
                 _rearrangment_breaker = True
                 continue
+
             if _rearrangment_breaker:
+                # the meat of the rearranment, right after the fields
                 self.rearrangment_summary = line.strip().split("\t")
                 _rearrangment_breaker = False
+
             if "junction details" in line:
+                '''We found the junction detail line, get the fields,
+                and the next line will be the actual junction details
+                The junction details are the nucleotides of the Vend, VD,D,Jstart'''
                 self.junction_detail_titles = line.strip().split(
                     "(")[2].split(")")[0].split(",")
                 _junction_breaker = True
                 continue
+
             if _junction_breaker:
+                '''The meat of the junction details, right after the fields'''
                 self.junction_detail = line.strip().split("\t")
                 _junction_breaker = False
+
             if "Alignment summary" in line:
+                '''Alignment summaries include the regions for CDR and framework,
+                probably the most useful as it contains the areas in our sequence
+                which match each regions CDR1,2,3 FW1,2,3 and the total (which is just the v portion)'''
                 self.alignment_summary_titles = line.strip().split(
                     "(")[1].split(")")[0].split(",")
-                self.alignment_summary_titles = self.alignment_summary_titles
-                self.alignment_summary_titles = [
-                    x.strip() for x in self.alignment_summary_titles]
+                # strip off white marks in the fields
+                self.alignment_summary_titles = [x.strip() for x in self.alignment_summary_titles]
+            '''Ok, in some blast versions, the line starts with just the field we are looking for,
+            In other versions it has a '-', so I will just check for both'''
+
+            # check for hypen
             try:
                 if line.split()[0].split('-')[0] == "FWR1":
                     self.fr1_alignment_summary = line.strip().split()[1:]
@@ -174,6 +192,8 @@ class single_blast_entry():
                     self.total_alignment_summary = line.strip().split()[1:]
             except IndexError:
                 pass
+
+            # else the line will just start with the region of interest
             if line.startswith("FWR1"):
                 self.fr1_alignment_summary = line.strip().split()[1:]
             if line.startswith("CDR1"):
@@ -188,54 +208,65 @@ class single_blast_entry():
                 self.cdr3_alignment_summary = line.strip().split('\t')[1:]
             if line.startswith("Total"):
                 self.total_alignment_summary = line.strip().split()[1:]
+
+            '''Last but not least, we can pass all the VDJ hits along with all the
+            info about them that blast gives, the VDJ hits can give a ton of information
+            about the junction, the identity to each gene, the frame, gaps, evalue, etc,
+            these are ranked and put into a list'''
             if "# Fields:" in line:
                 self.hit_fields = line.strip().split(":")[1].split(",")
                 _fields_breaker = True
             if _fields_breaker:
+                '''vdj hits have to be a list, since there can be more than one depending
+                what the user asked for'''
                 if line.startswith("V"):
                     self.hits_v.append(line)
                 elif line.startswith("D"):
                     self.hits_d.append(line)
                 elif line.startswith("J"):
                     self.hits_j.append(line)
-        self.full_query_seq = self.fasta_files[self.query]
-        self.process()
+        '''now that I got all the blast output parsed,
+        lets put it into the requested format, before we do that however lets make
+        one dictionary'''
 
-    def process(self):
-        self.blast_dict[
-            self.query] = {"domain_classification": self.domain_classification,
-                           "rearrangement": self.parse_rearranment(),
-                           "junction": self.parse_junction(),
-                           "fr1_align": self.parse_fr1_align(),
-                           "fr2_align": self.parse_fr2_align(),
-                           "fr3_align": self.parse_fr3_align(),
-                           "cdr1_align": self.parse_cdr1_align(),
-                           "cdr2_align": self.parse_cdr2_align(),
-                           "cdr3_align": self.parse_cdr3_align(),
-                           "total_align": self.parse_total_align(),
-                           "v_hits": self.parse_v_hits(),
-                           "d_hits": self.parse_d_hits(),
-                           "j_hits": self.parse_j_hits()
-                           }
-        self.translate_junction()
+    def generate_blast_dict(self):
+        '''THE blast dict is a dictionary of dictionaries containing all of
+        our information about the hit, this will be filled by several methods,
+        each of which return their own dictionaries'''
+        blast_dict = {}
+        blast_dict[self.query] = {
+            "domain_classification": self.domain_classification,
+            "rearrangement": self.parse_rearranment(),
+            "junction": self.parse_junction(),
+            "fr1_align": self.parse_fr1_align(),
+            "fr2_align": self.parse_fr2_align(),
+            "fr3_align": self.parse_fr3_align(),
+            "cdr1_align": self.parse_cdr1_align(),
+            "cdr2_align": self.parse_cdr2_align(),
+            "cdr3_align": self.parse_cdr3_align(),
+            "total_align": self.parse_total_align(),
+            "v_hits": self.parse_v_hits(),
+            "d_hits": self.parse_d_hits(),
+            "j_hits": self.parse_j_hits()
+        }
 
-    def translate_junction(self):
-        self.cdr3_partial = ""
-        if self.junction_together:
-            coding_region = Seq(self.junction_together, IUPAC.ambiguous_dna)
-            self.cdr3_partial = str(coding_region.translate())
+        return blast_dict
 
     def parse_rearranment(self):
+        '''parse the rearrangement summary (just the basic statistics)
+        portion of the blast hit'''
         _return_dict = {}
         for title, value in zip(self.rearrangment_summary_titles, self.rearrangment_summary):
             if len(value.split(',')) > 1:
-                # cast multiple entries for tuple, makes them easier for json
+                '''sometimes there are multiple values for the rearranment values'''
                 _return_dict[title.strip()] = tuple(value.split(','))
             else:
                 _return_dict[title.strip()] = value
         return _return_dict
 
     def parse_junction(self):
+        '''Return a dictionary of the junction that is the
+        nuceotide sequence of teh CDR3 junctions'''
         _return_dict = {}
         self.junction_together = ""
         for title, value in zip(self.junction_detail_titles, self.junction_detail):
@@ -250,6 +281,7 @@ class single_blast_entry():
                     self.junction_together += value
         return _return_dict
 
+    # Now lets start parsing the alignment summaries into each sections FW1,2,3,4,CDR1,2,3
     def parse_fr1_align(self):
         _return_dict = {}
         for title, value in zip(self.alignment_summary_titles, self.fr1_alignment_summary):
@@ -323,6 +355,7 @@ class single_blast_entry():
         return _return_dict
 
     def parse_total_align(self):
+        '''The total alignment is just the Whole region which is pretty nice'''
         _return_dict = {}
         for title, value in zip(self.alignment_summary_titles, self.total_alignment_summary):
             try:
@@ -339,14 +372,16 @@ class single_blast_entry():
         rank = 1
         for entry in self.hits_v:
             _entry_dict = {}
-            #_entry_dict['rank'] = int(rank)
             for value, title in zip(entry.split()[1:], self.hit_fields):
+                # sometimes there is nothing there so it can't cast to a float
                 try:
                     _entry_dict[title.strip().replace(' ', '_')] = float(value)
                 except:
                     _entry_dict[title.strip().replace(' ', '_')] = value
             _return_dict['rank_' + str(rank)] = _entry_dict
             rank += 1
+        # return a v_hit dictionary that is unsorted, but we kept the rank
+        # by how it appeared in the balst out
         return _return_dict
 
     def parse_d_hits(self):
@@ -379,21 +414,25 @@ class single_blast_entry():
             rank += 1
         return _return_dict
 
-    def return_json_document(self):
+
+def trim_json(blast_dictionary, general_options, nuc_options, aa_options):
         '''Our Main Function that will return a json type document'''
         # to be converted to a json document
-        self.json_dictionary = {}
 
         # hits arrays if we have more than one hit we kept in the blast query
-        self.v_hits_array = []
-        self.j_hits_array = []
-        self.d_hits_array = []
+        v_hits_array = []
+        j_hits_array = []
+        d_hits_array = []
 
-        self.json_dictionary = {
-            "_id": self.query,
-            "format": self.blast_dict[self.query]['domain_classification']
+        query = blast_dictionary.keys()[0]
+
+        json_dictionary = {
+            "_id": query,
+            "format": blast_dictionary[query]['domain_classification']
         }
 
+        print json_dictionary
+        sys.exit()
         # Most important should be considered individually
         try:
             self.json_dictionary["top_v"] = self.blast_dict[
@@ -538,10 +577,12 @@ class single_blast_entry():
         # and finally return the object
         return self.json
 
+
+def trim_csv(blast_dictionary, general_options, nuc_options, aa_options):
+    pass
+
 if __name__ == '__main__':
     to_convert = sys.argv[1]
-    raw_fasta = sys.argv[2]
-    original = {}
-    for s in SeqIO.parse(raw_fasta, 'fasta'):
-        original[str(s.id)] = str(s.seq)
-    igblast_output(to_convert, "test_out.json", original)
+    from output_tabs_checkboxes import all_checkboxes as ac
+    igo = igblast_output(to_convert, ac['general'], ac['nucleotide'], ac['amino'], zip_bool=True)
+    igo.parse_blast_file_to_type("testing.json.gz", o_type="json")
