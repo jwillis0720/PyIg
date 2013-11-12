@@ -26,9 +26,9 @@ class pyigblast_gui():
         # argument dictionary we will pass to the arg parser eventually
         self.argument_dict = {
             'query': '',
-            'database': self._directory_name + "/directory/",
+            'database': self._directory_name + "/database/",
             'in_data': self._directory_name + "/internal_data/",
-            'aux_data': self._directory_name + "/optional_data/",
+            'aux_data': self._directory_name + "/optional_file/",
             'output_file': self._user_directory + "/pyigblast_output",
             'tmp_data': self._user_directory + "/pyigblast_temporary/"}
         window_info = self.root.winfo_toplevel()
@@ -216,9 +216,9 @@ class pyigblast_gui():
         self._set_up_scheme_frame(scheme_frame)
 
         # heavy or light chain
-        chain_type_frame = ttk.LabelFrame(basic_options_frame)
-        chain_type_frame.pack(side=TOP, fill=X, padx=5, pady=5)
-        self._set_up_chain_type_frame(chain_type_frame)
+        # chain_type_frame = ttk.LabelFrame(basic_options_frame)
+        # chain_type_frame.pack(side=TOP, fill=X, padx=5, pady=5)
+        # self._set_up_chain_type_frame(chain_type_frame)
 
         # heavy or light chain
         species_type_frame = ttk.LabelFrame(basic_options_frame)
@@ -318,7 +318,7 @@ class pyigblast_gui():
         radio_button_raw_blast_output.pack(side=LEFT, fill=X, expand=1)
 
     def _set_up_nvdj_type_frame(self, nvdj_type_frame):
-        self.v_gene_numb = ""
+        self.v_gene_numb = Tkinter.StringVar()
         numbs = [i for i in xrange(1, 4)]
         v_gene_label = ttk.LabelFrame(nvdj_type_frame, text="V-Gene Matches")
         v_gene_combo = ttk.Combobox(
@@ -327,7 +327,7 @@ class pyigblast_gui():
         v_gene_label.pack(side=LEFT, expand=1, pady=5, padx=20, fill=X)
         v_gene_combo.pack(side=TOP, expand=1, pady=5, padx=10, fill=X)
 
-        self.d_gene_numb = ""
+        self.d_gene_numb = Tkinter.StringVar()
         numbs = [i for i in xrange(1, 4)]
         d_gene_label = ttk.LabelFrame(nvdj_type_frame, text="D-Gene Matches")
         d_gene_combo = ttk.Combobox(
@@ -336,7 +336,7 @@ class pyigblast_gui():
         d_gene_label.pack(side=LEFT, expand=1, pady=5, padx=20, fill=X)
         d_gene_combo.pack(side=TOP, expand=1, pady=5)
 
-        self.j_gene_numb = ""
+        self.j_gene_numb = Tkinter.StringVar()
         numbs = [i for i in xrange(1, 4)]
         j_gene_label = ttk.LabelFrame(nvdj_type_frame, text="J-Gene Matches")
         j_gene_combo = ttk.Combobox(
@@ -690,22 +690,27 @@ class pyigblast_gui():
         blast_args_dict = {
             '-query': "",
             '-organism': self.species_var.get(),
-            '-num_alignments_V': self.v_gene_numb,
-            '-num_alignments_D': self.d_gene_numb,
-            '-num_alignments_J': self.j_gene_numb,
-            '-min_D_match': self.min_d_match.get(),
-            '-D_penalty': self.penalty_mismatch.get(),
+            '-num_alignments_V': self.v_gene_numb.get(),
+            '-num_alignments_D': self.d_gene_numb.get(),
+            '-num_alignments_J': self.j_gene_numb.get(),
+            '-min_D_match': str(self.min_d_match.get()),
+            '-D_penalty': str(int(self.penalty_mismatch.get())),
             '-domain_system': self.scheme_var.get(),
             '-out': "",
-            '-evalue': self.evalue.get(),
-            '-word_size': self.word_size.get(),
-            '-max_target_seqs': 500,
+            '-evalue': str(self.evalue.get()),
+            '-word_size': str(self.word_size.get()),
+            '-max_target_seqs': str(500),
             '-germline_db_V': "{0}{1}_gl_V".format(
                 self.argument_dict['database'], self.species_var.get()),
             '-germline_db_D': "{0}{1}_gl_D".format(
                 self.argument_dict['database'], self.species_var.get()),
             '-germline_db_J': "{0}{1}_gl_J".format(
-                self.argument_dict['database'], self.species_var.get())}
+                self.argument_dict['database'], self.species_var.get()),
+            '-auxiliary_data': "{0}{1}_gl.aux".format(
+                self.argument_dict['aux_data'], self.species_var.get()),
+            '-domain_system': self.scheme_var.get(),
+            '-outfmt': str(7)
+        }
 
         output_options_dict = {
             'final_outfile': self.argument_dict['output_file'],
@@ -715,7 +720,9 @@ class pyigblast_gui():
             'general_output': self.general_class.state(),
             'nucleotide_output': self.nucleotide_class.state(),
             'amino_acid_output': self.amino_class.state(),
-            'tmp_data_directory': self.argument_dict['tmp_data']
+            'tmp_data_directory': self.argument_dict['tmp_data'],
+            'internal_data_directory': self.argument_dict['in_data'],
+            'output_type': self.output_type_var.get()
         }
         execute(blast_args_dict, output_options_dict)
 
