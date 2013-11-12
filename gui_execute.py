@@ -58,7 +58,10 @@ def run_mp_and_delete(manager):
     if _output_type == "blast_out":
         os.remove(_file)
     if _output_type == "json":
-        output_parser.igblast_output(_blast_out, _json_out, _all_fasta, gz=_zip_bool)
+        output_parser.igblast_output(_blast_out, _all_fasta, gz=_zip_bool)
+        output_parser.set_output_option(
+            gen=manager['general_option'], nuc=manager['nuc_option'], aa=manager['aa_option'])
+        output_parser.igblast_output.dump_json(_json_out)
         os.remove(_file)
         os.remove(_blast_out)
 
@@ -76,7 +79,6 @@ def concat(_manager_dict):
                 f_in = gzip.open(file, 'rb')
                 gf.writelines(f_in)
                 f_in.close()
-                print zipped_and_json
                 os.remove(file)
 
 #     elif json_bool and not zip_bool:
@@ -122,6 +124,9 @@ def execute(blast_options, outputoptions):
     # output options
     zip_bool = outputoptions['zip_bool']
     output_file = outputoptions['final_outfile']
+    general_option = outputoption['general_output']
+    nuc_option = outputoption['nucleotide_output']
+    aa_option = outputoption['amino_acid_output']
 
     # manager_dict
     _manager_list = []
@@ -135,6 +140,9 @@ def execute(blast_options, outputoptions):
         _manager_dict['internal_data'] = outputoptions['internal_data_directory']
         _manager_dict['output_type'] = outputoptions['output_type']
         _manager_dict['output_file'] = output_file
+        _manager_dict['general_option'] = general_option
+        _manager_dict['nuc_options'] = nuc_option
+        _manager_dict['amino_options'] = aa_option
         _manager_list.append(_manager_dict)
         _manager_dict = {}
 

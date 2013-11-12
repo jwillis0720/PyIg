@@ -19,38 +19,72 @@ class igblast_output():
     output - string for the filename to the output
     '''
 
-    def __init__(self, file, output_file, fasta_files, gz=False):
-        breaker = True
-        query_holder = []
+    def __init__(self, blast_file, fasta_files, general_options, nuc_options, aa_options, zip_bool=False):
+
+        self.blast_file_handle = open(blast_file)
         self.fasta_files = fasta_files
-        _end_dict = {}
+        self.end_dict = {}
+        self.general_options = general_options
+        self.nuc_options
+        self.aa_options
+        self.zip = zip_bool
         try:
             for line in open('junctional_data/human_germ_properties.txt').readlines():
                 line_split = line.split()
-                _end_dict[line_split[0]] = int(line_split[1])
+                self.end_dict[line_split[0]] = int(line_split[1])
         except IOError:
             print "Cant open human_germ_properties.txt, \
             need this file to process CDR3 regions"
             sys.exit()
-        if gz:
-            z = gzip.open(output_file + ".gz", 'wb')
+        # if gz:
+        #     z = gzip.open(file + ".gz", 'wb')
+        # else:
+        #     z = open(file, 'w')
+        # with z as f:
+        #     for line in open(file):
+        #         if "IGBLASTN" in line:
+        #             breaker = False
+        #             if query_holder:
+        #                 f.write(
+        #                     single_blast_entry(query_holder, self.fasta_files, _end_dict).return_json_document())
+        #                 f.write("\n")
+        #             query_holder = []
+        #             continue
+        #         if not breaker:
+        #             query_holder.append(line)
+        #     f.write(
+        #         single_blast_entry(query_holder, self.fasta_files, _end_dict).return_json_document())
+        #     f.write("\n")
+
+    def parse_blast_file_to_json(output_file):
+        _breaker = True
+        focus_lines = []
+        if self.gzip:
+            json_output_file_handle = gzip.open(output_file + ".gz", 'wb')
         else:
-            z = open(output_file, 'w')
-        with z as f:
-            for line in open(file):
+            json_output_file_handle = open(output_file, 'w')
+        with json_output_file_handle as openfile:
+            for line in self.blast_file_handle:
                 if "IGBLASTN" in line:
-                    breaker = False
+                    _breaker = False
                     if query_holder:
-                        f.write(
-                            single_blast_entry(query_holder, self.fasta_files, _end_dict).return_json_document())
-                        f.write("\n")
-                    query_holder = []
-                    continue
-                if not breaker:
-                    query_holder.append(line)
-            f.write(
-                single_blast_entry(query_holder, self.fasta_files, _end_dict).return_json_document())
-            f.write("\n")
+                        sbe = single_blast_entry(focus_lines)
+                        sbe.analyze_blast(self.end_dict)
+                        sbe.analyze_blast(self.fasta_files)
+                        blast_dictionary = sbe.return_blast_dictionary()  # return single blast entry
+                        json_document_trimmed = trim_json(blast_dictionary,
+                                                          self.general_options, self.nuc_option, self.aa_option)  # trim the json according to input
+                        openfile.write(json_document_trimmed + "\n")  # write it out
+                    if not breaker:
+                        focus_lines.append(line)
+            # and do it for the end too
+            sbe = single_blast_entry(focus_lines)
+            sbe.analyze_blast(self.end_dict)
+            sbe.analyze_blast(self.fasta_files)
+            blast_dictionary = sbe.return_blast_dictionary()  # return single blast entry
+            json_document_trimmed = trim_json(blast_dictionary,
+                                              self.general_options, self.nuc_option, self.aa_option)  # trim the json according to input
+            openfile.write(json_document_trimmed + "\n")  # write it out
 
 
 class single_blast_entry():
