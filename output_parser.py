@@ -54,7 +54,6 @@ class igblast_output():
         with json_output_file_handle as openfile:
             for line in self.blast_file_handle:
                 if "IGBLASTN" in line:
-                    _breaker = False
                     if focus_lines:
                         sbe = single_blast_entry(focus_lines, self.end_dict)
                         blast_dictionary = sbe.generate_blast_dict()  # return single blast entry
@@ -62,12 +61,16 @@ class igblast_output():
                             json_document_trimmed = trim_json(blast_dictionary,
                                                               self.general_options, self.nuc_options, self.aa_options)  # trim the json according to input
                             openfile.write(json_document_trimmed + "\n")  # write it out
+                            focus_lines = []
                         if o_type == "csv":
                             csv_document_trimmed = trim_csv(blast_dictionary,
                                                             self.general_options, self.nuc_options, self.aa_options)  # trim the json according to input
                             openfile.write(csv_document_trimmed + "\n")  # write it out
-                    if not _breaker:
-                        focus_lines.append(line)
+                            focus_lines = []
+                    else:
+                        continue
+                else:
+                    focus_lines.append(line)
             # and do it for the end too
             sbe = single_blast_entry(focus_lines, self.end_dict)
             blast_dictionary = sbe.generate_blast_dict()  # return single blast entry
@@ -141,6 +144,7 @@ class single_blast_entry():
                 returned like the top matches and if was productive etc'''
                 self.rearrangment_summary_titles = line.strip().split(
                     "(")[2].split(")")[0].split(",")
+                self.rearrangment_summary_titles = [x.lower().replace(" ", "_") for x in self.rearrangment_summary_titles]
                 _rearrangment_breaker = True
                 continue
 
@@ -418,164 +422,180 @@ class single_blast_entry():
 def trim_json(blast_dictionary, general_options, nuc_options, aa_options):
         '''Our Main Function that will return a json type document'''
         # to be converted to a json document
+        json_dictionary = {}
 
         # hits arrays if we have more than one hit we kept in the blast query
-        v_hits_array = []
-        j_hits_array = []
-        d_hits_array = []
-
         query = blast_dictionary.keys()[0]
 
-        json_dictionary = {
-            "_id": query,
-            "format": blast_dictionary[query]['domain_classification']
-        }
+        blast_dictionary = blast_dictionary[query]
+        for general_entry in general_options:
+            print general_entry
+            default = general_entry['default']
+            key = general_entry['json_key']
+            formal = general_entry['formal']
+            if default == 0:
+                continue
+            if key == "_id":
+                json_dictionary["_id"] = query
+                continue
+            split_keys = key.split('.')
+            length_of_key = len(split_keys)
+            if length_of_key == 1:
+                json_dictionary[formal] = blast_dictionary[key]
+            elif length_of_key == 2:
+                for subkey_1 in blast_dictionary[split_keys[0]]:
+                    json_dictionary[formal] = blast_dictionary[split_keys[0]][subkey_1]
+            elif length_of_key == 3:
+                for subkey_1 in blast_dictionary[key]:
+                    for subkey_2 in blast_dictionary[key][subkey_1]:
+                        json_dictionary[formal] = blast_dictionary[key][subkey_1][subkey_2]
 
         print json_dictionary
         sys.exit()
+
         # Most important should be considered individually
-        try:
-            self.json_dictionary["top_v"] = self.blast_dict[
-                self.query]['rearrangement']['Top V gene match']
-        except KeyError:
-            self.json_dictionary["top_v"] = "N/A"
-        try:
-            self.json_dictionary["top_d"] = self.blast_dict[
-                self.query]['rearrangement']['Top D gene match']
-        except KeyError:
-            self.json_dictionary["top_d"] = "N/A"
-        try:
-            self.json_dictionary["top_j"] = self.blast_dict[
-                self.query]['rearrangement']['Top J gene match']
-        except KeyError:
-            self.json_dictionary["top_j"] = "N/A",
-        try:
-            self.json_dictionary["strand"] = self.blast_dict[
-                self.query]['rearrangement']['Strand']
-        except KeyError:
-            self.json_dictionary["strand"] = "N/A"
-        try:
-            self.json_dictionary["chain_type"] = self.blast_dict[
-                self.query]['rearrangement']['Chain type']
-        except KeyError:
-            self.json_dictionary["chain_type"] = "N/A"
-        try:
-            self.json_dictionary["stop_codon"] = self.blast_dict[
-                self.query]['rearrangement']['stop codon']
-        except KeyError:
-            self.json_dictionary["stop_codon"] = "N/A"
-        try:
-            self.json_dictionary["productive"] = self.blast_dict[
-                self.query]['rearrangement']['Productive']
-        except KeyError:
-            self.json_dictionary["productive"] = "N/A"
-        try:
-            self.json_dictionary["in_frame"] = self.blast_dict[
-                self.query]['rearrangement']['V-J frame']
-        except KeyError:
-            self.json_dictionary["in_frame"] = "N/A"
+        # try:
+        #     self.json_dictionary["top_v"] = self.blast_dict[
+        #         self.query]['rearrangement']['Top V gene match']
+        # except KeyError:
+        #     self.json_dictionary["top_v"] = "N/A"
+        # try:
+        #     self.json_dictionary["top_d"] = self.blast_dict[
+        #         self.query]['rearrangement']['Top D gene match']
+        # except KeyError:
+        #     self.json_dictionary["top_d"] = "N/A"
+        # try:
+        #     self.json_dictionary["top_j"] = self.blast_dict[
+        #         self.query]['rearrangement']['Top J gene match']
+        # except KeyError:
+        #     self.json_dictionary["top_j"] = "N/A",
+        # try:
+        #     self.json_dictionary["strand"] = self.blast_dict[
+        #         self.query]['rearrangement']['Strand']
+        # except KeyError:
+        #     self.json_dictionary["strand"] = "N/A"
+        # try:
+        #     self.json_dictionary["chain_type"] = self.blast_dict[
+        #         self.query]['rearrangement']['Chain type']
+        # except KeyError:
+        #     self.json_dictionary["chain_type"] = "N/A"
+        # try:
+        #     self.json_dictionary["stop_codon"] = self.blast_dict[
+        #         self.query]['rearrangement']['stop codon']
+        # except KeyError:
+        #     self.json_dictionary["stop_codon"] = "N/A"
+        # try:
+        #     self.json_dictionary["productive"] = self.blast_dict[
+        #         self.query]['rearrangement']['Productive']
+        # except KeyError:
+        #     self.json_dictionary["productive"] = "N/A"
+        # try:
+        #     self.json_dictionary["in_frame"] = self.blast_dict[
+        #         self.query]['rearrangement']['V-J frame']
+        # except KeyError:
+        #     self.json_dictionary["in_frame"] = "N/A"
 
         # add junctions. won't modify key names this time
-        try:
-            for junction_entry in self.blast_dict[self.query]['junction']:
-                self.json_dictionary[junction_entry] = self.blast_dict[
-                    self.query]['junction'][junction_entry]
-        except KeyError:
-            for junction_title in self.junction_detail_titles:
-                self.json_dictionary[junction_title] = "N/A"
+        # try:
+        #     for junction_entry in self.blast_dict[self.query]['junction']:
+        #         self.json_dictionary[junction_entry] = self.blast_dict[
+        #             self.query]['junction'][junction_entry]
+        # except KeyError:
+        #     for junction_title in self.junction_detail_titles:
+        #         self.json_dictionary[junction_title] = "N/A"
 
         # alignment_summary will be empty if it is empty, no need for try and
-        self.alignment_summaries = {}
-        if self.blast_dict[self.query]['fr1_align']:
-            self.alignment_summaries[
-                'fr1_align'] = self.blast_dict[self.query]['fr1_align']
+        # self.alignment_summaries = {}
+        # if self.blast_dict[self.query]['fr1_align']:
+        #     self.alignment_summaries[
+        #         'fr1_align'] = self.blast_dict[self.query]['fr1_align']
 
-        else:
-            self.alignment_summaries['fr1_align'] = 'N/A'
+        # else:
+        #     self.alignment_summaries['fr1_align'] = 'N/A'
 
-        if self.blast_dict[self.query]['cdr1_align']:
-            self.alignment_summaries[
-                'cdr1_align'] = self.blast_dict[self.query]['cdr1_align']
+        # if self.blast_dict[self.query]['cdr1_align']:
+        #     self.alignment_summaries[
+        #         'cdr1_align'] = self.blast_dict[self.query]['cdr1_align']
 
-        else:
-            self.alignment_summaries['cdr1_align'] = 'N/A'
+        # else:
+        #     self.alignment_summaries['cdr1_align'] = 'N/A'
 
-        if self.blast_dict[self.query]['fr2_align']:
-            self.alignment_summaries[
-                'fr2_align'] = self.blast_dict[self.query]['fr2_align']
+        # if self.blast_dict[self.query]['fr2_align']:
+        #     self.alignment_summaries[
+        #         'fr2_align'] = self.blast_dict[self.query]['fr2_align']
 
-        else:
-            self.alignment_summaries['fr2_align'] = 'N/A'
+        # else:
+        #     self.alignment_summaries['fr2_align'] = 'N/A'
 
-        if self.blast_dict[self.query]['cdr2_align']:
-            self.alignment_summaries[
-                'cdr2_align'] = self.blast_dict[self.query]['cdr2_align']
+        # if self.blast_dict[self.query]['cdr2_align']:
+        #     self.alignment_summaries[
+        #         'cdr2_align'] = self.blast_dict[self.query]['cdr2_align']
 
-        else:
-            self.alignment_summaries['cdr2_align'] = 'N/A'
+        # else:
+        #     self.alignment_summaries['cdr2_align'] = 'N/A'
 
-        if self.blast_dict[self.query]['fr3_align']:
-            self.alignment_summaries[
-                'fr3_align'] = self.blast_dict[self.query]['fr3_align']
+        # if self.blast_dict[self.query]['fr3_align']:
+        #     self.alignment_summaries[
+        #         'fr3_align'] = self.blast_dict[self.query]['fr3_align']
 
-        else:
-            self.alignment_summaries['fr3_align'] = 'N/A'
+        # else:
+        #     self.alignment_summaries['fr3_align'] = 'N/A'
 
-        if self.blast_dict[self.query]['cdr3_align']:
-            self.alignment_summaries[
-                'cdr3_align'] = self.blast_dict[self.query]['cdr3_align']
+        # if self.blast_dict[self.query]['cdr3_align']:
+        #     self.alignment_summaries[
+        #         'cdr3_align'] = self.blast_dict[self.query]['cdr3_align']
 
-        else:
-            self.alignment_summaries['cdr3_align'] = 'N/A'
+        # else:
+        #     self.alignment_summaries['cdr3_align'] = 'N/A'
 
-        if self.blast_dict[self.query]['total_align']:
-            self.alignment_summaries['total_align'] = self.blast_dict[
-                self.query]['total_align']
+        # if self.blast_dict[self.query]['total_align']:
+        #     self.alignment_summaries['total_align'] = self.blast_dict[
+        #         self.query]['total_align']
 
-        else:
-            self.alignment_summaries['total_align'] = 'N/A'
+        # else:
+        #     self.alignment_summaries['total_align'] = 'N/A'
 
-        self.json_dictionary['alignment_summaries'] = self.alignment_summaries
+        # self.json_dictionary['alignment_summaries'] = self.alignment_summaries
 
         # vhits
-        try:
-            for rank in sorted(self.blast_dict[self.query]['v_hits']):
-                self.v_hits_array.append(
-                    {rank: self.blast_dict[self.query]['v_hits'][rank]})
-        except ValueError:
-            self.v_hits_array = "N/A"
+        # try:
+        #     for rank in sorted(self.blast_dict[self.query]['v_hits']):
+        #         self.v_hits_array.append(
+        #             {rank: self.blast_dict[self.query]['v_hits'][rank]})
+        # except ValueError:
+        #     self.v_hits_array = "N/A"
 
         # dhits
-        try:
-            for rank in sorted(self.blast_dict[self.query]['d_hits']):
-                self.d_hits_array.append(
-                    {rank: self.blast_dict[self.query]['d_hits'][rank]})
-        except ValueError:
-            self.d_hits_array = "N/A"
+        # try:
+        #     for rank in sorted(self.blast_dict[self.query]['d_hits']):
+        #         self.d_hits_array.append(
+        #             {rank: self.blast_dict[self.query]['d_hits'][rank]})
+        # except ValueError:
+        #     self.d_hits_array = "N/A"
 
         # jhits
-        try:
-            for rank in sorted(self.blast_dict[self.query]['j_hits']):
-                self.j_hits_array.append(
-                    {rank: self.blast_dict[self.query]['j_hits'][rank]})
-        except KeyError:
-            self.j_hits_array = "N/A"
+        # try:
+        #     for rank in sorted(self.blast_dict[self.query]['j_hits']):
+        #         self.j_hits_array.append(
+        #             {rank: self.blast_dict[self.query]['j_hits'][rank]})
+        # except KeyError:
+        #     self.j_hits_array = "N/A"
 
-        self.json_dictionary["v_hits"] = self.v_hits_array
-        self.json_dictionary["d_hits"] = self.d_hits_array
-        self.json_dictionary['j_hits'] = self.j_hits_array
+        # self.json_dictionary["v_hits"] = self.v_hits_array
+        # self.json_dictionary["d_hits"] = self.d_hits_array
+        # self.json_dictionary['j_hits'] = self.j_hits_array
 
-        if self.json_dictionary["productive"].lower() == "yes":
-            self.json_dictionary["partial_cdr3_aa"] = self.cdr3_partial
+        # if self.json_dictionary["productive"].lower() == "yes":
+        #     self.json_dictionary["partial_cdr3_aa"] = self.cdr3_partial
 
-        self.json_dictionary = cdr_analyzer(
-            self.json_dictionary, self.full_query_seq, self.end_translation_dictionaries).return_json_dict_with_cdr_analysis()
+        # self.json_dictionary = cdr_analyzer(
+        #     self.json_dictionary, self.full_query_seq, self.end_translation_dictionaries).return_json_dict_with_cdr_analysis()
 
         # convert dictionary to json object
-        self.json = json.dumps(self.json_dictionary, sort_keys=1)
+        # self.json = json.dumps(self.json_dictionary, sort_keys=1)
 
         # and finally return the object
-        return self.json
+        # return self.json
 
 
 def trim_csv(blast_dictionary, general_options, nuc_options, aa_options):
