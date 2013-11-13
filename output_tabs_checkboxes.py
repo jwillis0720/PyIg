@@ -6,13 +6,13 @@ general = [
     {'default': 0, 'formal': 'Input Sequence', 'json_key': 'raw_seq'},
     {'default': 1, 'formal': 'Chain Type', 'json_key': 'rearrangement.chain_type'},
     {'default': 1, 'formal': 'Format Type', 'json_key': 'domain_classification'},
-    {'default': 1, 'formal': 'Query Sequence', 'json_key': 'full_seq'},
-    {'default': 1, 'formal': 'Query Translated', 'json_key': 'full_seq_aa'},
-    {'default': 1, 'formal': 'Top V Hit', 'json_key': 'v_hits.rank1.subject_id'},
-    {'default': 1, 'formal': 'Top D Hit', 'json_key': 'd_hit.rank1.subject_id'},
-    {'default': 1, 'formal': 'Top J Hit', 'json_key': 'j_hit.rank1.subject_id'},
-    {'default': 1, 'formal': 'Productive', 'json_key': 'productive'},
-    {'default': 1, 'formal': 'Productive CDR3', 'json_key': 'productive_cdr3'}
+    {'default': 0, 'formal': 'Query Sequence', 'json_key': 'full_seq'},
+    {'default': 0, 'formal': 'Query Translated', 'json_key': 'full_seq_aa'},
+    {'default': 1, 'formal': 'Top V Hit', 'json_key': 'rearrangement.top_v_gene_match'},
+    {'default': 1, 'formal': 'Top D Hit', 'json_key': 'rearrangement.top_d_gene_match'},
+    {'default': 1, 'formal': 'Top J Hit', 'json_key': 'rearrangement.top_j_gene_match'},
+    {'default': 0, 'formal': 'Productive', 'json_key': 'productive'},
+    {'default': 0, 'formal': 'Productive CDR3', 'json_key': 'productive_cdr3'}
 ]
 
 nucleotide = [

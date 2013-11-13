@@ -3,12 +3,9 @@ import json
 import gzip
 from cdr_analyzer import cdr_analyzer
 
-try:
-    from Bio.Seq import Seq
-    from Bio import SeqIO
-    from Bio.Alphabet import IUPAC
-except ImportError:
-    print("Need Biopython to use the IgBlast output parser class")
+# try:
+# except ImportError:
+#    print("Need Biopython to use the IgBlast output parser class")
 
 
 class igblast_output():
@@ -45,7 +42,6 @@ class igblast_output():
             sys.exit()
 
     def parse_blast_file_to_type(self, output_file, o_type="json"):
-        _breaker = True
         focus_lines = []
         if self.zip:
             json_output_file_handle = gzip.open(output_file + ".gz", 'wb')
@@ -144,7 +140,7 @@ class single_blast_entry():
                 returned like the top matches and if was productive etc'''
                 self.rearrangment_summary_titles = line.strip().split(
                     "(")[2].split(")")[0].split(",")
-                self.rearrangment_summary_titles = [x.lower().replace(" ", "_") for x in self.rearrangment_summary_titles]
+                self.rearrangment_summary_titles = [x.strip().lower().replace(" ", "_") for x in self.rearrangment_summary_titles]
                 _rearrangment_breaker = True
                 continue
 
@@ -253,6 +249,8 @@ class single_blast_entry():
             "d_hits": self.parse_d_hits(),
             "j_hits": self.parse_j_hits()
         }
+
+        #blast_dict = cdr_analyzer()
 
         return blast_dict
 
@@ -429,7 +427,6 @@ def trim_json(blast_dictionary, general_options, nuc_options, aa_options):
 
         blast_dictionary = blast_dictionary[query]
         for general_entry in general_options:
-            print general_entry
             default = general_entry['default']
             key = general_entry['json_key']
             formal = general_entry['formal']
@@ -443,15 +440,9 @@ def trim_json(blast_dictionary, general_options, nuc_options, aa_options):
             if length_of_key == 1:
                 json_dictionary[formal] = blast_dictionary[key]
             elif length_of_key == 2:
-                for subkey_1 in blast_dictionary[split_keys[0]]:
-                    json_dictionary[formal] = blast_dictionary[split_keys[0]][subkey_1]
+                json_dictionary[formal] = blast_dictionary[split_keys[0]][split_keys[1]]
             elif length_of_key == 3:
-                for subkey_1 in blast_dictionary[key]:
-                    for subkey_2 in blast_dictionary[key][subkey_1]:
-                        json_dictionary[formal] = blast_dictionary[key][subkey_1][subkey_2]
-
-        print json_dictionary
-        sys.exit()
+                json_dictionary[formal] = blast_dictionary[split_keys[0]][split_keys[1]][split_keys[2]]
 
         # Most important should be considered individually
         # try:
