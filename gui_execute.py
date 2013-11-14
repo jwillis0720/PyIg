@@ -25,17 +25,26 @@ def run_mp_and_delete(manager):
 
     # bools
     _zip_bool = manager['zip_bool']
-    _all_fasta = manager['all_fasta']
 
     # file name outputs, these will all be temp files to be parsed later
     _file = manager['split_file']
     _blast_out = _file + ".blast_out"
-    _json_out = _file + ".json"
-    _zip_out = _file + ".json.gz"
+    if not _zip_bool:
+        _json_out = _file + ".json"
+    else:
+        _json_out = _file + ".json.gz"
 
     # set the filename in the instance:
     blast_options['-query'] = _file
     blast_options['-out'] = _blast_out
+
+    # temporary path
+    _temporary_path = manager['temporary_path']
+
+    # output options
+    _general_option = manager['general_option']
+    _nuc_option = manager['nucleotide_output']
+    _aa_option = manager['amino_options']
 
     # check on internal data
     _internal_data = manager['internal_data']
@@ -58,10 +67,10 @@ def run_mp_and_delete(manager):
     if _output_type == "blast_out":
         os.remove(_file)
     if _output_type == "json":
-        output_parser.igblast_output(_blast_out, _all_fasta, gz=_zip_bool)
-        output_parser.set_output_option(
-            gen=manager['general_option'], nuc=manager['nuc_option'], aa=manager['aa_option'])
-        output_parser.igblast_output.dump_json(_json_out)
+        output_parser.igblast_output(_blast_out, _general_option,
+                                     _nuc_option, _aa_option, _file,
+                                     _temporary_path, gz=_zip_bool)
+        output_parser.igblast_output.parse_blast_file_to_type(_json_out, _output_type)
         os.remove(_file)
         os.remove(_blast_out)
 
@@ -121,12 +130,13 @@ def execute(blast_options, outputoptions):
     all_fasta = split_fasta(processors, path, file_name, suffix=".tmp_fasta")
     glob_path = path + os.path.basename(file_name).split('.fasta')[0] + "*.tmp_fasta"
     split_up_starting_files = glob.glob(glob_path)
+
     # output options
     zip_bool = outputoptions['zip_bool']
     output_file = outputoptions['final_outfile']
-    general_option = outputoption['general_output']
-    nuc_option = outputoption['nucleotide_output']
-    aa_option = outputoption['amino_acid_output']
+    general_option = outputoptions['general_output']
+    nuc_option = outputoptions['nucleotide_output']
+    aa_option = outputoptions['amino_acid_output']
 
     # manager_dict
     _manager_list = []
@@ -143,6 +153,7 @@ def execute(blast_options, outputoptions):
         _manager_dict['general_option'] = general_option
         _manager_dict['nuc_options'] = nuc_option
         _manager_dict['amino_options'] = aa_option
+        _manager_dict['temporary_path'] = path
         _manager_list.append(_manager_dict)
         _manager_dict = {}
 

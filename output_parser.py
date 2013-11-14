@@ -2,7 +2,9 @@ import sys
 import json
 import gzip
 from cdr_analyzer import cdr_analyzer
-
+import shelve
+from Bio import SeqIO
+import os.path
 # try:
 # except ImportError:
 #    print("Need Biopython to use the IgBlast output parser class")
@@ -20,7 +22,8 @@ class igblast_output():
     '''
 
     def __init__(self, blast_file, general_options,
-                 nuc_options, aa_options, zip_bool=False):
+                 nuc_options, aa_options, input_file,
+                 temporary_directory, zip_bool=False):
 
         # The blast file that was output, format it to a handle
         self.blast_file_handle = open(blast_file)
@@ -32,6 +35,16 @@ class igblast_output():
         self.aa_options = aa_options
         # bool to tell us if we want the file zipped
         self.zip = zip_bool
+
+        # where you want to store the output before it gets concat
+        self.temporary_directory = temporary_directory
+
+        # the input file given to this blast instance, used to get the raw seq
+        self.input_file = input_file
+
+        # get back the db handle to the raw seqs
+        self.raw_seqs_db_handle = self.get_raw_seqs_db(os.path.basename(blast_file).split('.')[0])
+
         try:
             for line in open('junctional_data/human_germ_properties.txt').readlines():
                 line_split = line.split()
@@ -51,11 +64,13 @@ class igblast_output():
             for line in self.blast_file_handle:
                 if "IGBLASTN" in line:
                     if focus_lines:
-                        sbe = single_blast_entry(focus_lines, self.end_dict)
+                        sbe = single_blast_entry(focus_lines, self.raw_seqs_db_handle, self.end_dict)
                         blast_dictionary = sbe.generate_blast_dict()  # return single blast entry
                         if o_type == "json":
                             json_document_trimmed = trim_json(blast_dictionary,
-                                                              self.general_options, self.nuc_options, self.aa_options)  # trim the json according to input
+                                                              self.general_options,
+                                                              self.nuc_options,
+                                                              self.aa_options)  # trim the json according to input
                             openfile.write(json_document_trimmed + "\n")  # write it out
                             focus_lines = []
                         if o_type == "csv":
@@ -68,8 +83,10 @@ class igblast_output():
                 else:
                     focus_lines.append(line)
             # and do it for the end too
-            sbe = single_blast_entry(focus_lines, self.end_dict)
+
+            sbe = single_blast_entry(focus_lines, self.raw_seqs_db_handle, self.end_dict)
             blast_dictionary = sbe.generate_blast_dict()  # return single blast entry
+
             if o_type == "json":
                 json_document_trimmed = trim_json(blast_dictionary,
                                                   self.general_options, self.nuc_options, self.aa_option)  # trim the json according to input
@@ -78,17 +95,28 @@ class igblast_output():
                 csv_document_trimmed = trim_csv(blast_dictionary,
                                                 self.general_options, self.nuc_options, self.aa_option)  # trim the json according to input
                 openfile.write(csv_document_trimmed + "\n")  # write it out
+        self.raw_seqs_db_handle.close()
+
+    def get_raw_seqs_db(self, name):
+        self.db_name = self.temporary_directory + "/" + name + ".db"
+        shelf = shelve.open(self.db_name)
+        for sequence_object in SeqIO.parse(self.input_file, 'fasta'):
+            shelf[str(sequence_object.id)] = str(sequence_object.seq)
+        return shelf
 
 
 class single_blast_entry():
 
     '''The helper class to parse an individual blast result'''
 
-    def __init__(self, single_entry, end_cdr3_dicts):
+    def __init__(self, single_entry, raw_seqs_handle, end_cdr3_dicts):
         # some breaker options that will tell us when to go on to the next section
         _rearrangment_breaker = False
         _junction_breaker = False
         _fields_breaker = False
+
+        # the database handle
+        self.raw_seqs_handle = raw_seqs_handle
 
         # Where to end translation for CDR3 loops specified in an output file
         self.end_cdr3_dicts = end_cdr3_dicts
@@ -236,6 +264,7 @@ class single_blast_entry():
         blast_dict = {}
         blast_dict[self.query] = {
             "domain_classification": self.domain_classification,
+            "raw_seq": self.get_raw_seq(),
             "rearrangement": self.parse_rearranment(),
             "junction": self.parse_junction(),
             "fr1_align": self.parse_fr1_align(),
@@ -250,9 +279,13 @@ class single_blast_entry():
             "j_hits": self.parse_j_hits()
         }
 
-        #blast_dict = cdr_analyzer()
+        # add the analysis
+        blast_dict = cdr_analyzer(blast_dict, self.end_cdr3_dicts)
 
         return blast_dict
+
+    def get_raw_seq(self):
+        return self.raw_seqs_handle[self.query].upper()
 
     def parse_rearranment(self):
         '''parse the rearrangement summary (just the basic statistics)
@@ -444,6 +477,8 @@ def trim_json(blast_dictionary, general_options, nuc_options, aa_options):
             elif length_of_key == 3:
                 json_dictionary[formal] = blast_dictionary[split_keys[0]][split_keys[1]][split_keys[2]]
 
+        print json_dictionary
+        sys.exit()
         # Most important should be considered individually
         # try:
         #     self.json_dictionary["top_v"] = self.blast_dict[
@@ -594,6 +629,9 @@ def trim_csv(blast_dictionary, general_options, nuc_options, aa_options):
 
 if __name__ == '__main__':
     to_convert = sys.argv[1]
+    raw_sequences = sys.argv[2]
+    temporary = "."
     from output_tabs_checkboxes import all_checkboxes as ac
-    igo = igblast_output(to_convert, ac['general'], ac['nucleotide'], ac['amino'], zip_bool=True)
+    igo = igblast_output(to_convert, ac['general'], ac['nucleotide'],
+                         ac['amino'], raw_sequences, temporary, zip_bool=True)
     igo.parse_blast_file_to_type("testing.json.gz", o_type="json")

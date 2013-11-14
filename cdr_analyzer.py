@@ -7,9 +7,12 @@ except ImportError:
 
 class cdr_analyzer():
 
-    def __init__(self, initial_json_dictionary, query_seq, end_translation_dictionaries):
-        self.unmodified = initial_json_dictionary
+    def __init__(self, initial_blast_dictionary, end_translation_dictionaries):
+        self.unmodified = initial_blast_dictionary
         self.end_translation_dictionaries = end_translation_dictionaries
+
+        # the raw sequence we want to query
+        query_seq = self.unmodified['raw_seq']
 
         # framework1
         self.frames_and_cdrs = {}
