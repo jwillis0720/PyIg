@@ -318,7 +318,7 @@ class pyigblast_gui():
 
     def _update_output(self, suffix):
         direct = os.path.dirname(self.output_file_entry.get())
-        current = os.path.dirname(self.output_file_entry.get()).split('.')[0]
+        current = os.path.basename(self.output_file_entry.get()).split('.')[0]
         self.output_file_entry.delete(0, END)
         self.output_file_entry.insert(END, direct + "/" + current + "." + suffix)
 

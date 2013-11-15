@@ -174,7 +174,7 @@ def execute(blast_options, outputoptions):
 
     # run_protocol
     # for i in _manager_list:
-    #     run_mp_and_delete(i)
+    #         run_mp_and_delete(i)
     pool.map(run_mp_and_delete, _manager_list)
     concat(_manager_list[0])
 
