@@ -5,9 +5,8 @@ from cdr_analyzer import cdr_analyzer
 import shelve
 from Bio import SeqIO
 import os.path
-# try:
-# except ImportError:
-#    print("Need Biopython to use the IgBlast output parser class")
+from collections import OrderedDict
+import csv
 
 
 class igblast_output():
@@ -21,20 +20,18 @@ class igblast_output():
     output - string for the filename to the output
     '''
 
-    def __init__(self, blast_file, general_options,
-                 nuc_options, aa_options, input_file,
-                 temporary_directory, zip_bool=False):
+    def __init__(self, blast_file, input_file, temporary_directory, options, **kwargs):
 
         # The blast file that was output, format it to a handle
         self.blast_file_handle = open(blast_file)
         # the file to use that will tell us where the CDR3 ends, pass this to the CDR analyzer
         self.end_dict = {}
         # these are dictionaries with the options we want to output. See output_tabs checkbozes
-        self.general_options = general_options
-        self.nuc_options = nuc_options
-        self.aa_options = aa_options
+
         # bool to tell us if we want the file zipped
-        self.zip = zip_bool
+        self.zip = kwargs['zip_bool']
+
+        self.option_list = options
 
         # where you want to store the output before it gets concat
         self.temporary_directory = temporary_directory
@@ -55,11 +52,14 @@ class igblast_output():
             sys.exit()
 
     def parse_blast_file_to_type(self, output_file, o_type="json"):
+        self.header_written = False
         focus_lines = []
+        output_file = output_file.split('.')[0] + "." + o_type
         if self.zip:
             json_output_file_handle = gzip.open(output_file + ".gz", 'wb')
         else:
             json_output_file_handle = open(output_file, 'w')
+
         with json_output_file_handle as openfile:
             for line in self.blast_file_handle:
                 if "IGBLASTN" in line:
@@ -67,16 +67,18 @@ class igblast_output():
                         sbe = single_blast_entry(focus_lines, self.raw_seqs_db_handle, self.end_dict)
                         blast_dictionary = sbe.generate_blast_dict()  # return single blast entry
                         if o_type == "json":
-                            json_document_trimmed = trim_json(blast_dictionary,
-                                                              self.general_options,
-                                                              self.nuc_options,
-                                                              self.aa_options)  # trim the json according to input
-                            openfile.write(json_document_trimmed + "\n")  # write it out
+                            json_document_trimmed = trim_json(blast_dictionary, self.option_list)  # trim the json according to input
+                            openfile.write(json.dumps(json_document_trimmed, indent=4))
+                            openfile.write("\n")
+                              # write it out
                             focus_lines = []
                         if o_type == "csv":
-                            csv_document_trimmed = trim_csv(blast_dictionary,
-                                                            self.general_options, self.nuc_options, self.aa_options)  # trim the json according to input
-                            openfile.write(csv_document_trimmed + "\n")  # write it out
+                            csv_document_trimmed = trim_json(blast_dictionary, self.option_list)  # trim the json according to input
+                            dw = csv.DictWriter(openfile, fieldnames=csv_document_trimmed.keys(), delimiter=",", quotechar="|", quoting=csv.QUOTE_MINIMAL)
+                            if not self.header_written:
+                                dw.writeheader()
+                                self.header_written = True
+                            dw.writerow(csv_document_trimmed)
                             focus_lines = []
                     else:
                         continue
@@ -88,13 +90,15 @@ class igblast_output():
             blast_dictionary = sbe.generate_blast_dict()  # return single blast entry
 
             if o_type == "json":
-                json_document_trimmed = trim_json(blast_dictionary,
-                                                  self.general_options, self.nuc_options, self.aa_option)  # trim the json according to input
-                openfile.write(json_document_trimmed + "\n")  # write it out
+                json_document_trimmed = trim_json(blast_dictionary, self.option_list)  # trim the json according to input
+                openfile.write(json.dumps(json_document_trimmed, indent=4))
+                openfile.write("\n")  # write it out
             elif o_type == "csv":
-                csv_document_trimmed = trim_csv(blast_dictionary,
-                                                self.general_options, self.nuc_options, self.aa_option)  # trim the json according to input
-                openfile.write(csv_document_trimmed + "\n")  # write it out
+                csv_document_trimmed = trim_json(blast_dictionary, self.option_list)
+                dw = csv.DictWriter(openfile, fieldnames=csv_document_trimmed.keys(), delimiter=",", quotechar="|", quoting=csv.QUOTE_MINIMAL)
+                if not self.header_written:
+                    dw.writeheader()
+                dw.writerow(csv_document_trimmed)
         self.raw_seqs_db_handle.close()
 
     def get_raw_seqs_db(self, name):
@@ -198,21 +202,21 @@ class single_blast_entry():
                 self.alignment_summary_titles = line.strip().split(
                     "(")[1].split(")")[0].split(",")
                 # strip off white marks in the fields
-                self.alignment_summary_titles = [x.strip() for x in self.alignment_summary_titles]
+                self.alignment_summary_titles = [x.strip().replace(" ", "_") for x in self.alignment_summary_titles]
             '''Ok, in some blast versions, the line starts with just the field we are looking for,
             In other versions it has a '-', so I will just check for both'''
 
             # check for hypen
             try:
-                if line.split()[0].split('-')[0] == "FWR1":
+                if line.split()[0].split('-')[0] == "FR1":
                     self.fr1_alignment_summary = line.strip().split()[1:]
                 if line.split()[0].split('-')[0] == "CDR1":
                     self.cdr1_alignment_summary = line.strip().split()[1:]
-                if line.split()[0].split('-')[0] == "FWR2":
+                if line.split()[0].split('-')[0] == "FR2":
                     self.fr2_alignment_summary = line.strip().split()[1:]
                 if line.split()[0].split('-')[0] == "CDR2":
                     self.cdr2_alignment_summary = line.strip().split()[1:]
-                if line.split()[0].split('-')[0] == "FWR3":
+                if line.split()[0].split('-')[0] == "FR3":
                     self.fr3_alignment_summary = line.strip().split()[1:]
                 if line.split()[0].split('-')[0] == "CDR3":
                     self.cdr3_alignment_summary = line.strip('\t').split()[1:]
@@ -280,8 +284,7 @@ class single_blast_entry():
         }
 
         # add the analysis
-        blast_dict = cdr_analyzer(blast_dict, self.end_cdr3_dicts)
-
+        blast_dict = cdr_analyzer(blast_dict, self.end_cdr3_dicts).return_modified_dict()
         return blast_dict
 
     def get_raw_seq(self):
@@ -410,9 +413,9 @@ class single_blast_entry():
             for value, title in zip(entry.split()[1:], self.hit_fields):
                 # sometimes there is nothing there so it can't cast to a float
                 try:
-                    _entry_dict[title.strip().replace(' ', '_')] = float(value)
+                    _entry_dict[title.strip().replace(' ', '_').replace("%", "percent")] = float(value)
                 except:
-                    _entry_dict[title.strip().replace(' ', '_')] = value
+                    _entry_dict[title.strip().replace(' ', '_').replace("%", "percent")] = value
             _return_dict['rank_' + str(rank)] = _entry_dict
             rank += 1
         # return a v_hit dictionary that is unsorted, but we kept the rank
@@ -427,9 +430,9 @@ class single_blast_entry():
             #_entry_dict["rank"] = int(rank)
             for value, title in zip(entry.split()[1:], self.hit_fields):
                 try:
-                    _entry_dict[title.strip().replace(' ', '_')] = float(value)
+                    _entry_dict[title.strip().replace(' ', '_').replace("%", "percent")] = float(value)
                 except:
-                    _entry_dict[title.strip().replace(' ', '_')] = value
+                    _entry_dict[title.strip().replace(' ', '_').replace("%", "percent")] = value
             _return_dict['rank_' + str(rank)] = _entry_dict
             rank += 1
         return _return_dict
@@ -439,189 +442,45 @@ class single_blast_entry():
         rank = 1
         for entry in self.hits_j:
             _entry_dict = {}
-            #_entry_dict['rank'] = int(rank)
             for value, title in zip(entry.split()[1:], self.hit_fields):
                 try:
-                    _entry_dict[title.strip().replace(' ', '_')] = float(value)
+                    _entry_dict[title.strip().replace(' ', '_').replace("%", "percent")] = float(value)
                 except:
-                    _entry_dict[title.strip().replace(' ', '_')] = value
+                    _entry_dict[title.strip().replace(' ', '_').replace("%", "percent")] = value
             _return_dict['rank_' + str(rank)] = _entry_dict
             rank += 1
         return _return_dict
 
 
-def trim_json(blast_dictionary, general_options, nuc_options, aa_options):
-        '''Our Main Function that will return a json type document'''
-        # to be converted to a json document
-        json_dictionary = {}
+def trim_json(blast_dictionary, all_options):
+    '''Our Main Function that will return a json type document'''
+    # to be converted to a json document
+    json_dictionary = OrderedDict()
+    for options in all_options:
+        json_dictionary.update(add_entries(blast_dictionary, json_dictionary, options))
+    return json_dictionary
 
-        # hits arrays if we have more than one hit we kept in the blast query
-        query = blast_dictionary.keys()[0]
 
-        blast_dictionary = blast_dictionary[query]
-        for general_entry in general_options:
-            default = general_entry['default']
-            key = general_entry['json_key']
-            formal = general_entry['formal']
-            if default == 0:
-                continue
-            if key == "_id":
-                json_dictionary["_id"] = query
-                continue
-            split_keys = key.split('.')
-            length_of_key = len(split_keys)
+def add_entries(blast_dictionary, dictionary, options):
+    for gentry in options:
+        formal = gentry
+        state = options[gentry]['state']
+        json_key = options[gentry]['json_key']
+        split_keys = json_key.split('.')
+        length_of_key = len(split_keys)
+        if state == 0:
+            continue
+        try:
             if length_of_key == 1:
-                json_dictionary[formal] = blast_dictionary[key]
+                dictionary[formal] = blast_dictionary[json_key]
             elif length_of_key == 2:
-                json_dictionary[formal] = blast_dictionary[split_keys[0]][split_keys[1]]
+                dictionary[formal] = blast_dictionary[split_keys[0]][split_keys[1]]
             elif length_of_key == 3:
-                json_dictionary[formal] = blast_dictionary[split_keys[0]][split_keys[1]][split_keys[2]]
+                dictionary[formal] = blast_dictionary[split_keys[0]][split_keys[1]][split_keys[2]]
+        except KeyError:
+            dictionary[formal] = ""
 
-        print json_dictionary
-        sys.exit()
-        # Most important should be considered individually
-        # try:
-        #     self.json_dictionary["top_v"] = self.blast_dict[
-        #         self.query]['rearrangement']['Top V gene match']
-        # except KeyError:
-        #     self.json_dictionary["top_v"] = "N/A"
-        # try:
-        #     self.json_dictionary["top_d"] = self.blast_dict[
-        #         self.query]['rearrangement']['Top D gene match']
-        # except KeyError:
-        #     self.json_dictionary["top_d"] = "N/A"
-        # try:
-        #     self.json_dictionary["top_j"] = self.blast_dict[
-        #         self.query]['rearrangement']['Top J gene match']
-        # except KeyError:
-        #     self.json_dictionary["top_j"] = "N/A",
-        # try:
-        #     self.json_dictionary["strand"] = self.blast_dict[
-        #         self.query]['rearrangement']['Strand']
-        # except KeyError:
-        #     self.json_dictionary["strand"] = "N/A"
-        # try:
-        #     self.json_dictionary["chain_type"] = self.blast_dict[
-        #         self.query]['rearrangement']['Chain type']
-        # except KeyError:
-        #     self.json_dictionary["chain_type"] = "N/A"
-        # try:
-        #     self.json_dictionary["stop_codon"] = self.blast_dict[
-        #         self.query]['rearrangement']['stop codon']
-        # except KeyError:
-        #     self.json_dictionary["stop_codon"] = "N/A"
-        # try:
-        #     self.json_dictionary["productive"] = self.blast_dict[
-        #         self.query]['rearrangement']['Productive']
-        # except KeyError:
-        #     self.json_dictionary["productive"] = "N/A"
-        # try:
-        #     self.json_dictionary["in_frame"] = self.blast_dict[
-        #         self.query]['rearrangement']['V-J frame']
-        # except KeyError:
-        #     self.json_dictionary["in_frame"] = "N/A"
-
-        # add junctions. won't modify key names this time
-        # try:
-        #     for junction_entry in self.blast_dict[self.query]['junction']:
-        #         self.json_dictionary[junction_entry] = self.blast_dict[
-        #             self.query]['junction'][junction_entry]
-        # except KeyError:
-        #     for junction_title in self.junction_detail_titles:
-        #         self.json_dictionary[junction_title] = "N/A"
-
-        # alignment_summary will be empty if it is empty, no need for try and
-        # self.alignment_summaries = {}
-        # if self.blast_dict[self.query]['fr1_align']:
-        #     self.alignment_summaries[
-        #         'fr1_align'] = self.blast_dict[self.query]['fr1_align']
-
-        # else:
-        #     self.alignment_summaries['fr1_align'] = 'N/A'
-
-        # if self.blast_dict[self.query]['cdr1_align']:
-        #     self.alignment_summaries[
-        #         'cdr1_align'] = self.blast_dict[self.query]['cdr1_align']
-
-        # else:
-        #     self.alignment_summaries['cdr1_align'] = 'N/A'
-
-        # if self.blast_dict[self.query]['fr2_align']:
-        #     self.alignment_summaries[
-        #         'fr2_align'] = self.blast_dict[self.query]['fr2_align']
-
-        # else:
-        #     self.alignment_summaries['fr2_align'] = 'N/A'
-
-        # if self.blast_dict[self.query]['cdr2_align']:
-        #     self.alignment_summaries[
-        #         'cdr2_align'] = self.blast_dict[self.query]['cdr2_align']
-
-        # else:
-        #     self.alignment_summaries['cdr2_align'] = 'N/A'
-
-        # if self.blast_dict[self.query]['fr3_align']:
-        #     self.alignment_summaries[
-        #         'fr3_align'] = self.blast_dict[self.query]['fr3_align']
-
-        # else:
-        #     self.alignment_summaries['fr3_align'] = 'N/A'
-
-        # if self.blast_dict[self.query]['cdr3_align']:
-        #     self.alignment_summaries[
-        #         'cdr3_align'] = self.blast_dict[self.query]['cdr3_align']
-
-        # else:
-        #     self.alignment_summaries['cdr3_align'] = 'N/A'
-
-        # if self.blast_dict[self.query]['total_align']:
-        #     self.alignment_summaries['total_align'] = self.blast_dict[
-        #         self.query]['total_align']
-
-        # else:
-        #     self.alignment_summaries['total_align'] = 'N/A'
-
-        # self.json_dictionary['alignment_summaries'] = self.alignment_summaries
-
-        # vhits
-        # try:
-        #     for rank in sorted(self.blast_dict[self.query]['v_hits']):
-        #         self.v_hits_array.append(
-        #             {rank: self.blast_dict[self.query]['v_hits'][rank]})
-        # except ValueError:
-        #     self.v_hits_array = "N/A"
-
-        # dhits
-        # try:
-        #     for rank in sorted(self.blast_dict[self.query]['d_hits']):
-        #         self.d_hits_array.append(
-        #             {rank: self.blast_dict[self.query]['d_hits'][rank]})
-        # except ValueError:
-        #     self.d_hits_array = "N/A"
-
-        # jhits
-        # try:
-        #     for rank in sorted(self.blast_dict[self.query]['j_hits']):
-        #         self.j_hits_array.append(
-        #             {rank: self.blast_dict[self.query]['j_hits'][rank]})
-        # except KeyError:
-        #     self.j_hits_array = "N/A"
-
-        # self.json_dictionary["v_hits"] = self.v_hits_array
-        # self.json_dictionary["d_hits"] = self.d_hits_array
-        # self.json_dictionary['j_hits'] = self.j_hits_array
-
-        # if self.json_dictionary["productive"].lower() == "yes":
-        #     self.json_dictionary["partial_cdr3_aa"] = self.cdr3_partial
-
-        # self.json_dictionary = cdr_analyzer(
-        #     self.json_dictionary, self.full_query_seq, self.end_translation_dictionaries).return_json_dict_with_cdr_analysis()
-
-        # convert dictionary to json object
-        # self.json = json.dumps(self.json_dictionary, sort_keys=1)
-
-        # and finally return the object
-        # return self.json
+    return dictionary
 
 
 def trim_csv(blast_dictionary, general_options, nuc_options, aa_options):
@@ -632,6 +491,5 @@ if __name__ == '__main__':
     raw_sequences = sys.argv[2]
     temporary = "."
     from output_tabs_checkboxes import all_checkboxes as ac
-    igo = igblast_output(to_convert, ac['general'], ac['nucleotide'],
-                         ac['amino'], raw_sequences, temporary, zip_bool=True)
-    igo.parse_blast_file_to_type("testing.json.gz", o_type="json")
+    igo = igblast_output(to_convert, raw_sequences, temporary, ac, zip_bool=False)
+    igo.parse_blast_file_to_type("testing.csv", o_type="csv")

@@ -1,4 +1,3 @@
-from arg_parse import blastargument_parser
 import subprocess as sp
 import multiprocessing as mp
 import glob
@@ -42,9 +41,7 @@ def run_mp_and_delete(manager):
     _temporary_path = manager['temporary_path']
 
     # output options
-    _general_option = manager['general_option']
-    _nuc_option = manager['nucleotide_output']
-    _aa_option = manager['amino_options']
+    _output_options = manager['output_options']
 
     # check on internal data
     _internal_data = manager['internal_data']
@@ -66,11 +63,10 @@ def run_mp_and_delete(manager):
     _output_type = manager['output_type']
     if _output_type == "blast_out":
         os.remove(_file)
-    if _output_type == "json":
-        output_parser.igblast_output(_blast_out, _general_option,
-                                     _nuc_option, _aa_option, _file,
-                                     _temporary_path, gz=_zip_bool)
-        output_parser.igblast_output.parse_blast_file_to_type(_json_out, _output_type)
+    else:
+        op = output_parser.igblast_output(_blast_out, _file, _temporary_path,
+                                          _output_options, zip_bool=_zip_bool)
+        op.parse_blast_file_to_type(_json_out, _output_type)
         os.remove(_file)
         os.remove(_blast_out)
 
@@ -89,6 +85,30 @@ def concat(_manager_dict):
                 gf.writelines(f_in)
                 f_in.close()
                 os.remove(file)
+    elif file_type == "json":
+        just_json = glob.glob(file_names + "*.json")
+        with open(out_file + ".json", 'w') as gf:
+            for file in just_json:
+                f_in = open(file, 'r')
+                gf.writelines(f_in)
+                f_in.close()
+                os.remove(file)
+
+    elif file_type == "csv":
+        just_csv = glob.glob(file_names + "*.csv")
+        with open(out_file + ".csv", 'w') as gf:
+            for file in just_csv:
+                for line in open(file):
+                    gf.write(line)
+
+                for files in just_csv[1:]:
+                    f = open(files)
+                    f.next()
+                    for line in f:
+                        gf.write(line)
+                    f.close()
+                # os.remove(file)
+
 
 #     elif json_bool and not zip_bool:
 #         just_json = glob.glob(file_name + "*.json")
@@ -134,9 +154,6 @@ def execute(blast_options, outputoptions):
     # output options
     zip_bool = outputoptions['zip_bool']
     output_file = outputoptions['final_outfile']
-    general_option = outputoptions['general_output']
-    nuc_option = outputoptions['nucleotide_output']
-    aa_option = outputoptions['amino_acid_output']
 
     # manager_dict
     _manager_list = []
@@ -150,14 +167,14 @@ def execute(blast_options, outputoptions):
         _manager_dict['internal_data'] = outputoptions['internal_data_directory']
         _manager_dict['output_type'] = outputoptions['output_type']
         _manager_dict['output_file'] = output_file
-        _manager_dict['general_option'] = general_option
-        _manager_dict['nuc_options'] = nuc_option
-        _manager_dict['amino_options'] = aa_option
+        _manager_dict['output_options'] = outputoptions['output_options']
         _manager_dict['temporary_path'] = path
         _manager_list.append(_manager_dict)
         _manager_dict = {}
 
     # run_protocol
+    # for i in _manager_list:
+    #     run_mp_and_delete(i)
     pool.map(run_mp_and_delete, _manager_list)
     concat(_manager_list[0])
 

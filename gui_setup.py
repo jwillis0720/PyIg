@@ -8,7 +8,7 @@ import tkMessageBox
 from Tkconstants import *
 from Bio import SeqIO as so
 from vertical_scroll import VerticalScrolledFrame as vsf
-from output_tabs_checkboxes import all_checkboxes
+from output_tabs_checkboxes import all_checkboxes_dict
 from multiprocessing import cpu_count
 from gui_execute import execute
 
@@ -24,6 +24,7 @@ class pyigblast_gui():
         self._directory_name = os.path.dirname(os.path.abspath(_program_name))
         self._user_directory = os.path.expanduser("~")
         # argument dictionary we will pass to the arg parser eventually
+        self.output_entry = ""
         self.argument_dict = {
             'query': '',
             'database': self._directory_name + "/database/",
@@ -33,7 +34,7 @@ class pyigblast_gui():
             'tmp_data': self._user_directory + "/pyigblast_temporary/"}
         window_info = self.root.winfo_toplevel()
         window_info.wm_title('PyIgBLAST - GUI')
-        window_info.geometry('1500x900+10+10')
+        window_info.geometry('2200x1500+10+10')
         # creates main menu
         self.MainMenu()
         # creates main menu notebook inside
@@ -216,11 +217,6 @@ class pyigblast_gui():
         self._set_up_scheme_frame(scheme_frame)
 
         # heavy or light chain
-        # chain_type_frame = ttk.LabelFrame(basic_options_frame)
-        # chain_type_frame.pack(side=TOP, fill=X, padx=5, pady=5)
-        # self._set_up_chain_type_frame(chain_type_frame)
-
-        # heavy or light chain
         species_type_frame = ttk.LabelFrame(basic_options_frame)
         species_type_frame.pack(side=TOP, fill=X, expand=1, padx=5, pady=5)
         self._set_up_species_type_frame(species_type_frame)
@@ -247,7 +243,7 @@ class pyigblast_gui():
             basic_options_frame, text="Zip output file")
         zip_bool_type_frame.pack(side=BOTTOM, anchor=SW, padx=5, pady=5)
         self.zip_var = Tkinter.IntVar()
-        self.zip_var.set(1)
+        self.zip_var.set(0)
         zip_chk = ttk.Checkbutton(
             zip_bool_type_frame, onvalue=1, offvalue=0, text="Zip output file",
             variable=self.zip_var, command=lambda: self.zip_var.get())
@@ -308,14 +304,23 @@ class pyigblast_gui():
             output_type_frame, text="Output format:", font=('Arial', 16))
         scheme_label.pack(side=TOP, anchor=NW)
         radio_button_json_output = ttk.Radiobutton(
-            output_type_frame, text="JSON", variable=self.output_type_var, value="json")
+            output_type_frame, text="JSON", variable=self.output_type_var,
+            command=lambda suffix="json", self=self: self._update_output(suffix), value="json")
         radio_button_json_output.pack(side=LEFT, fill=X, expand=1)
         radio_button_csv_output = ttk.Radiobutton(
-            output_type_frame, text="CSV", variable=self.output_type_var, value="csv")
+            output_type_frame, text="CSV", variable=self.output_type_var,
+            command=lambda suffix="csv", self=self: self._update_output(suffix), value="csv")
         radio_button_csv_output.pack(side=LEFT, fill=X, expand=1)
         radio_button_raw_blast_output = ttk.Radiobutton(
-            output_type_frame, text="BLAST", variable=self.output_type_var, value="blast_out")
+            output_type_frame, text="BLAST", variable=self.output_type_var,
+            command=lambda suffix="blast_out", self=self: self._update_output(suffix), value="blast_out")
         radio_button_raw_blast_output.pack(side=LEFT, fill=X, expand=1)
+
+    def _update_output(self, suffix):
+        direct = os.path.dirname(self.output_file_entry.get())
+        current = os.path.dirname(self.output_file_entry.get()).split('.')[0]
+        self.output_file_entry.delete(0, END)
+        self.output_file_entry.insert(END, direct + "/" + current + "." + suffix)
 
     def _set_up_nvdj_type_frame(self, nvdj_type_frame):
         self.v_gene_numb = Tkinter.StringVar()
@@ -604,14 +609,14 @@ class pyigblast_gui():
             font=('Arial', 26))
         output_file_label.pack(side=TOP, anchor=NW, padx=5, pady=5)
 
-        output_file_entry = ttk.Entry(output_file_frame, width=10)
-        output_file_entry.delete(0, END)
-        output_file_entry.insert(END, self.argument_dict['output_file'] +
-                                 "." + str(self.output_type_var.get()))
+        self.output_file_entry = ttk.Entry(output_file_frame, width=10)
+        self.output_file_entry.delete(0, END)
+        self.output_file_entry.insert(END, self.argument_dict['output_file'] +
+                                      "." + str(self.output_type_var.get()))
         output_file_entry_button = ttk.Button(
             output_file_frame, text="Browse...",
-            command=lambda entry=output_file_entry: self._enter_output(entry))
-        output_file_entry.pack(side=LEFT, padx=3, expand=1, fill=X, pady=3)
+            command=lambda entry=self.output_file_entry: self._enter_output(entry))
+        self.output_file_entry.pack(side=LEFT, padx=3, expand=1, fill=X)
         output_file_entry_button.pack(side=LEFT, fill=X)
 
     def _fill_output_format_tab(self, output_frame):
@@ -621,48 +626,153 @@ class pyigblast_gui():
             output_fields_frame, text="Select Output Fields", font=('Arial', 20))
         output_fields_top_label.pack(side=TOP, padx=3, pady=3, anchor=NW)
         output_fields_frame.pack(
-            side=TOP, fill=BOTH, expand=1, padx=10, pady=10)
+            side=TOP, fill=BOTH, expand=1, padx=2)
 
         # general options
         general_frame = ttk.LabelFrame(output_fields_frame)
         general_label = ttk.Label(
             general_frame, text="General fields:", font=('Arial', 20))
         general_label.pack(side=TOP, anchor=NW, padx=5, pady=5)
-        _general_options = all_checkboxes['general']
+        _general_options = all_checkboxes_dict['general']
         self.general_class = Checkbar(parent=general_frame, picks=[
-                                      (i['formal'], i['default']) for i in _general_options])
-        general_frame.pack(side=TOP, expand=1, fill=X, padx=10, pady=10)
+                                      (i['formal'], i['default'], i['json_key']) for i in _general_options])
+        general_frame.pack(side=TOP, expand=1, fill=X)
 
         # nucleotide
         nucleotide_frame = ttk.LabelFrame(output_fields_frame)
         nucleotide_label = ttk.Label(nucleotide_frame, font=('Arial', 20),
                                      text="Nucleotide Specific:")
         nucleotide_label.pack(side=TOP, anchor=NW, padx=5, pady=5)
-        _nucleotide_options = all_checkboxes['nucleotide']
+        _nucleotide_options = all_checkboxes_dict['nucleotide']
         self.nucleotide_class = Checkbar(parent=nucleotide_frame, picks=[
-            (i['formal'], i['default']) for i in _nucleotide_options])
-        nucleotide_frame.pack(side=TOP, fill=X, expand=1, padx=10, pady=10)
+            (i['formal'], i['default'], i['json_key']) for i in _nucleotide_options])
+        nucleotide_frame.pack(side=TOP, fill=X, expand=1)
 
         # Translation Specific
         amino_frame = ttk.LabelFrame(output_fields_frame)
         amino_label = ttk.Label(amino_frame, font=('Arial', 20),
                                 text="Translation Specific:")
-        amino_label.pack(side=TOP, anchor=NW, padx=5, pady=5)
-        _amino_options = all_checkboxes['amino']
-        self.amino_class = Checkbar(parent=amino_frame, picks=[
-                                    (i['formal'], i['default']) for i in _amino_options])
-        amino_frame.pack(side=TOP, expand=1, fill=X, padx=10, pady=10)
+        amino_label.pack(side=TOP, anchor=NW)
+        _amino_options = all_checkboxes_dict['amino']
+        self.amino_class = Checkbar(parent=amino_frame, picks=[(i['formal'], i['default'], i['json_key']) for i in _amino_options])
+        amino_frame.pack(side=TOP, fill=X, expand=1)
+
+        # Alignment_frame
+        alignment_frame = ttk.LabelFrame(output_fields_frame)
+        alignment_label = ttk.Label(alignment_frame, font=('Arial', 20),
+                                    text="Alignment Information:")
+        alignment_label.pack(side=TOP, anchor=NW)
+
+        # subframe in alignment frame
+        total_alignment_frame = ttk.LabelFrame(alignment_frame)
+        total_alignment_label = ttk.Label(total_alignment_frame, font=('Arial', 16),
+                                          text="Total Alignments")
+        total_alignment_label.pack(side=TOP, anchor=NW)
+        _total_options = all_checkboxes_dict['total_alignments']
+        self.total_alignments_class = Checkbar(parent=total_alignment_frame,
+                                               picks=[(i['formal'], i['default'], i['json_key']) for i in _total_options])
+        total_alignment_frame.pack(side=TOP, expand=1, fill=X)
+
+        fw1_alignment_frame = ttk.LabelFrame(alignment_frame)
+        fw1_alignment_label = ttk.Label(fw1_alignment_frame, font=('Arial', 16),
+                                        text="FW1 Alignments")
+        fw1_alignment_label.pack(side=TOP, anchor=NW)
+        _fw1_options = all_checkboxes_dict['fw1_alignments']
+        self.fw1_alignments_class = Checkbar(parent=fw1_alignment_frame,
+                                             picks=[(i['formal'], i['default'], i['json_key']) for i in _fw1_options])
+        fw1_alignment_frame.pack(side=TOP, expand=1, fill=X)
+
+        fw2_alignment_frame = ttk.LabelFrame(alignment_frame)
+        fw2_alignment_label = ttk.Label(fw2_alignment_frame, font=('Arial', 16),
+                                        text="FW2 Alignments")
+        fw2_alignment_label.pack(side=TOP, anchor=NW)
+        _fw2_options = all_checkboxes_dict['fw2_alignments']
+        self.fw2_alignments_class = Checkbar(parent=fw2_alignment_frame,
+                                             picks=[(i['formal'], i['default'], i['json_key']) for i in _fw2_options])
+        fw2_alignment_frame.pack(side=TOP, expand=1, fill=X)
+
+        fw3_alignment_frame = ttk.LabelFrame(alignment_frame)
+        fw3_alignment_label = ttk.Label(fw3_alignment_frame, font=('Arial', 16),
+                                        text="FW3 Alignments")
+        fw3_alignment_label.pack(side=TOP, anchor=NW)
+        _fw3_options = all_checkboxes_dict['fw3_alignments']
+        self.fw3_alignments_class = Checkbar(parent=fw3_alignment_frame,
+                                             picks=[(i['formal'], i['default'], i['json_key']) for i in _fw3_options])
+        fw3_alignment_frame.pack(side=TOP, expand=1, fill=X)
+
+        cdr1_alignment_frame = ttk.LabelFrame(alignment_frame)
+        cdr1_alignment_label = ttk.Label(cdr1_alignment_frame, font=('Arial', 16),
+                                         text="CDR1 Alignments")
+        cdr1_alignment_label.pack(side=TOP, anchor=NW)
+        _cdr1_options = all_checkboxes_dict['cdr1_alignments']
+        self.cdr1_alignments_class = Checkbar(parent=cdr1_alignment_frame,
+                                              picks=[(i['formal'], i['default'], i['json_key']) for i in _cdr1_options])
+        cdr1_alignment_frame.pack(side=TOP, expand=1, fill=X)
+
+        cdr2_alignment_frame = ttk.LabelFrame(alignment_frame)
+        cdr2_alignment_label = ttk.Label(cdr2_alignment_frame, font=('Arial', 16),
+                                         text="CDR2 Alignments")
+        cdr2_alignment_label.pack(side=TOP, anchor=NW)
+        _cdr2_options = all_checkboxes_dict['cdr2_alignments']
+        self.cdr2_alignments_class = Checkbar(parent=cdr2_alignment_frame,
+                                              picks=[(i['formal'], i['default'], i['json_key']) for i in _cdr2_options])
+        cdr2_alignment_frame.pack(side=TOP, expand=1, fill=X)
+
+        cdr3_alignment_frame = ttk.LabelFrame(alignment_frame)
+        cdr3_alignment_label = ttk.Label(cdr3_alignment_frame, font=('Arial', 16),
+                                         text="CDR3 Alignments")
+        cdr3_alignment_label.pack(side=TOP, anchor=NW)
+        _cdr3_options = all_checkboxes_dict['cdr3_alignments']
+        self.cdr3_alignments_class = Checkbar(parent=cdr3_alignment_frame,
+                                              picks=[(i['formal'], i['default'], i['json_key']) for i in _cdr3_options])
+        cdr3_alignment_frame.pack(side=TOP, expand=1, fill=X)
+
+        alignment_frame.pack(side=TOP, expand=1, fill=X)
+
+        hits_frame = ttk.LabelFrame(output_fields_frame)
+        hits_label = ttk.Label(hits_frame, font=('Arial', 20),
+                               text="Gene Hits:")
+        hits_label.pack(side=TOP, anchor=NW)
+
+        # subframe in alignment frame
+        v_hit_frame = ttk.LabelFrame(hits_frame)
+        v_hit_label = ttk.Label(v_hit_frame, font=('Arial', 16),
+                                text="V-Gene")
+        v_hit_label.pack(side=TOP, anchor=NW)
+        _v_hits_options = all_checkboxes_dict['v_hits']
+        self.v_hits_class = Checkbar(parent=v_hit_frame,
+                                     picks=[(i['formal'], i['default'], i['json_key']) for i in _v_hits_options])
+        v_hit_frame.pack(side=TOP, expand=1, fill=X)
+
+        d_hit_frame = ttk.LabelFrame(hits_frame)
+        d_hit_label = ttk.Label(d_hit_frame, font=('Arial', 16),
+                                text="D-Gene")
+        d_hit_label.pack(side=TOP, anchor=NW)
+        _d_hits_options = all_checkboxes_dict['d_hits']
+        self.d_hits_class = Checkbar(parent=d_hit_frame,
+                                     picks=[(i['formal'], i['default'], i['json_key']) for i in _d_hits_options])
+        d_hit_frame.pack(side=TOP, expand=1, fill=X)
+
+        j_hit_frame = ttk.LabelFrame(hits_frame)
+        j_hit_label = ttk.Label(j_hit_frame, font=('Arial', 16),
+                                text="J-Gene")
+        j_hit_label.pack(side=TOP, anchor=NW)
+        _j_hits_options = all_checkboxes_dict['j_hits']
+        self.j_hits_class = Checkbar(parent=j_hit_frame,
+                                     picks=[(i['formal'], i['default'], i['json_key']) for i in _j_hits_options])
+        j_hit_frame.pack(side=TOP, expand=1, fill=X)
+        hits_frame.pack(side=TOP, expand=1, fill=X)
 
     def _enter_output(self, entry):
         fo = None
-        opts = {'title': "Select FASTA file to open...",
+        opts = {'title': "Select output file to open...",
                 'initialfile': entry.get(),
                 'initialdir': self._user_directory}
         fo = filedialog.asksaveasfilename(**opts)
         if fo:
             entry.delete(0, END)
-            entry.insert(END, fn)
-            self.argument_dict['output_file'] = str(fn)
+            entry.insert(END, fo)
+            self.argument_dict['output_file'] = str(fo)
 
     def _create_readme(self, notebook_frame):
         readme_frame = ttk.Frame(notebook_frame, name="r_frame")
@@ -686,6 +796,11 @@ class pyigblast_gui():
             tkMessageBox.showwarning(
                 "Input Missing",
                 "At the very least we need a fasta\n")
+        output_options = [self.general_class.state(), self.nucleotide_class.state(),
+                          self.amino_class.state(), self.total_alignments_class.state(), self.fw1_alignments_class.state(),
+                          self.fw2_alignments_class.state(), self.fw3_alignments_class.state(), self.cdr1_alignments_class.state(),
+                          self.cdr2_alignments_class.state(), self.cdr3_alignments_class.state(),
+                          self.v_hits_class.state(), self.d_hits_class.state(), self.j_hits_class.state()]
 
         blast_args_dict = {
             '-query': "",
@@ -717,12 +832,10 @@ class pyigblast_gui():
             'num_procs': self.proc_count.get(),
             'pre_split_up_input': self.argument_dict['query'],
             'zip_bool': self.zip_var.get(),
-            'general_output': self.general_class.state(),
-            'nucleotide_output': self.nucleotide_class.state(),
-            'amino_acid_output': self.amino_class.state(),
             'tmp_data_directory': self.argument_dict['tmp_data'],
             'internal_data_directory': self.argument_dict['in_data'],
-            'output_type': self.output_type_var.get()
+            'output_type': self.output_type_var.get(),
+            'output_options': output_options
         }
         execute(blast_args_dict, output_options_dict)
 
@@ -743,18 +856,20 @@ class Checkbar():
 
     def __init__(self, parent=None, picks=[], side=LEFT, anchor=W):
         self.vars = {}
-        for pick in picks:
+        for i, pick in enumerate(picks):
+            json_key = pick[2]
+            print json_key
             var = Tkinter.IntVar()
             var.set(int(pick[1]))
             chk = ttk.Checkbutton(parent, onvalue=1, offvalue=0, text=pick[
                                   0], variable=var, command=lambda: self.state())
-            chk.pack(side=side, anchor=anchor, expand=YES, pady=10)
-            self.vars[pick[0]] = var
+            chk.pack(side=LEFT, fill=X, expand=1)
+            self.vars[pick[0]] = {"state": var, "json_key": json_key}
 
     def state(self):
         states_dict = {}
         for var in self.vars:
-            states_dict[var] = self.vars[var].get()
+            states_dict[var] = {"state": self.vars[var]['state'].get(), "json_key": self.vars[var]['json_key']}
         print states_dict
         return states_dict
 
