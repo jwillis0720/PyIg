@@ -20,11 +20,14 @@ class pyigblast_gui():
     def __init__(self, root):
         # Initialization
         self.root = root
-        _program_name = sys.argv[0]
-        self._directory_name = os.path.dirname(os.path.abspath(_program_name))
+        # get directories
+        self._directory_name = os.path.dirname(os.path.abspath(sys.argv[0]))
         self._user_directory = os.path.expanduser("~")
-        # argument dictionary we will pass to the arg parser eventually
+
+        # this will later become a widget. I initialize it here because it needs to update
         self.output_entry = ""
+
+        # argument dictionary we will pass to the arg parser eventually
         self.argument_dict = {
             'query': '',
             'database': self._directory_name + "/database/",
@@ -34,13 +37,15 @@ class pyigblast_gui():
             'tmp_data': self._user_directory + "/pyigblast_temporary/"}
         window_info = self.root.winfo_toplevel()
         window_info.wm_title('PyIgBLAST - GUI')
-        window_info.geometry('2200x1500+10+10')
-        # creates main menu
+
+        '''creates main menu - this will use pack geometry manager but some of the sub-frames
+        will use the grid geometry manager...that may be confusing but it is needed since
+        some of the options just take up to much space'''
         self.MainMenu()
-        # creates main menu notebook inside
-        self.TabNotebook()
 
     def MainMenu(self):
+        '''The main menu has 3 buttons and 2 labels that. The rest is a tabbed notebook'''
+        # 3 buttons and 2 labels in the bottom of the main menu frame
         main_menu = ttk.Frame(self.root)
         author_label = ttk.Label(main_menu, text="Jordan Willis")
         university_label = ttk.Label(main_menu, text="Vanderbilt University")
@@ -58,7 +63,11 @@ class pyigblast_gui():
         university_label.pack(side=RIGHT, fill=X, padx=10, pady=10)
         main_menu.pack(side=BOTTOM, fill=X, pady=10)
 
+        # now created tabbed notebook that will house input and output
+        self.TabNotebook()
+
     def TabNotebook(self):
+        # top level method, creates notbook inside of root. Then we will fill each tab
         main_notebook_frame = ttk.Notebook(self.root, name='main_notebook')
         main_notebook_frame.enable_traversal()
         main_notebook_frame.pack(side=TOP, expand=1, fill=BOTH)
@@ -67,29 +76,31 @@ class pyigblast_gui():
         self._create_readme(main_notebook_frame)
 
     def _create_files_and_directories(self, notebook_frame):
-        # This is the first tab that houses files, directories and Options
-        # First frame in the notebook
+        # This is the first tab that houses files, directories and Option
+        # first frame
         f_and_d_frame = ttk.Frame(notebook_frame, name='f_and_d')
-        fasta_input_frame = ttk.LabelFrame(f_and_d_frame)
+        message = ttk.Label(anchor=W, text="Enter FASTA File", font=("Arial", 20))
+        fasta_input_frame = ttk.LabelFrame(f_and_d_frame, labelwidget=message)
         fasta_input_frame.pack(side=TOP, expand=0, fill=X, padx=10)
+
         # put in fasta_entry frame to take in input
         self._make_fasta_entry(fasta_input_frame)
 
         # Set up directory frame within the tab that takes in all the
         # directories needed to run run blast
-        directories_frame = ttk.LabelFrame(f_and_d_frame)
-        directories_frame.pack(side=LEFT, expand=1, fill=BOTH)
-        directory_label = ttk.Label(directories_frame, font=('Arial', 20),
-                                    text="Directories needed to run blast:")
-        directory_label.pack(side=TOP, fill=X, padx=20, pady=10)
+        directory_label = ttk.Label(font=('Arial', 20), text="Directories for BLAST:")
+        directories_frame = ttk.LabelFrame(f_and_d_frame, labelwidget=directory_label)
+        directories_frame.pack(side=LEFT, expand=1, fill=BOTH, pady=10, padx=10)
 
         # set now run functions to place directories within that frame
         self._set_up_directories(directories_frame)
 
         # On the other side of this tab we will put in the basic options
         # including output type and blast
-        basic_options_frame = ttk.LabelFrame(f_and_d_frame)
-        basic_options_frame.pack(side=LEFT, fill=BOTH, padx=5)
+        option_label = ttk.Label(font=('Arial', 20), text="Options:")
+        basic_options_frame = ttk.LabelFrame(f_and_d_frame, labelwidget=option_label)
+        basic_options_frame.pack(side=LEFT, expand=1, fill=BOTH, pady=10)
+
         self._set_up_basic_options(basic_options_frame)
 
         # and add it to the big frame
@@ -97,17 +108,14 @@ class pyigblast_gui():
             f_and_d_frame, text="Input Options", underline=0, padding=2)
 
     def _make_fasta_entry(self, fasta_input_frame):
-        message = ttk.Label(
-            fasta_input_frame, relief=FLAT, width=500, anchor=W,
-            text='Enter the entry FASTA file here', font=('Arial', 20))
-        fasta_entry = ttk.Entry(fasta_input_frame, width=10)
-        fasta_entry_button = ttk.Button(fasta_input_frame, text="Browse...",
+        fasta_entry = ttk.Entry(fasta_input_frame)
+        fasta_entry_button = ttk.Button(fasta_input_frame, width=40, text="Browse...",
                                         command=lambda entry=fasta_entry: self._enter_fasta(entry))
-        message.pack(side=TOP, expand=1, fill=BOTH, padx=3, pady=3)
         fasta_entry.pack(side=LEFT, padx=3, expand=1, fill=X, pady=3)
         fasta_entry_button.pack(side=LEFT, fill=X)
 
     def _enter_fasta(self, entry):
+        '''inputs and validates fasta entry'''
         fn = None
         _not_fasta = True
         opts = {'title': "Select FASTA file to open...",
@@ -212,7 +220,8 @@ class pyigblast_gui():
         # basic options
 
         #imgt or kabat
-        scheme_frame = ttk.LabelFrame(basic_options_frame)
+        scheme_label = ttk.Label(text="Scheme output:", font=('Arial', 16))
+        scheme_frame = ttk.LabelFrame(basic_options_frame, labelwidget=scheme_label)
         scheme_frame.pack(side=TOP, fill=X, expand=1, padx=5, pady=5)
         self._set_up_scheme_frame(scheme_frame)
 
@@ -252,15 +261,14 @@ class pyigblast_gui():
     def _set_up_scheme_frame(self, scheme_frame):
         self.scheme_var = Tkinter.StringVar()
         self.scheme_var.set("imgt")
-        scheme_label = ttk.Label(
-            scheme_frame, text="Scheme output:", font=('Arial', 16))
-        scheme_label.pack(side=TOP, anchor=NW)
         radio_button_imgt = ttk.Radiobutton(
             scheme_frame, text="IMGT", variable=self.scheme_var, value="imgt")
-        radio_button_imgt.pack(side=LEFT, fill=X, expand=1)
         radio_button_kabat = ttk.Radiobutton(
             scheme_frame, text="KABAT", variable=self.scheme_var, value="kabat")
-        radio_button_kabat.pack(side=LEFT, fill=X, expand=1)
+        radio_button_imgt.grid(row=0, column=0)
+        radio_button_kabat.grid(row=0, column=1)
+        #radio_button_imgt.pack(side=LEFT, fill=X, expand=1)
+        #radio_button_kabat.pack(side=LEFT, fill=X, expand=1)
 
     def _set_up_chain_type_frame(self, chain_type_frame):
         self.chain_var = Tkinter.StringVar()
@@ -840,6 +848,19 @@ class pyigblast_gui():
         execute(blast_args_dict, output_options_dict)
 
 
+def center(win):
+    win.update_idletasks()
+    frm_width = win.winfo_rootx() - win.winfo_x()
+    win_width = win.winfo_width() + (frm_width * 2)
+    titlebar_height = win.winfo_rooty() - win.winfo_y()
+    win_height = win.winfo_height() + (titlebar_height + frm_width)
+    x = (win.winfo_screenwidth() / 2) - (win_width / 2)
+    y = (win.winfo_screenheight() / 2) - (win_height / 2)
+    geom = (win.winfo_width(), win.winfo_height(), x, y)  # see note
+    print geom
+    win.geometry('{0}x{1}+{2}+{3}'.format(*geom))
+
+
 def main_refresh(root, gui_setup):
     reload(gui_setup)
     root.destroy()
@@ -849,6 +870,7 @@ def main_refresh(root, gui_setup):
 def main():
     root = Tkinter.Tk()
     pyigblast_class = pyigblast_gui(root)
+    center(root)
     root.mainloop()
 
 
