@@ -99,33 +99,33 @@ cdr3_alignments = [
 ]
 
 v_hits = [
-    {'default': 0, 'formal': 'V-Gene', 'json_key': 'v_hits.rank_1.subject_id'},
+    {'default': 1, 'formal': 'V-Gene', 'json_key': 'v_hits.rank_1.subject_id'},
     {'default': 0, 'formal': 'V-Gene Mismatches', 'json_key': 'v_hits.rank_1.mismatches'},
-    {'default': 0, 'formal': 'V-Gene Percent Identity', 'json_key': 'v_hits.rank_1.percent_identity'},
-    {'default': 0, 'formal': 'V-Gene Percent Gaps', 'json_key': 'v_hits.rank_1.gaps'},
-    {'default': 0, 'formal': 'V-Gene Percent e-Value', 'json_key': 'v_hits.rank_1.evalue'},
-    {'default': 0, 'formal': 'V-Gene Percent Bit Score', 'json_key': 'v_hits.rank_1.bit_score'},
-    {'default': 0, 'formal': 'V-Gene Percent Alignment Length', 'json_key': 'v_hits.rank_1.alignment_length'}
+    {'default': 1, 'formal': 'V-Gene Percent Identity', 'json_key': 'v_hits.rank_1.percent_identity'},
+    {'default': 0, 'formal': 'V-Gene Gaps', 'json_key': 'v_hits.rank_1.gaps'},
+    {'default': 0, 'formal': 'V-Gene e-Value', 'json_key': 'v_hits.rank_1.evalue'},
+    {'default': 0, 'formal': 'V-Gene Bit Score', 'json_key': 'v_hits.rank_1.bit_score'},
+    {'default': 0, 'formal': 'V-Gene Alignment Length', 'json_key': 'v_hits.rank_1.alignment_length'}
 ]
 
 d_hits = [
-    {'default': 0, 'formal': 'D-Gene', 'json_key': 'd_hits.rank_1.subject_id'},
+    {'default': 1, 'formal': 'D-Gene', 'json_key': 'd_hits.rank_1.subject_id'},
     {'default': 0, 'formal': 'D-Gene Mismatches', 'json_key': 'd_hits.rank_1.mismatches'},
-    {'default': 0, 'formal': 'D-Gene Percent Identity', 'json_key': 'd_hits.rank_1.percent_identity'},
-    {'default': 0, 'formal': 'D-Gene Percent Gaps', 'json_key': 'd_hits.rank_1.gaps'},
-    {'default': 0, 'formal': 'D-Gene Percent e-Value', 'json_key': 'd_hits.rank_1.evalue'},
-    {'default': 0, 'formal': 'D-Gene Percent Bit Score', 'json_key': 'd_hits.rank_1.bit_score'},
-    {'default': 0, 'formal': 'D-Gene Percent Alignment Length', 'json_key': 'd_hits.rank_1.alignment_length'}
+    {'default': 1, 'formal': 'D-Gene Percent Identity', 'json_key': 'd_hits.rank_1.percent_identity'},
+    {'default': 0, 'formal': 'D-Gene Gaps', 'json_key': 'd_hits.rank_1.gaps'},
+    {'default': 0, 'formal': 'D-Gene e-Value', 'json_key': 'd_hits.rank_1.evalue'},
+    {'default': 0, 'formal': 'D-Gene Bit Score', 'json_key': 'd_hits.rank_1.bit_score'},
+    {'default': 0, 'formal': 'D-Gene Alignment Length', 'json_key': 'd_hits.rank_1.alignment_length'}
 ]
 
 j_hits = [
-    {'default': 0, 'formal': 'J-Gene', 'json_key': 'j_hits.rank_1.subject_id'},
+    {'default': 1, 'formal': 'J-Gene', 'json_key': 'j_hits.rank_1.subject_id'},
     {'default': 0, 'formal': 'J-Gene Mismatches', 'json_key': 'j_hits.rank_1.mismatches'},
-    {'default': 0, 'formal': 'J-Gene Percent Identity', 'json_key': 'j_hits.rank_1.percent_identity'},
-    {'default': 0, 'formal': 'J-Gene Percent Gaps', 'json_key': 'j_hits.rank_1.gaps'},
-    {'default': 0, 'formal': 'J-Gene Percent e-Value', 'json_key': 'j_hits.rank_1.evalue'},
-    {'default': 0, 'formal': 'J-Gene Percent Bit Score', 'json_key': 'j_hits.rank_1.bit_score'},
-    {'default': 0, 'formal': 'J-Gene Percent Alignment Length', 'json_key': 'j_hits.rank_1.alignment_length'}
+    {'default': 1, 'formal': 'J-Gene Percent Identity', 'json_key': 'j_hits.rank_1.percent_identity'},
+    {'default': 0, 'formal': 'J-Gene Gaps', 'json_key': 'j_hits.rank_1.gaps'},
+    {'default': 0, 'formal': 'J-Gene e-Value', 'json_key': 'j_hits.rank_1.evalue'},
+    {'default': 0, 'formal': 'J-Gene Bit Score', 'json_key': 'j_hits.rank_1.bit_score'},
+    {'default': 0, 'formal': 'J-Gene Alignment Length', 'json_key': 'j_hits.rank_1.alignment_length'}
 ]
 
 all_checkboxes = [general + nucleotide + amino + total_alignments + fw1_alignments + fw2_alignments + fw3_alignments +
