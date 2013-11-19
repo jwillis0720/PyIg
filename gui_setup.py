@@ -796,9 +796,8 @@ class PyIg_gui():
 
     def execute(self):
         self.main_notebook_frame.select(2)
-        print self._directory_name
+        os.chdir(self._directory_name)
         print "Starting Execution"
-        time.sleep(.1)
 
         # okay here we go
         if not self.argument_dict['query']:

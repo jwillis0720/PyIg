@@ -52,7 +52,6 @@ def run_mp_and_delete(manager):
         _cline += current_argument
 
     print "Running BLAST on processor {0} for split file {1}".format(manager['proc_number'], _file)
-    print " ".join(_cline)
     sp.call(_cline)
 
     _output_type = manager['output_type']
@@ -197,9 +196,9 @@ def execute(blast_options, outputoptions):
         _manager_dict = {}
 
     # run_protocol
-    for i in _manager_list:
-        run_mp_and_delete(i)
-    #pool.map(run_mp_and_delete, _manager_list)
+    # for i in _manager_list:
+    #    run_mp_and_delete(i)
+    pool.map(run_mp_and_delete, _manager_list)
     concat(_manager_list[0])
     print "Process is done"
     print "Took {0}".format(time.time() - ts)

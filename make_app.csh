@@ -5,6 +5,6 @@ cp -r junctional_data /Applications/PyIg.app/Contents/MacOS/.
 cp -r database /Applications/PyIg.app/Contents/MacOS/.
 cp -r internal_data /Applications/PyIg.app/Contents/MacOS/.
 cp -r optional_file /Applications/PyIg.app/Contents/MacOS/.
-cp -r executables/darwin/igblastn /Applications/PyIg.app/Contents/MacOS/.
+cp -r igblast_source/darwin/ncbi-igblast-1.2.0/bin/igblastn /Applications/PyIg.app/Contents/MacOS/.
 cp README_gui.txt /Applications/PyIg.app/Contents/MacOS/
 rm -rf /Applications/PyIg
