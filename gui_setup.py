@@ -10,12 +10,14 @@ from Bio import SeqIO as so
 from output_tabs_checkboxes import all_checkboxes_dict
 from multiprocessing import cpu_count
 from gui_execute import execute
+import time
+from collections import OrderedDict
 
 
 class Checkbar():
 
     def __init__(self, parent=None, picks=[], startrow=0):
-        self.vars = {}
+        self.vars = OrderedDict()
         row_count = startrow
         col_count = 0
         for pick in picks:
@@ -34,10 +36,33 @@ class Checkbar():
             parent.columnconfigure(col_count, weight=3)
 
     def state(self):
-        states_dict = {}
+        states_dict = OrderedDict()
         for var in self.vars:
             states_dict[var] = {"state": self.vars[var]['state'].get(), "json_key": self.vars[var]['json_key']}
         return states_dict
+
+
+class IORedirector(object):
+
+    '''A general class for redirecting I/O to this Text widget.'''
+
+    def __init__(self, text_area):
+        self.text_area = text_area
+
+    def flush(self):
+        '''
+        Frame sys.stdout's flush method.
+        '''
+        pass
+
+
+class StdoutRedirector(IORedirector):
+
+    '''A class for redirecting stdout to this Text widget.'''
+
+    def write(self, str):
+        self.text_area.insert(END, str)
+        self.text_area.see(END)
 
 
 class PyIg_gui():
@@ -57,6 +82,7 @@ class PyIg_gui():
         # argument dictionary we will pass to the arg parser eventually
         self.argument_dict = {
             'query': '',
+            'executable': self._directory_name + "/igblastn",
             'database': self._directory_name + "/database/",
             'in_data': self._directory_name + "/internal_data/",
             'aux_data': self._directory_name + "/optional_file/",
@@ -95,12 +121,13 @@ class PyIg_gui():
 
     def TabNotebook(self):
         # top level method, creates notbook inside of root. Then we will fill each tab
-        main_notebook_frame = ttk.Notebook(self.root, name='main_notebook')
-        main_notebook_frame.enable_traversal()
-        main_notebook_frame.pack(side=TOP, expand=1, fill=BOTH)
-        self._create_files_and_directories(main_notebook_frame)
-        self._create_format_output(main_notebook_frame)
-        self._create_readme(main_notebook_frame)
+        self.main_notebook_frame = ttk.Notebook(self.root, name='main_notebook')
+        self.main_notebook_frame.enable_traversal()
+        self.main_notebook_frame.pack(side=TOP, expand=1, fill=BOTH)
+        self._create_files_and_directories(self.main_notebook_frame)
+        self._create_format_output(self.main_notebook_frame)
+        self._create_output_stream(self.main_notebook_frame)
+        self._create_readme(self.main_notebook_frame)
 
     def _create_files_and_directories(self, notebook_frame):
         # This is the first tab that houses files, directories and Option
@@ -146,7 +173,8 @@ class PyIg_gui():
         fn = None
         _not_fasta = True
         opts = {'title': "Select FASTA file to open...",
-                'initialfile': entry.get()}
+                'initialfile': entry.get(),
+                'initialdir': self._user_directory}
         while _not_fasta:
             fn = filedialog.askopenfilename(**opts)
             try:
@@ -620,7 +648,7 @@ class PyIg_gui():
         output_file_frame.pack(side=TOP, fill=X, padx=2, pady=2)
         output_file_label = ttk.Label(
             output_file_frame, text='Enter Output File Name',
-            font=('Arial', 26))
+            font=('Arial', 20))
         output_file_label.pack(side=TOP, anchor=NW, padx=2, pady=2)
 
         self.output_file_entry = ttk.Entry(output_file_frame)
@@ -731,6 +759,21 @@ class PyIg_gui():
             for options in instance.vars:
                 instance.vars[options]['state'].set(on)
 
+    def _create_output_stream(self, notebook_frame):
+        create_output_frame = ttk.Frame(notebook_frame, name="o_frame")
+        self.output_stream_text = Tkinter.Text(create_output_frame)
+        self.output_stream_text.pack(side=LEFT, expand=1, fill=BOTH, anchor=NW)
+        sys.stdout = StdoutRedirector(self.output_stream_text)
+        sys.stderr = StdoutRedirector(self.output_stream_text)
+        scroll = ttk.Scrollbar(create_output_frame)
+        scroll.pack(side=RIGHT, fill=Y)
+        scroll.config(command=self.output_stream_text.yview)
+        self.output_stream_text.config(yscrollcommand=scroll.set)
+        create_output_frame.pack(side=TOP, expand=1, fill=BOTH)
+        self.output_stream_text.bind('<Key>', lambda e: 'break')
+        create_output_frame.update_idletasks()
+        notebook_frame.add(create_output_frame, text="Output Stream", underline=0, padding=2)
+
     def _create_readme(self, notebook_frame):
         readme_frame = ttk.Frame(notebook_frame, name="r_frame")
         readme_text = Tkinter.Text(readme_frame)
@@ -752,6 +795,11 @@ class PyIg_gui():
         gui_setup.main_refresh(self.root, gui_setup)
 
     def execute(self):
+        self.main_notebook_frame.select(2)
+        print self._directory_name
+        print "Starting Execution"
+        time.sleep(.1)
+
         # okay here we go
         if not self.argument_dict['query']:
             tkMessageBox.showwarning(
@@ -789,7 +837,8 @@ class PyIg_gui():
         }
 
         output_options_dict = {
-            'final_outfile': self.argument_dict['output_file'],
+            'executable': self.argument_dict['executable'],
+            'final_outfile': self.output_file_entry.get().split('.')[0],
             'num_procs': self.proc_count.get(),
             'pre_split_up_input': self.argument_dict['query'],
             'zip_bool': self.zip_var.get(),
@@ -824,6 +873,7 @@ def main():
     PyIg_gui(root)
     center(root)
     root.mainloop()
+    root.update_idletasks()
 
 
 if __name__ == '__main__':
