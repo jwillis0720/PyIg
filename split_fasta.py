@@ -15,12 +15,12 @@ def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
     # return all fasta so we can get the raw sequence from it which blast does not provide.
     #@todo, find a way to get the memory down in these functions
     all_fasta = {}
+    print path
     if not os.path.exists(path):
         os.makedirs(path)
-    length_parent_file = 0
     parent_file = []
     file_prefix = os.path.basename(file_name).split('.fasta')[0]
-    print "Counting entries in fasta files..."
+    print "Counting entries in fasta files {0}".format(file_name)
     for i, j in enumerate(Bio.SeqIO.parse(file_name, 'fasta')):
         if i % 10000 == 0 and i != 0:
             print "coutned {0} entries".format(i)
@@ -28,7 +28,7 @@ def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
     print "{0} in fasta file".format(len(parent_file))
 
     files_per_tmp = float(len(parent_file)) / float(num_procs)
-    print "{0} processors, blasting {1} entries per processor".format(num_procs, files_per_tmp)
+    # print "{0} processors, blasting {1} entries per processor".format(num_procs, files_per_tmp)
 
     # carries all of our records to be written
     joiner = []

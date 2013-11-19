@@ -7,39 +7,98 @@ import tkFileDialog as filedialog
 import tkMessageBox
 from Tkconstants import *
 from Bio import SeqIO as so
-from vertical_scroll import VerticalScrolledFrame as vsf
-from output_tabs_checkboxes import all_checkboxes
+from output_tabs_checkboxes import all_checkboxes_dict
 from multiprocessing import cpu_count
 from gui_execute import execute
+import time
+from collections import OrderedDict
 
 
-class pyigblast_gui():
+class Checkbar():
+
+    def __init__(self, parent=None, picks=[], startrow=0):
+        self.vars = OrderedDict()
+        row_count = startrow
+        col_count = 0
+        for pick in picks:
+            json_key = pick[2]
+            var = Tkinter.IntVar()
+            var.set(int(pick[1]))
+            chk = ttk.Checkbutton(parent, onvalue=1, offvalue=0, text=pick[
+                                  0], variable=var, command=lambda: self.state())
+            if col_count % 5 == 0:
+                row_count += 1
+                col_count = 0
+            chk.grid(row=row_count, column=col_count, sticky=NW, padx=2, pady=2)
+            col_count += 1
+            self.vars[pick[0]] = {"state": var, "json_key": json_key}
+            parent.rowconfigure(row_count, weight=3)
+            parent.columnconfigure(col_count, weight=3)
+
+    def state(self):
+        states_dict = OrderedDict()
+        for var in self.vars:
+            states_dict[var] = {"state": self.vars[var]['state'].get(), "json_key": self.vars[var]['json_key']}
+        return states_dict
+
+
+class IORedirector(object):
+
+    '''A general class for redirecting I/O to this Text widget.'''
+
+    def __init__(self, text_area):
+        self.text_area = text_area
+
+    def flush(self):
+        '''
+        Frame sys.stdout's flush method.
+        '''
+        pass
+
+
+class StdoutRedirector(IORedirector):
+
+    '''A class for redirecting stdout to this Text widget.'''
+
+    def write(self, str):
+        self.text_area.insert(END, str)
+        self.text_area.see(END)
+
+
+class PyIg_gui():
 
     '''gui class, will do everything including calling on executables'''
 
     def __init__(self, root):
         # Initialization
         self.root = root
-        _program_name = sys.argv[0]
-        self._directory_name = os.path.dirname(os.path.abspath(_program_name))
+        # get directories
+        self._directory_name = os.path.dirname(os.path.abspath(sys.argv[0]))
         self._user_directory = os.path.expanduser("~")
+
+        # this will later become a widget. I initialize it here because it needs to update
+        self.output_entry = ""
+        self.all_checkboxes_dict = all_checkboxes_dict
         # argument dictionary we will pass to the arg parser eventually
         self.argument_dict = {
             'query': '',
-            'database': self._directory_name + "/directory/",
+            'executable': self._directory_name + "/igblastn",
+            'database': self._directory_name + "/database/",
             'in_data': self._directory_name + "/internal_data/",
-            'aux_data': self._directory_name + "/optional_data/",
+            'aux_data': self._directory_name + "/optional_file/",
             'output_file': self._user_directory + "/pyigblast_output",
             'tmp_data': self._user_directory + "/pyigblast_temporary/"}
         window_info = self.root.winfo_toplevel()
-        window_info.wm_title('PyIgBLAST - GUI')
-        window_info.geometry('1500x900+10+10')
-        # creates main menu
+        window_info.wm_title('PyIg - GUI')
+
+        '''creates main menu - this will use pack geometry manager but some of the sub-frames
+        will use the grid geometry manager...that may be confusing but it is needed since
+        some of the options just take up to much space'''
         self.MainMenu()
-        # creates main menu notebook inside
-        self.TabNotebook()
 
     def MainMenu(self):
+        '''The main menu has 3 buttons and 2 labels that. The rest is a tabbed notebook'''
+        # 3 buttons and 2 labels in the bottom of the main menu frame
         main_menu = ttk.Frame(self.root)
         author_label = ttk.Label(main_menu, text="Jordan Willis")
         university_label = ttk.Label(main_menu, text="Vanderbilt University")
@@ -57,38 +116,45 @@ class pyigblast_gui():
         university_label.pack(side=RIGHT, fill=X, padx=10, pady=10)
         main_menu.pack(side=BOTTOM, fill=X, pady=10)
 
+        # now created tabbed notebook that will house input and output
+        self.TabNotebook()
+
     def TabNotebook(self):
-        main_notebook_frame = ttk.Notebook(self.root, name='main_notebook')
-        main_notebook_frame.enable_traversal()
-        main_notebook_frame.pack(side=TOP, expand=1, fill=BOTH)
-        self._create_files_and_directories(main_notebook_frame)
-        self._create_format_output(main_notebook_frame)
-        self._create_readme(main_notebook_frame)
+        # top level method, creates notbook inside of root. Then we will fill each tab
+        self.main_notebook_frame = ttk.Notebook(self.root, name='main_notebook')
+        self.main_notebook_frame.enable_traversal()
+        self.main_notebook_frame.pack(side=TOP, expand=1, fill=BOTH)
+        self._create_files_and_directories(self.main_notebook_frame)
+        self._create_format_output(self.main_notebook_frame)
+        self._create_output_stream(self.main_notebook_frame)
+        self._create_readme(self.main_notebook_frame)
 
     def _create_files_and_directories(self, notebook_frame):
-        # This is the first tab that houses files, directories and Options
-        # First frame in the notebook
+        # This is the first tab that houses files, directories and Option
+        # first frame
         f_and_d_frame = ttk.Frame(notebook_frame, name='f_and_d')
-        fasta_input_frame = ttk.LabelFrame(f_and_d_frame)
+        message = ttk.Label(anchor=W, text="Enter FASTA File", font=("Arial", 20))
+        fasta_input_frame = ttk.LabelFrame(f_and_d_frame, labelwidget=message)
         fasta_input_frame.pack(side=TOP, expand=0, fill=X, padx=10)
+
         # put in fasta_entry frame to take in input
         self._make_fasta_entry(fasta_input_frame)
 
         # Set up directory frame within the tab that takes in all the
         # directories needed to run run blast
-        directories_frame = ttk.LabelFrame(f_and_d_frame)
-        directories_frame.pack(side=LEFT, expand=1, fill=BOTH)
-        directory_label = ttk.Label(directories_frame, font=('Arial', 20),
-                                    text="Directories needed to run blast:")
-        directory_label.pack(side=TOP, fill=X, padx=20, pady=10)
+        directory_label = ttk.Label(font=('Arial', 20), text="Directories for BLAST:")
+        directories_frame = ttk.LabelFrame(f_and_d_frame, labelwidget=directory_label)
+        directories_frame.pack(side=LEFT, expand=1, fill=BOTH, pady=10, padx=10)
 
         # set now run functions to place directories within that frame
         self._set_up_directories(directories_frame)
 
         # On the other side of this tab we will put in the basic options
         # including output type and blast
-        basic_options_frame = ttk.LabelFrame(f_and_d_frame)
-        basic_options_frame.pack(side=LEFT, fill=BOTH, padx=5)
+        option_label = ttk.Label(font=('Arial', 20), text="Options:")
+        basic_options_frame = ttk.LabelFrame(f_and_d_frame, labelwidget=option_label)
+        basic_options_frame.pack(side=LEFT, expand=1, fill=BOTH, pady=10)
+
         self._set_up_basic_options(basic_options_frame)
 
         # and add it to the big frame
@@ -96,21 +162,19 @@ class pyigblast_gui():
             f_and_d_frame, text="Input Options", underline=0, padding=2)
 
     def _make_fasta_entry(self, fasta_input_frame):
-        message = ttk.Label(
-            fasta_input_frame, relief=FLAT, width=500, anchor=W,
-            text='Enter the entry FASTA file here', font=('Arial', 20))
-        fasta_entry = ttk.Entry(fasta_input_frame, width=10)
-        fasta_entry_button = ttk.Button(fasta_input_frame, text="Browse...",
+        fasta_entry = ttk.Entry(fasta_input_frame)
+        fasta_entry_button = ttk.Button(fasta_input_frame, width=25, text="Browse...",
                                         command=lambda entry=fasta_entry: self._enter_fasta(entry))
-        message.pack(side=TOP, expand=1, fill=BOTH, padx=3, pady=3)
         fasta_entry.pack(side=LEFT, padx=3, expand=1, fill=X, pady=3)
         fasta_entry_button.pack(side=LEFT, fill=X)
 
     def _enter_fasta(self, entry):
+        '''inputs and validates fasta entry'''
         fn = None
         _not_fasta = True
         opts = {'title': "Select FASTA file to open...",
-                'initialfile': entry.get()}
+                'initialfile': entry.get(),
+                'initialdir': self._user_directory}
         while _not_fasta:
             fn = filedialog.askopenfilename(**opts)
             try:
@@ -209,143 +273,111 @@ class pyigblast_gui():
 
     def _set_up_basic_options(self, basic_options_frame):
         # basic options
-
         #imgt or kabat
-        scheme_frame = ttk.LabelFrame(basic_options_frame)
-        scheme_frame.pack(side=TOP, fill=X, expand=1, padx=5, pady=5)
-        self._set_up_scheme_frame(scheme_frame)
-
-        # heavy or light chain
-        chain_type_frame = ttk.LabelFrame(basic_options_frame)
-        chain_type_frame.pack(side=TOP, fill=X, padx=5, pady=5)
-        self._set_up_chain_type_frame(chain_type_frame)
-
-        # heavy or light chain
-        species_type_frame = ttk.LabelFrame(basic_options_frame)
-        species_type_frame.pack(side=TOP, fill=X, expand=1, padx=5, pady=5)
-        self._set_up_species_type_frame(species_type_frame)
-
-        # output_type
-        output_type_frame = ttk.LabelFrame(basic_options_frame)
-        output_type_frame.pack(side=TOP, fill=X, expand=1, padx=5, pady=5)
-        self._set_up_output_type_frame(output_type_frame)
-
-        # Number of V D and J genes
-        nvdj_type_frame = ttk.LabelFrame(
-            basic_options_frame, text="VDJ Matches")
-        nvdj_type_frame.pack(side=TOP, fill=X, expand=1, padx=5, pady=5)
-        self._set_up_nvdj_type_frame(nvdj_type_frame)
-
-        # Blast options
-        blast_options_frame = ttk.LabelFrame(
-            basic_options_frame, text="Blast Options")
-        blast_options_frame.pack(side=TOP, fill=X, expand=1, padx=5, pady=5)
-        self._set_up_blast_options(blast_options_frame)
-
-        # zipped
-        zip_bool_type_frame = ttk.LabelFrame(
-            basic_options_frame, text="Zip output file")
-        zip_bool_type_frame.pack(side=BOTTOM, anchor=SW, padx=5, pady=5)
-        self.zip_var = Tkinter.IntVar()
-        self.zip_var.set(1)
-        zip_chk = ttk.Checkbutton(
-            zip_bool_type_frame, onvalue=1, offvalue=0, text="Zip output file",
-            variable=self.zip_var, command=lambda: self.zip_var.get())
-        zip_chk.pack(side=TOP, anchor=SW)
-
-    def _set_up_scheme_frame(self, scheme_frame):
+        scheme_label = ttk.Label(basic_options_frame, text="Scheme Output:", font=('Arial', 16))
+        scheme_label.grid(row=0, column=0, sticky=W, padx=5, pady=5)
         self.scheme_var = Tkinter.StringVar()
         self.scheme_var.set("imgt")
-        scheme_label = ttk.Label(
-            scheme_frame, text="Scheme output:", font=('Arial', 16))
-        scheme_label.pack(side=TOP, anchor=NW)
         radio_button_imgt = ttk.Radiobutton(
-            scheme_frame, text="IMGT", variable=self.scheme_var, value="imgt")
-        radio_button_imgt.pack(side=LEFT, fill=X, expand=1)
+            basic_options_frame, text="IMGT", variable=self.scheme_var, value="imgt")
         radio_button_kabat = ttk.Radiobutton(
-            scheme_frame, text="KABAT", variable=self.scheme_var, value="kabat")
-        radio_button_kabat.pack(side=LEFT, fill=X, expand=1)
+            basic_options_frame, text="KABAT", variable=self.scheme_var, value="kabat")
+        radio_button_imgt.grid(row=1, column=0, sticky=NW, padx=10, rowspan=3)
+        radio_button_kabat.grid(row=1, column=1, sticky=NW, padx=10, rowspan=3)
+        basic_options_frame.rowconfigure(1, weight=3)
 
-    def _set_up_chain_type_frame(self, chain_type_frame):
-        self.chain_var = Tkinter.StringVar()
-        self.chain_var.set("heavy")
-        chain_label = ttk.Label(
-            chain_type_frame, text="Chain Type:", font=('Arial', 16))
-        chain_label.pack(side=TOP, anchor=NW)
-        chain_button_heavy = ttk.Radiobutton(
-            chain_type_frame, text="HEAVY", variable=self.chain_var, value="heavy")
-        chain_button_heavy.pack(side=LEFT, fill=X, expand=1)
-        chain_button_light = ttk.Radiobutton(
-            chain_type_frame, text="LIGHT", variable=self.chain_var, value="light")
-        chain_button_light.pack(side=LEFT, fill=X, expand=1)
-
-    def _set_up_species_type_frame(self, species_type_frame):
+        # species frame
         self.species_var = Tkinter.StringVar()
+        # set initial value
         self.species_var.set("human")
+
+        # label
         species_label = ttk.Label(
-            species_type_frame, text="Species Type:", font=('Arial', 16))
-        species_label.pack(side=TOP, anchor=NW)
+            basic_options_frame, text="Species Type:", font=('Arial', 16))
+        species_label.grid(row=5, column=0, sticky=NW, padx=5, pady=5)
+
+        # 4 buttons
         species_button_human = ttk.Radiobutton(
-            species_type_frame, text="HUMAN",
+            basic_options_frame, text="HUMAN",
             variable=self.species_var, value="human")
-        species_button_human.pack(side=LEFT, fill=X, expand=1)
+        species_button_human.grid(row=6, column=0, sticky=NW, padx=10)
         species_button_mouse = ttk.Radiobutton(
-            species_type_frame, text="MOUSE",
+            basic_options_frame, text="MOUSE",
             variable=self.species_var, value="mouse")
-        species_button_mouse.pack(side=LEFT, fill=X, expand=1)
+        species_button_mouse.grid(row=6, column=1, sticky=NW, padx=10)
         species_button_rabbit = ttk.Radiobutton(
-            species_type_frame, text="RABBIT",
+            basic_options_frame, text="RABBIT",
             variable=self.species_var, value="rabbit", state="disabled")
-        species_button_rabbit.pack(side=LEFT, fill=X, expand=1)
-        species_button_rat = ttk.Radiobutton(species_type_frame, text="RAT",
+        species_button_rabbit.grid(row=6, column=2, sticky=NW, padx=10)
+        species_button_rat = ttk.Radiobutton(basic_options_frame, text="RAT",
                                              variable=self.species_var, value="rat", state="disabled")
-        species_button_rat.pack(side=LEFT, fill=X, expand=1)
+        species_button_rat.grid(row=6, column=3, sticky=NW, padx=10)
+        basic_options_frame.rowconfigure(6, weight=3)
 
-    def _set_up_output_type_frame(self, output_type_frame):
+        # output_type
         self.output_type_var = Tkinter.StringVar()
-        self.output_type_var.set("json")
+        self.output_type_var.set("csv")
+
+        # label
         scheme_label = ttk.Label(
-            output_type_frame, text="Output format:", font=('Arial', 16))
-        scheme_label.pack(side=TOP, anchor=NW)
+            basic_options_frame, text="Output Format:", font=('Arial', 16))
+        scheme_label.grid(row=9, column=0, sticky=W, padx=5, pady=5)
+
+        # button
         radio_button_json_output = ttk.Radiobutton(
-            output_type_frame, text="JSON", variable=self.output_type_var, value="json")
-        radio_button_json_output.pack(side=LEFT, fill=X, expand=1)
+            basic_options_frame, text="JSON", variable=self.output_type_var,
+            command=lambda suffix="json", self=self: self._update_output(suffix), value="json")
+        radio_button_json_output.grid(row=10, column=0, sticky=NW, padx=10)
         radio_button_csv_output = ttk.Radiobutton(
-            output_type_frame, text="CSV", variable=self.output_type_var, value="csv")
-        radio_button_csv_output.pack(side=LEFT, fill=X, expand=1)
+            basic_options_frame, text="CSV", variable=self.output_type_var,
+            command=lambda suffix="csv", self=self: self._update_output(suffix), value="csv")
+        radio_button_csv_output.grid(row=10, column=1, sticky=NW, padx=10)
         radio_button_raw_blast_output = ttk.Radiobutton(
-            output_type_frame, text="BLAST", variable=self.output_type_var, value="blast_out")
-        radio_button_raw_blast_output.pack(side=LEFT, fill=X, expand=1)
+            basic_options_frame, text="BLAST", variable=self.output_type_var,
+            command=lambda suffix="blast_out", self=self: self._update_output(suffix), value="blast_out")
+        radio_button_raw_blast_output.grid(row=10, column=2, sticky=NW, padx=10)
+        basic_options_frame.rowconfigure(10, weight=3)
 
-    def _set_up_nvdj_type_frame(self, nvdj_type_frame):
-        self.v_gene_numb = ""
+        # Number of V D and J genes
+        nvdj_type_label = ttk.Label(
+            basic_options_frame, text="VDJ:", font=('Arial', 16))
+        nvdj_type_label.grid(row=13, column=0, sticky=NW, padx=5, pady=5)
+
+        # Vgene
+        self.v_gene_numb = Tkinter.StringVar()
         numbs = [i for i in xrange(1, 4)]
-        v_gene_label = ttk.LabelFrame(nvdj_type_frame, text="V-Gene Matches")
+        v_gene_label = ttk.Label(basic_options_frame, text="V-Gene Matches")
         v_gene_combo = ttk.Combobox(
-            v_gene_label, values=numbs, textvariable=self.v_gene_numb)
+            basic_options_frame, values=numbs, textvariable=self.v_gene_numb)
         v_gene_combo.current(0)
-        v_gene_label.pack(side=LEFT, expand=1, pady=5, padx=20, fill=X)
-        v_gene_combo.pack(side=TOP, expand=1, pady=5, padx=10, fill=X)
+        v_gene_label.grid(row=14, column=0, sticky=NW, padx=10)
+        v_gene_combo.grid(row=15, column=0, sticky=NW, padx=10)
 
-        self.d_gene_numb = ""
+        self.d_gene_numb = Tkinter.StringVar()
         numbs = [i for i in xrange(1, 4)]
-        d_gene_label = ttk.LabelFrame(nvdj_type_frame, text="D-Gene Matches")
+        d_gene_label = ttk.Label(basic_options_frame, text="D-Gene Matches")
         d_gene_combo = ttk.Combobox(
-            d_gene_label, values=numbs, textvariable=self.d_gene_numb)
+            basic_options_frame, values=numbs, textvariable=self.d_gene_numb)
         d_gene_combo.current(0)
-        d_gene_label.pack(side=LEFT, expand=1, pady=5, padx=20, fill=X)
-        d_gene_combo.pack(side=TOP, expand=1, pady=5)
+        d_gene_label.grid(row=14, column=1, sticky=NW, padx=10)
+        d_gene_combo.grid(row=15, column=1, sticky=NW, padx=10)
 
-        self.j_gene_numb = ""
+        self.j_gene_numb = Tkinter.StringVar()
         numbs = [i for i in xrange(1, 4)]
-        j_gene_label = ttk.LabelFrame(nvdj_type_frame, text="J-Gene Matches")
+        j_gene_label = ttk.Label(basic_options_frame, text="J-Gene Matches")
         j_gene_combo = ttk.Combobox(
-            j_gene_label, values=numbs, textvariable=self.j_gene_numb)
+            basic_options_frame, values=numbs, textvariable=self.j_gene_numb)
         j_gene_combo.current(0)
-        j_gene_label.pack(side=LEFT, expand=1, pady=5, padx=20, fill=X)
-        j_gene_combo.pack(side=TOP, expand=1, pady=5, padx=10, fill=X)
+        j_gene_label.grid(row=14, column=2, sticky=NW, padx=10)
+        j_gene_combo.grid(row=15, column=2, sticky=NW, padx=10)
+        basic_options_frame.rowconfigure(15, weight=3)
 
-    def _set_up_blast_options(self, blast_options_frame):
+        # Blast options
+        blast_options_label = ttk.Label(
+            basic_options_frame, text="Blast Options:", font=('Arial', 16))
+        blast_options_label.grid(row=17, column=0, sticky=NW, padx=5, pady=5)
+
+        # initial values
         self.evalue = Tkinter.DoubleVar()
         self.evalue.set(1)
         self.word_size = Tkinter.IntVar()
@@ -358,60 +390,74 @@ class pyigblast_gui():
         self.proc_count.set(cpu_count())
 
         # evalue
-        e_value_label = ttk.LabelFrame(
-            blast_options_frame, text="e-Value Threshold")
-        e_value_entry = ttk.Entry(e_value_label)
+        e_value_label = ttk.Label(
+            basic_options_frame, text="e-Value Threshold")
+        e_value_entry = ttk.Entry(basic_options_frame)
         e_value_entry.insert(0, self.evalue.get())
         e_value_entry.bind('<Return>', self._validate_e_value)
         e_value_entry.bind('<FocusOut>', self._validate_e_value)
-        e_value_label.pack(side=LEFT, expand=1, pady=5, padx=5, fill=X)
-        e_value_entry.pack(side=TOP, expand=1, pady=5, padx=5, fill=X)
+        e_value_label.grid(row=18, column=0, sticky=NW, padx=10)
+        e_value_entry.grid(row=19, column=0, sticky=NW, padx=10)
 
         # word size
-        word_size_label = ttk.LabelFrame(
-            blast_options_frame, text="Word Size")
-        word_size_entry = ttk.Entry(word_size_label)
+        word_size_label = ttk.Label(
+            basic_options_frame, text="Word Size")
+        word_size_entry = ttk.Entry(basic_options_frame)
         word_size_entry.insert(0, self.word_size.get())
         word_size_entry.bind('<Return>', self._validate_word_value)
         word_size_entry.bind('<FocusOut>', self._validate_word_value)
-        word_size_label.pack(side=LEFT, expand=1, pady=5, padx=5, fill=X)
-        word_size_entry.pack(side=TOP, expand=1, pady=5, padx=5, fill=X)
+        word_size_label.grid(row=18, column=1, sticky=NW, padx=10)
+        word_size_entry.grid(row=19, column=1, sticky=NW, padx=10)
 
-        penalty_mismatch_label = ttk.LabelFrame(
-            blast_options_frame, text="Penalty Mismatch")
-        penalty_mismatch_entry = ttk.Entry(penalty_mismatch_label)
+        penalty_mismatch_label = ttk.Label(
+            basic_options_frame, text="Penalty Mismatch")
+        penalty_mismatch_entry = ttk.Entry(basic_options_frame)
         penalty_mismatch_entry.insert(0, self.penalty_mismatch.get())
         penalty_mismatch_entry.bind(
             '<Return>', self._validate_penalty_mismatch_value)
         penalty_mismatch_entry.bind(
             '<FocusOut>', self._validate_penalty_mismatch_value)
-        penalty_mismatch_label.pack(side=LEFT, expand=1, pady=5,
-                                    padx=5, fill=X)
-        penalty_mismatch_entry.pack(side=TOP, expand=1, pady=5,
-                                    padx=5, fill=X)
+        penalty_mismatch_label.grid(row=18, column=2, sticky=NW, padx=10)
+        penalty_mismatch_entry.grid(row=19, column=2, sticky=NW, padx=10)
+
         # Min D Nucleotides
-        min_d_match_label = ttk.LabelFrame(
-            blast_options_frame, text="Minimal Number of D Nucleotides")
-        min_d_match_entry = ttk.Entry(min_d_match_label)
+        min_d_match_label = ttk.Label(
+            basic_options_frame, text="Minimal Number of D Nucleotides")
+        min_d_match_entry = ttk.Entry(basic_options_frame)
         min_d_match_entry.insert(0, self.min_d_match.get())
         min_d_match_entry.bind(
             '<Return>', self._validate_min_match_value)
         min_d_match_entry.bind(
             '<FocusOut>', self._validate_min_match_value)
-        min_d_match_label.pack(side=LEFT, expand=1, pady=5, padx=5, fill=X)
-        min_d_match_entry.pack(side=TOP, expand=1, pady=5, padx=5, fill=X)
+        min_d_match_label.grid(row=20, column=0, sticky=NW, padx=10)
+        min_d_match_entry.grid(row=21, column=0, sticky=NW, padx=10)
 
         # how many cpus to use
-        proc_count_label = ttk.LabelFrame(
-            blast_options_frame, text="Processors")
-        proc_count_entry = ttk.Entry(proc_count_label)
+        proc_count_label = ttk.Label(
+            basic_options_frame, text="Processors")
+        proc_count_entry = ttk.Entry(basic_options_frame)
         proc_count_entry.insert(0, self.proc_count.get())
         proc_count_entry.bind(
             '<Return>', self._validate_proc_count_value)
         proc_count_entry.bind(
             '<FocusOut>', self._validate_proc_count_value)
-        proc_count_label.pack(side=LEFT, expand=1, pady=5, padx=5, fill=X)
-        proc_count_entry.pack(side=TOP, expand=1, pady=5, padx=5, fill=X)
+        proc_count_label.grid(row=20, column=1, sticky=NW, padx=10)
+        proc_count_entry.grid(row=21, column=1, sticky=NW, padx=10)
+
+        # zipped
+        self.zip_var = Tkinter.IntVar()
+        self.zip_var.set(0)
+        zip_chk = ttk.Checkbutton(
+            basic_options_frame, onvalue=1, offvalue=0, text="Zip output file",
+            variable=self.zip_var, command=lambda: self.zip_var.get())
+        zip_chk.grid(row=21, column=2, sticky=NW, padx=10)
+        basic_options_frame.rowconfigure(21, weight=3)
+
+    def _update_output(self, suffix):
+        direct = os.path.dirname(self.output_file_entry.get())
+        current = os.path.basename(self.output_file_entry.get()).split('.')[0]
+        self.output_file_entry.delete(0, END)
+        self.output_file_entry.insert(END, direct + "/" + current + "." + suffix)
 
     def _validate_e_value(self, event):
         entry_widget = event.widget
@@ -588,92 +634,160 @@ class pyigblast_gui():
             entry_widget.focus_set()
 
     def _create_format_output(self, main_notebook_frame):
-        # secon tab
-        output_frame = ttk.LabelFrame(main_notebook_frame)
-        output_frame.pack(side=TOP, expand=1, fill=BOTH, padx=10, pady=10)
+        '''second tab holds which output fields we want'''
+        # second tab
+        output_frame = ttk.Frame(main_notebook_frame)
+        output_frame.pack(side=TOP, expand=1, fill=BOTH)
         self._make_output_file(output_frame)
         self._fill_output_format_tab(output_frame)
         main_notebook_frame.add(
             output_frame, text="Output Options", underline=0, padding=2)
 
     def _make_output_file(self, output_frame):
-        output_file_frame = ttk.LabelFrame(output_frame)
-        output_file_frame.pack(side=TOP, fill=X, padx=10, pady=10)
+        output_file_frame = ttk.Frame(output_frame)
+        output_file_frame.pack(side=TOP, fill=X, padx=2, pady=2)
         output_file_label = ttk.Label(
             output_file_frame, text='Enter Output File Name',
-            font=('Arial', 26))
-        output_file_label.pack(side=TOP, anchor=NW, padx=5, pady=5)
+            font=('Arial', 20))
+        output_file_label.pack(side=TOP, anchor=NW, padx=2, pady=2)
 
-        output_file_entry = ttk.Entry(output_file_frame, width=10)
-        output_file_entry.delete(0, END)
-        output_file_entry.insert(END, self.argument_dict['output_file'] +
-                                 "." + str(self.output_type_var.get()))
+        self.output_file_entry = ttk.Entry(output_file_frame)
+        self.output_file_entry.delete(0, END)
+        self.output_file_entry.insert(END, self.argument_dict['output_file'] +
+                                      "." + str(self.output_type_var.get()))
         output_file_entry_button = ttk.Button(
-            output_file_frame, text="Browse...",
-            command=lambda entry=output_file_entry: self._enter_output(entry))
-        output_file_entry.pack(side=LEFT, padx=3, expand=1, fill=X, pady=3)
+            output_file_frame, text="Browse...", width=25,
+            command=lambda entry=self.output_file_entry: self._enter_output(entry))
+        self.output_file_entry.pack(side=LEFT, padx=3, expand=1, fill=X)
         output_file_entry_button.pack(side=LEFT, fill=X)
 
     def _fill_output_format_tab(self, output_frame):
         # fill output_format_tab from another dictionary
-        output_fields_frame = ttk.LabelFrame(output_frame)
-        output_fields_top_label = ttk.Label(
-            output_fields_frame, text="Select Output Fields", font=('Arial', 20))
-        output_fields_top_label.pack(side=TOP, padx=3, pady=3, anchor=NW)
-        output_fields_frame.pack(
-            side=TOP, fill=BOTH, expand=1, padx=10, pady=10)
+        output_fields_label = ttk.Label(
+            output_frame, text="Select Output Fields", font=('Arial', 20))
+        output_fields_label.pack(side=TOP, anchor=NW, padx=5, pady=5)
 
-        # general options
-        general_frame = ttk.LabelFrame(output_fields_frame)
-        general_label = ttk.Label(
-            general_frame, text="General fields:", font=('Arial', 20))
-        general_label.pack(side=TOP, anchor=NW, padx=5, pady=5)
-        _general_options = all_checkboxes['general']
+        output_labels_nb_frame = ttk.Notebook(output_frame, name='output_labels')
+        output_labels_nb_frame.enable_traversal()
+        output_labels_nb_frame.pack(side=TOP, expand=1, fill=BOTH)
+
+        # general frame output
+        general_frame = ttk.Frame(output_frame)
+        _general_options = self.all_checkboxes_dict['general']
         self.general_class = Checkbar(parent=general_frame, picks=[
-                                      (i['formal'], i['default']) for i in _general_options])
-        general_frame.pack(side=TOP, expand=1, fill=X, padx=10)
+                                      (i['formal'], i['default'], i['json_key']) for i in _general_options])
+        output_labels_nb_frame.add(general_frame, text="General", underline=0, padding=2)
 
         # nucleotide
-        nucleotide_frame = ttk.LabelFrame(output_fields_frame)
-        nucleotide_label = ttk.Label(nucleotide_frame, font=('Arial', 20),
-                                     text="Nucleotide Specific:")
-        nucleotide_label.pack(side=TOP, anchor=NW, padx=5, pady=5)
-        _nucleotide_options = all_checkboxes['nucleotide']
+        nucleotide_frame = ttk.Frame(output_frame)
+        _nucleotide_options = self.all_checkboxes_dict['nucleotide']
         self.nucleotide_class = Checkbar(parent=nucleotide_frame, picks=[
-            (i['formal'], i['default']) for i in _nucleotide_options])
-        nucleotide_frame.pack(side=TOP, fill=X, expand=1, padx=10)
+            (i['formal'], i['default'], i['json_key']) for i in _nucleotide_options])
+        output_labels_nb_frame.add(nucleotide_frame, text="Nucleotide", underline=0, padding=2)
 
         # Translation Specific
-        amino_frame = ttk.LabelFrame(output_fields_frame)
-        amino_label = ttk.Label(amino_frame, font=('Arial', 20),
-                                text="Translation Specific:")
-        amino_label.pack(side=TOP, anchor=NW, padx=5, pady=5)
-        _amino_options = all_checkboxes['amino']
-        self.amino_class = Checkbar(parent=amino_frame, picks=[
-                                    (i['formal'], i['default']) for i in _amino_options])
-        amino_frame.pack(side=TOP, expand=1, fill=X, padx=10)
+        amino_frame = ttk.Frame(output_frame)
+        _amino_options = self.all_checkboxes_dict['amino']
+        self.amino_class = Checkbar(parent=amino_frame,
+                                    picks=[(i['formal'], i['default'], i['json_key']) for i in _amino_options])
+        output_labels_nb_frame.add(amino_frame, text="Amino Acid", underline=0, padding=2)
+
+        # Alignment_frame
+        alignment_frame = ttk.Frame(output_frame)
+        _total_options = self.all_checkboxes_dict['total_alignments']
+        self.total_alignments_class = Checkbar(parent=alignment_frame,
+                                               picks=[(i['formal'], i['default'], i['json_key']) for i in _total_options], startrow=0)
+        _fw1_options = self.all_checkboxes_dict['fw1_alignments']
+        self.fw1_alignments_class = Checkbar(parent=alignment_frame,
+                                             picks=[(i['formal'], i['default'], i['json_key']) for i in _fw1_options], startrow=1)
+
+        _fw2_options = self.all_checkboxes_dict['fw2_alignments']
+        self.fw2_alignments_class = Checkbar(parent=alignment_frame,
+                                             picks=[(i['formal'], i['default'], i['json_key']) for i in _fw2_options], startrow=2)
+
+        _fw3_options = self.all_checkboxes_dict['fw3_alignments']
+        self.fw3_alignments_class = Checkbar(parent=alignment_frame,
+                                             picks=[(i['formal'], i['default'], i['json_key']) for i in _fw3_options], startrow=3)
+
+        _cdr1_options = self.all_checkboxes_dict['cdr1_alignments']
+        self.cdr1_alignments_class = Checkbar(parent=alignment_frame,
+                                              picks=[(i['formal'], i['default'], i['json_key']) for i in _cdr1_options], startrow=4)
+        _cdr2_options = self.all_checkboxes_dict['cdr2_alignments']
+        self.cdr2_alignments_class = Checkbar(parent=alignment_frame,
+                                              picks=[(i['formal'], i['default'], i['json_key']) for i in _cdr2_options], startrow=5)
+
+        _cdr3_options = self.all_checkboxes_dict['cdr3_alignments']
+        self.cdr3_alignments_class = Checkbar(parent=alignment_frame,
+                                              picks=[(i['formal'], i['default'], i['json_key']) for i in _cdr3_options], startrow=6)
+        output_labels_nb_frame.add(alignment_frame, text="Alignment Frame", underline=0, padding=2)
+
+        hits_frame = ttk.Frame(output_frame)
+        _v_hits_options = self.all_checkboxes_dict['v_hits']
+        self.v_hits_class = Checkbar(parent=hits_frame,
+                                     picks=[(i['formal'], i['default'], i['json_key']) for i in _v_hits_options])
+        _d_hits_options = self.all_checkboxes_dict['d_hits']
+        self.d_hits_class = Checkbar(parent=hits_frame,
+                                     picks=[(i['formal'], i['default'], i['json_key']) for i in _d_hits_options], startrow=2)
+        _j_hits_options = self.all_checkboxes_dict['j_hits']
+        self.j_hits_class = Checkbar(parent=hits_frame,
+                                     picks=[(i['formal'], i['default'], i['json_key']) for i in _j_hits_options], startrow=4)
+        output_labels_nb_frame.add(hits_frame, text="VDJ Hits", underline=0, padding=2)
+
+        output_options_list = [self.general_class, self.nucleotide_class, self.amino_class, self.total_alignments_class,
+                               self.fw1_alignments_class, self.fw2_alignments_class, self.fw3_alignments_class, self.cdr1_alignments_class, self.cdr2_alignments_class,
+                               self.cdr3_alignments_class, self.v_hits_class, self.d_hits_class, self.j_hits_class]
+        select_all_button = ttk.Button(output_frame, text="Select All", command=lambda o_options=output_options_list, self=self: self._select_all_outputs(o_options, 1))
+        select_all_button.pack(side=LEFT, padx=2, pady=2)
+
+        select_all_button = ttk.Button(output_frame, text="Deselect All", command=lambda o_options=output_options_list, self=self: self._select_all_outputs(o_options, 0))
+        select_all_button.pack(side=LEFT, padx=2, pady=2)
 
     def _enter_output(self, entry):
         fo = None
-        opts = {'title': "Select FASTA file to open...",
-                'initialfile': entry.get(),
+        opts = {'title': "Select output file to open...",
                 'initialdir': self._user_directory}
         fo = filedialog.asksaveasfilename(**opts)
         if fo:
+            basename = os.path.splitext(str(fo))[0]
+            out_file = basename + "." + self.output_type_var.get()
             entry.delete(0, END)
-            entry.insert(END, fn)
-            self.argument_dict['output_file'] = str(fn)
+            entry.insert(END, out_file)
+            self.argument_dict['output_file'] = out_file
+
+    def _select_all_outputs(self, o_options, on):
+        for instance in o_options:
+            for options in instance.vars:
+                instance.vars[options]['state'].set(on)
+
+    def _create_output_stream(self, notebook_frame):
+        create_output_frame = ttk.Frame(notebook_frame, name="o_frame")
+        self.output_stream_text = Tkinter.Text(create_output_frame)
+        self.output_stream_text.pack(side=LEFT, expand=1, fill=BOTH, anchor=NW)
+        sys.stdout = StdoutRedirector(self.output_stream_text)
+        sys.stderr = StdoutRedirector(self.output_stream_text)
+        scroll = ttk.Scrollbar(create_output_frame)
+        scroll.pack(side=RIGHT, fill=Y)
+        scroll.config(command=self.output_stream_text.yview)
+        self.output_stream_text.config(yscrollcommand=scroll.set)
+        create_output_frame.pack(side=TOP, expand=1, fill=BOTH)
+        self.output_stream_text.bind('<Key>', lambda e: 'break')
+        create_output_frame.update_idletasks()
+        notebook_frame.add(create_output_frame, text="Output Stream", underline=0, padding=2)
 
     def _create_readme(self, notebook_frame):
         readme_frame = ttk.Frame(notebook_frame, name="r_frame")
-        # scroled_widget = ttk.ScrolledWindow(readme_frame,scrollbar='auto')
-        # window = scroled.window
-        vertical_scroll_frame = vsf(readme_frame)
-        vertical_scroll_frame.pack(side=TOP, expand=1, fill=BOTH, anchor=NW)
-        vsf_label = ttk.Label(
-            vertical_scroll_frame.interior, text=open(self._directory_name + '/README_gui.txt').readlines(), anchor=N)
-        # scroled_widget.pack(side=TOP, fill=BOTH, expand=1)
-        vsf_label.pack(side=TOP, fill=BOTH, expand=1, anchor=NW)
+        readme_text = Tkinter.Text(readme_frame)
+        readme_text.pack(side=LEFT, expand=1, fill=BOTH, anchor=NW)
+        scroll_bar = ttk.Scrollbar(readme_frame)
+        scroll_bar.pack(side=RIGHT, fill=Y)
+        scroll_bar.config(command=readme_text.yview)
+        readme_text.config(yscrollcommand=scroll_bar.set)
+        readme_frame.pack(side=TOP, expand=1, fill=BOTH)
+        notebook_frame.update_idletasks()
+        for line in open(self._directory_name + '/README_gui.txt').readlines():
+            readme_text.insert(END, line)
+            readme_text.see(END)
+            readme_text.update_idletasks()
         notebook_frame.add(readme_frame, text="Readme", underline=0, padding=2)
 
     def _update(self):
@@ -681,43 +795,70 @@ class pyigblast_gui():
         gui_setup.main_refresh(self.root, gui_setup)
 
     def execute(self):
+        self.main_notebook_frame.select(2)
+        os.chdir(self._directory_name)
+        print "Starting Execution"
+
         # okay here we go
         if not self.argument_dict['query']:
             tkMessageBox.showwarning(
                 "Input Missing",
                 "At the very least we need a fasta\n")
+        output_options = [self.general_class.state(), self.nucleotide_class.state(),
+                          self.amino_class.state(), self.total_alignments_class.state(), self.fw1_alignments_class.state(),
+                          self.fw2_alignments_class.state(), self.fw3_alignments_class.state(), self.cdr1_alignments_class.state(),
+                          self.cdr2_alignments_class.state(), self.cdr3_alignments_class.state(),
+                          self.v_hits_class.state(), self.d_hits_class.state(), self.j_hits_class.state()]
 
         blast_args_dict = {
             '-query': "",
             '-organism': self.species_var.get(),
-            '-num_alignments_V': self.v_gene_numb,
-            '-num_alignments_D': self.d_gene_numb,
-            '-num_alignments_J': self.j_gene_numb,
-            '-min_D_match': self.min_d_match.get(),
-            '-D_penalty': self.penalty_mismatch.get(),
+            '-num_alignments_V': self.v_gene_numb.get(),
+            '-num_alignments_D': self.d_gene_numb.get(),
+            '-num_alignments_J': self.j_gene_numb.get(),
+            '-min_D_match': str(self.min_d_match.get()),
+            '-D_penalty': str(int(self.penalty_mismatch.get())),
             '-domain_system': self.scheme_var.get(),
             '-out': "",
-            '-evalue': self.evalue.get(),
-            '-word_size': self.word_size.get(),
-            '-max_target_seqs': 500,
+            '-evalue': str(self.evalue.get()),
+            '-word_size': str(self.word_size.get()),
+            '-max_target_seqs': str(500),
             '-germline_db_V': "{0}{1}_gl_V".format(
                 self.argument_dict['database'], self.species_var.get()),
             '-germline_db_D': "{0}{1}_gl_D".format(
                 self.argument_dict['database'], self.species_var.get()),
             '-germline_db_J': "{0}{1}_gl_J".format(
-                self.argument_dict['database'], self.species_var.get())}
+                self.argument_dict['database'], self.species_var.get()),
+            '-auxiliary_data': "{0}{1}_gl.aux".format(
+                self.argument_dict['aux_data'], self.species_var.get()),
+            '-domain_system': self.scheme_var.get(),
+            '-outfmt': str(7)
+        }
 
         output_options_dict = {
-            'final_outfile': self.argument_dict['output_file'],
+            'executable': self.argument_dict['executable'],
+            'final_outfile': self.output_file_entry.get().split('.')[0],
             'num_procs': self.proc_count.get(),
             'pre_split_up_input': self.argument_dict['query'],
             'zip_bool': self.zip_var.get(),
-            'general_output': self.general_class.state(),
-            'nucleotide_output': self.nucleotide_class.state(),
-            'amino_acid_output': self.amino_class.state(),
-            'tmp_data_directory': self.argument_dict['tmp_data']
+            'tmp_data_directory': self.argument_dict['tmp_data'],
+            'internal_data_directory': self.argument_dict['in_data'],
+            'output_type': self.output_type_var.get(),
+            'output_options': output_options
         }
         execute(blast_args_dict, output_options_dict)
+
+
+def center(win):
+    win.update_idletasks()
+    frm_width = win.winfo_rootx() - win.winfo_x()
+    win_width = win.winfo_width() + (frm_width * 2)
+    titlebar_height = win.winfo_rooty() - win.winfo_y()
+    win_height = win.winfo_height() + (titlebar_height + frm_width)
+    x = (win.winfo_screenwidth() / 2) - (win_width / 2)
+    y = (win.winfo_screenheight() / 2) - (win_height / 2)
+    geom = (win.winfo_width(), win.winfo_height(), x, y)  # see note
+    win.geometry('{0}x{1}+{2}+{3}'.format(*geom))
 
 
 def main_refresh(root, gui_setup):
@@ -728,28 +869,11 @@ def main_refresh(root, gui_setup):
 
 def main():
     root = Tkinter.Tk()
-    pyigblast_class = pyigblast_gui(root)
+    PyIg_gui(root)
+    center(root)
     root.mainloop()
+    root.update_idletasks()
 
-
-class Checkbar():
-
-    def __init__(self, parent=None, picks=[], side=LEFT, anchor=W):
-        self.vars = {}
-        for pick in picks:
-            var = Tkinter.IntVar()
-            var.set(int(pick[1]))
-            chk = ttk.Checkbutton(parent, onvalue=1, offvalue=0, text=pick[
-                                  0], variable=var, command=lambda: self.state())
-            chk.pack(side=side, anchor=anchor, expand=YES)
-            self.vars[pick[0]] = var
-
-    def state(self):
-        states_dict = {}
-        for var in self.vars:
-            states_dict[var] = self.vars[var].get()
-        print states_dict
-        return states_dict
 
 if __name__ == '__main__':
     main()

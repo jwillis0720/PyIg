@@ -1,154 +1,83 @@
-PyIgBlast
-=========
+* PyIg - Python Immunoglobulin Blast
 
-PyIgBlast - Open source parser to call IgBlast and parse results for high-throughput sequencing. 
-Uses Python multi-processing to get around bottlenecks of IgBlast multi-threading. 
-Parses blast output to deliminated files (csv,json) for uploading to databases. 
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
 
-#ONLY BENCHMARKED WITH HUMAN HEAVY SO FAR
+This program is distributed in the hope that it will be useful,
+but without any warranty.
 
-Requires
-=========
+* Third-Party Software Used by PyIg
 
-1.   >Python2.7
-2.   [BioPython - Python tools for biological computations](http://biopython.org/wiki/Download)
-3.   [IgBlastn - BLAST algorithm for analyzing immunoglobulin repertoires](ftp://ftp.ncbi.nih.gov/blast/executables/igblast/release/)
+IgBLASTN - Nucleotide-Nucleotide BLAST for immunoglobulin sequences 2.2.28+
 
-Usage
-========
-    
-    pyigblast -h 
+Released under public domain as "United Stated Government work" under terms of the United States
+copyright act. It can not be copyrighted. See:
 
-Required Arguments
---------
+Ye, J, Ma N, Madden TL, Ostell JM, 2013 Nuc. Acid Research IgBLAST: an immunoglobulin variable domain sequence analysis tool
 
-    -q --query 
-      The fasta file to blast
-    -d --db_path 
-      The database path from igblast
-    -i --internal_data 
-      The internal database from igblast
-      
-    pyigblast -q query.fasta -d database/ -i internal/
+-------------------------------------------------------------------------------------------------------------
 
-Recommended Arguments
----------
+*Basic usage
 
-    -a --aux_path 
-        The auxiliray path that contains the frame origins of the germline gene
-    -x --executable 
-        If igblastn is not in /usr/bin , specifiy path to executable
-        
-    pyigblast -q query.fasta -d database/ -i internal -a optional/ -x /bin/igblastn
-    
-BLAST Specfic Arguments
----------
-Have defaults
+All that is required is a FASTA file containing any number of sequences. The rest of the arguments are defaulted detailed as followed. It will output one file in either JSON or CSV formats. The blast output is raw igblastn output and is not parsed.
 
-    -o --out 
-        The output filename
-    -e --e_value 
-        Expectation value threshold for blast.
-    -w --word_size 
-        Word size for wordmatch algorithm
-    -pm --penalty_mistmatch
-        Penalty for nucleotide mismatch
-    -rm --reward_match
-        Reward for nucleotide match
-    
-    pyigblast -q query.fasta -d database/ -i internal -a optional/ -x /bin/igblastn -o blast_output -e 1E-15 
-    -w 4 -pm 3 -rm 5
+*Input FASTA file
 
-IgBlast Specific Arguments
---------
-Have defaults
+Can be one or many fasta entries to blast across. Will get one row or entry in the output for every sequence submitted.
 
-    -or --organism 
-        The organism immunoglobulin repertoire to blast against
-    -nV --num_v
-        How many V-genes to return
-    -nD --num_d
-        How many D-genes to return
-    -nJ --num_j
-        How many J-genes to return
-    -dgm --d_gene_matches
-        How many nucleotides in the D-gene must match to call it a hit
-    -s --domain
-        Classification system to use
-    -sT --show_translation
-        Show translation of alignment
-     
-     pyigblast -q query.fasta -d database/ -i internal -a optional/ -x /bin/igblastn -o blast_output -e 1E-15 
-     -w 4 -pm 3 -rm 5 -or human -nV 2 -nD 2 -nJ 1 -dgm 5 -s imgt -sT
+*Databases
 
-Formatting
-----------
-Have defaults
+The database directories are used by blast and the parsing scripts to scan junctions and assign germline genes.
 
-    -f --format_options
-        Default is a tab seperated format of :
-            qseqid sseqid pident length mismatch gapopen qstart qend sstart send
-        Or:
-            Pass format_file.txt and uncomment out metrics to return
-    -z --zip
-        Zip up all output files
-    -c --concatenate
-        Turn off automatic concatenation of result files. Pyigblast splits up files across processors, 
-        if you want them to be put back together.
-    -j, --json
-        Use the JSON output option that will format the text driven igblast output to a json document
-    -jp --json_prefix
-        The prefix for json_output files
-    
-    pyigblast -q query.fasta -d database/ -i internal -a optional/ -x /bin/igblastn -o blast_output -e 1E-15 
-     -w 4 -pm 3 -rm 5 -or human -nV 2 -nD 2 -nJ 1 -dgm 5 -s imgt -sT -f format_templat.txt -z -c -j 
-     -jp my_json_file.txt
+-Compiled BLAST Directory
 
-Formatting File
----------------
-The format file, just comment out to remove from output:
+The BLAST formatted germline files to BLAST against. To use your own, you would need to use 'makeblastdb' from the BLAST software suite to format sequences for BLAST.
 
-     qseqid # Query Seq-id
-    #qgi # Query GI
-    #qacc # Query accesion
-    #qaccver # Query accesion.version
-    qlen # Query sequence length
-    sseqid # Subject Seq-id
-    #sallseqid # All subject Seq-id(s), separated by a ';'
-    #sgi # Subject GI
-    #sallgi # All subject GIs
-    sacc # Subject accession
-    #saccver # Subject accession.version
-    #sallacc # All subject accessions
-    slen # Subject sequence length
-    qstart # Start of alignment in query
-    qend # End of alignment in query
-    sstart # Start of alignment in subject
-    send # End of alignment in subject
-    qseq # Aligned part of query sequence
-    sseq # Aligned part of subject sequence
-    evalue # Expect value
-    bitscore # Bit score
-    score # Raw score
-    length # Alignment length
-    pident # Percentage of identical matches
-    nident # Number of identical matches
-    mismatch # Number of mismatches
-    positive # Number of positive-scoring matches
-    gapopen # Number of gap openings
-    gaps # Total number of gaps
-    ppos # Percentage of positive-scoring matche
-    #frames # Query and subject frames separated by a '/'
-    qframe # Query frame
-    sframe # Subject frame
-    #btop # Blast traceback operations (BTOP)
-    #staxids # unique Subject Taxonomy ID(s), separated by a ';'(in numerical order)
-    #sscinames # unique Subject Scientific Name(s), separated by a ';'
-    #scomnames # unique Subject Common Name(s), separated by a ';'
-    #sblastnames # unique Subject Blast Name(s), separated by a ';'(in alphabetical order)
-    #sskingdoms # unique Subject Super Kingdom(s), separated by a ';'(in alphabetical order) 
-    #stitle # Subject Title
-    #salltitles # All Subject Title(s), separated by a '<>'
-    #sstrand # Subject Strand
-    #qcovs # Query Coverage Per Subject
-    #qcovhsp # Query Coverage Per HSP
+-Internal Data Directory
+
+Used by BLAST to assign frameworks and cdrs for each gene.
+
+-Auxillary
+
+Contains coding frames for the JH gnes. Necessary for BLAST translation, however, the end parser puts together the junctions and retranslates. So it's not necessary.
+
+*Options
+
+-Scheme
+
+Should the numbering and selection scheme use IMGT or KABAT.
+
+-Species
+
+Which species to BLAST against. No need to change the database, just give this option and it will take care of it for you.
+
+-Output format
+
+JSON (JavaScript Object Notation) - This output format is useful if you want to upload to databases like MONGO. It contains all the fields and values within the file. If you don't know that you need this, just use CSV.
+
+CSV (Comma seperated values) - All the fields are on the first line, followed by the data. This can be opened in EXCEL or uploaded to a relational database like mySQL.
+
+BLAST output - This is just the raw output from blast if you wanted it. Basically gives junctional regions but is not parsed or organized.
+
+-VDJ
+
+How many V,D,J genes to show in each output. A number > 1 is only relevant to JSON output since it is the only thing that can handle multiple entries of the same object (nested). If you choose 3, it will rank them by sequence identity, and put them in order in the JSON. If you use CSV, it will only give back rank 1.
+
+-BLAST Options
+
+e-value - The minimal expected value to use for BLAST to consider a gene a match. Ex. For 10, you would see 10 matches in the db for a given score just by chance.
+
+word size - BLAST breaks up the search into "words", what word size should it be used.
+
+penalty mismatch - The penalty of a score for having a mismatch
+
+minimal D nucleotides - The minimal number of matching D nucleotides needed for BLAST to consider it a match.
+
+processors - How many processors to use for blasting. PyIg will break up the input fasta and submit it to each processor. It automatically garbage collects
+
+zip files - For large files, should they be zipped up at the end
+
+**
+http://stackoverflow.com/questions/3333334/stdout-to-tkinter-gui
