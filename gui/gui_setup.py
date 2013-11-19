@@ -7,6 +7,7 @@ import tkFileDialog as filedialog
 import tkMessageBox
 from Tkconstants import *
 from Bio import SeqIO as so
+sys.path.append("../output_parsing")
 from output_tabs_checkboxes import all_checkboxes_dict
 from multiprocessing import cpu_count
 from gui_execute import execute
@@ -763,8 +764,8 @@ class PyIg_gui():
         create_output_frame = ttk.Frame(notebook_frame, name="o_frame")
         self.output_stream_text = Tkinter.Text(create_output_frame)
         self.output_stream_text.pack(side=LEFT, expand=1, fill=BOTH, anchor=NW)
-        sys.stdout = StdoutRedirector(self.output_stream_text)
-        sys.stderr = StdoutRedirector(self.output_stream_text)
+        #sys.stdout = StdoutRedirector(self.output_stream_text)
+        #sys.stderr = StdoutRedirector(self.output_stream_text)
         scroll = ttk.Scrollbar(create_output_frame)
         scroll.pack(side=RIGHT, fill=Y)
         scroll.config(command=self.output_stream_text.yview)

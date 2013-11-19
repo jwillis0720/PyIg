@@ -3,10 +3,10 @@ import subprocess as sp
 import multiprocessing as mp
 import glob
 import os
-import output_parser
+import ..output_parsing.output_parser
 import sys
 import gzip
-from split_fasta import split_fasta
+from ..output_parsing.split_fasta import split_fasta
 try:
     import Bio
 except ImportError("Trouble Installing BioPython:"):
