@@ -83,12 +83,12 @@ class PyIg_gui():
         # argument dictionary we will pass to the arg parser eventually
         self.argument_dict = {
             'query': '',
-            'executable': self._directory_name + "/igblastn",
-            'database': self._directory_name + "/database/",
-            'in_data': self._directory_name + "/internal_data/",
-            'aux_data': self._directory_name + "/optional_file/",
-            'output_file': self._user_directory + "/pyigblast_output",
-            'tmp_data': self._user_directory + "/pyigblast_temporary/"}
+            'executable': os.path.join(self._directory_name,"igblastn"),
+            'database': os.path.join(self._directory_name, "database"),
+            'in_data': os.path.join(self._directory_name,"internal_data"),
+            'aux_data': os.path.join(self._directory_name,"optional_file"),
+            'output_file': os.path.join(self._user_directory,"pyigblast_output"),
+            'tmp_data': os.path.join(self._user_directory,"pyigblast_temporary")}
         window_info = self.root.winfo_toplevel()
         window_info.wm_title('PyIg - GUI')
 
@@ -262,7 +262,7 @@ class PyIg_gui():
         direc = filedialog.askdirectory(**opts)
         if direc:
             entry.delete(0, END)
-            entry.insert(END, fn)
+            entry.insert(END, direc)
             if type == 'blast':
                 self.argument_dict['database'] = str(direc)
             elif type == 'in_data':
