@@ -43,7 +43,7 @@ class igblast_output():
         self.raw_seqs_db_handle = self.get_raw_seqs_db(os.path.basename(blast_file).split('.')[0])
 
         try:
-            for line in open('junctional_data/human_germ_properties.txt').readlines():
+            for line in open('../junctional_data/human_germ_properties.txt').readlines():
                 line_split = line.split()
                 self.end_dict[line_split[0]] = int(line_split[1])
         except IOError:
@@ -102,7 +102,7 @@ class igblast_output():
         self.raw_seqs_db_handle.close()
 
     def get_raw_seqs_db(self, name):
-        self.db_name = self.temporary_directory + "/" + name + ".db"
+        self.db_name = os.path.join(self.temporary_directory, name + ".db")
         shelf = shelve.open(self.db_name)
         for sequence_object in SeqIO.parse(self.input_file, 'fasta'):
             shelf[str(sequence_object.id)] = str(sequence_object.seq)

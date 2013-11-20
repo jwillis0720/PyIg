@@ -268,9 +268,9 @@ class PyIg_gui():
             elif type == 'in_data':
                 self.argument_dict['in_data'] = str(direc)
             elif type == 'aux_data':
-                self.argument_dict['aux_data'] = str(direct)
+                self.argument_dict['aux_data'] = str(direc)
             elif type == 'tmp_data':
-                self.argument_dict['tmp_data'] = str(direct)
+                self.argument_dict['tmp_data'] = str(direc)
 
     def _set_up_basic_options(self, basic_options_frame):
         # basic options
@@ -824,14 +824,14 @@ class PyIg_gui():
             '-evalue': str(self.evalue.get()),
             '-word_size': str(self.word_size.get()),
             '-max_target_seqs': str(500),
-            '-germline_db_V': "{0}{1}_gl_V".format(
-                self.argument_dict['database'], self.species_var.get()),
-            '-germline_db_D': "{0}{1}_gl_D".format(
-                self.argument_dict['database'], self.species_var.get()),
-            '-germline_db_J': "{0}{1}_gl_J".format(
-                self.argument_dict['database'], self.species_var.get()),
-            '-auxiliary_data': "{0}{1}_gl.aux".format(
-                self.argument_dict['aux_data'], self.species_var.get()),
+            '-germline_db_V': "{0}_gl_V".format(
+                os.path.join(self.argument_dict['database'], self.species_var.get())),
+            '-germline_db_D': "{0}_gl_D".format(
+                os.path.join(self.argument_dict['database'], self.species_var.get())),
+            '-germline_db_J': "{0}_gl_J".format(
+                os.path.join(self.argument_dict['database'], self.species_var.get())),
+            '-auxiliary_data': "{0}_gl.aux".format(
+                os.path.join(self.argument_dict['aux_data'], self.species_var.get())),
             '-domain_system': self.scheme_var.get(),
             '-outfmt': str(7)
         }
