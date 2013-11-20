@@ -11,6 +11,7 @@ import datetime
 import sys
 from distutils.dir_util import copy_tree as copytree
 
+
 def run_mp_and_delete(manager):
     '''main method to run igblast through multiprocessing protocol,
     takes in a list of dictionaires each with a seperate set of arguments'''
@@ -42,9 +43,10 @@ def run_mp_and_delete(manager):
     # check on internal data
     _internal_data = manager['internal_data']
     _current_directory = os.getcwd()
-    if not os.path.exists(os.path.join(_current_directory + os.path.basename(_internal_data))):
-        copytree(_internal_data, os.getcwd())
+    if not os.path.exists(os.path.join(_current_directory, os.path.basename(_internal_data))):
         print "Copying internal data to current directory"
+        copytree(_internal_data, os.getcwd())
+
     # set up the command line
     _cline = [manager['executable']]  # we know its in this directory since we copied it here to make this executable
     for argument in blast_options:
@@ -167,7 +169,7 @@ def execute(blast_options, outputoptions):
 
     # split fasta file up
     all_fasta = split_fasta(processors, path, file_name, suffix=".tmp_fasta")
-    glob_path = os.path.join(path,os.path.basename(file_name).split('.fasta')[0] + "*.tmp_fasta")
+    glob_path = os.path.join(path, os.path.basename(file_name).split('.fasta')[0] + "*.tmp_fasta")
 
     print "Splitting up file {0} into {1}".format(file_name, path)
     split_up_starting_files = glob.glob(glob_path)
@@ -196,10 +198,10 @@ def execute(blast_options, outputoptions):
         _manager_dict = {}
 
     # run_protocol
-    for i in _manager_list:
-        run_mp_and_delete(i)
-    
-#pool.map(run_mp_and_delete, _manager_list)
+    # for i in _manager_list:
+     #   run_mp_and_delete(i)
+
+    pool.map(run_mp_and_delete, _manager_list)
     concat(_manager_list[0])
     print "Process is done"
     print "Took {0}".format(time.time() - ts)
