@@ -8,11 +8,11 @@ import tkFileDialog as filedialog
 import tkMessageBox
 from Tkconstants import *
 from Bio import SeqIO as so
-from multiprocessing import cpu_count
+from multiprocessing import cpu_count, freeze_support
 from gui_execute import execute
-import time
 from collections import OrderedDict
 from output_tabs_checkboxes import all_checkboxes_dict
+
 
 class Checkbar():
 
@@ -24,8 +24,7 @@ class Checkbar():
             json_key = pick[2]
             var = Tkinter.IntVar()
             var.set(int(pick[1]))
-            chk = ttk.Checkbutton(parent, onvalue=1, offvalue=0, text=pick[
-                                  0], variable=var, command=lambda: self.state())
+            chk = ttk.Checkbutton(parent, onvalue=1, offvalue=0, text=pick[0], variable=var, command=lambda: self.state())
             if col_count % 5 == 0:
                 row_count += 1
                 col_count = 0
@@ -876,4 +875,6 @@ def main():
 
 
 if __name__ == '__main__':
+    print os.name
+    sys.exit()
     main()
