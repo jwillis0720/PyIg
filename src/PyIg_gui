@@ -8,7 +8,7 @@ import tkFileDialog as filedialog
 import tkMessageBox
 from Tkconstants import *
 from Bio import SeqIO as so
-from multiprocessing import cpu_count, freeze_support
+#from multiprocessing import cpu_count, freeze_support
 from gui_execute import execute
 from collections import OrderedDict
 from output_tabs_checkboxes import all_checkboxes_dict
@@ -81,7 +81,7 @@ class PyIg_gui():
         # argument dictionary we will pass to the arg parser eventually
         self.argument_dict = {
             'query': '',
-            'executable': os.path.join(self._directory_name, "igblastn"),
+            'executable': os.path.join(self._directory_name, "igblastn.exe"),
             'database': os.path.join(self._directory_name, "database"),
             'in_data': os.path.join(self._directory_name, "internal_data"),
             'aux_data': os.path.join(self._directory_name, "optional_file"),
@@ -386,7 +386,7 @@ class PyIg_gui():
         self.min_d_match = Tkinter.IntVar()
         self.min_d_match.set(5)
         self.proc_count = Tkinter.IntVar()
-        self.proc_count.set(cpu_count())
+        self.proc_count.set(2)
 
         # evalue
         e_value_label = ttk.Label(
@@ -762,8 +762,8 @@ class PyIg_gui():
         create_output_frame = ttk.Frame(notebook_frame, name="o_frame")
         self.output_stream_text = Tkinter.Text(create_output_frame)
         self.output_stream_text.pack(side=LEFT, expand=1, fill=BOTH, anchor=NW)
-        sys.stdout = StdoutRedirector(self.output_stream_text)
-        sys.stderr = StdoutRedirector(self.output_stream_text)
+        #sys.stdout = StdoutRedirector(self.output_stream_text)
+        #sys.stderr = StdoutRedirector(self.output_stream_text)
         scroll = ttk.Scrollbar(create_output_frame)
         scroll.pack(side=RIGHT, fill=Y)
         scroll.config(command=self.output_stream_text.yview)
@@ -875,6 +875,6 @@ def main():
 
 
 if __name__ == '__main__':
-    if os.name == "nt":
-        freeze_support()
+    #if os.name == "nt":
+    #    freeze_support()
     main()

@@ -1,6 +1,6 @@
 import sys
 import subprocess as sp
-import multiprocessing as mp
+#import multiprocessing as mp
 import glob
 import os
 import gzip
@@ -9,6 +9,7 @@ from split_fasta import split_fasta
 import time
 import datetime
 from distutils.dir_util import copy_tree as copytree
+import output_parser
 
 
 def run_mp_and_delete(manager):
@@ -52,6 +53,7 @@ def run_mp_and_delete(manager):
         current_argument = [argument, blast_options[argument]]
         _cline += current_argument
 
+    print " ".join(_cline) 
     print "Running BLAST on processor {0} for split file {1}".format(manager['proc_number'], _file)
     sp.call(_cline)
 
@@ -162,7 +164,7 @@ def execute(blast_options, outputoptions):
     fomatted_time = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
     print "Process Started {0}".format(fomatted_time)
     processors = outputoptions['num_procs']
-    pool = mp.Pool(processes=processors)
+    #pool = mp.Pool(processes=processors)
     file_name = outputoptions['pre_split_up_input']
     path = outputoptions['tmp_data_directory']
 
@@ -197,10 +199,10 @@ def execute(blast_options, outputoptions):
         _manager_dict = {}
 
     # run_protocol
-    # for i in _manager_list:
-     #   run_mp_and_delete(i)
+    for i in _manager_list:
+            run_mp_and_delete(i)
 
-    pool.map(run_mp_and_delete, _manager_list)
+    #pool.map(run_mp_and_delete, _manager_list)
     concat(_manager_list[0])
     print "Process is done"
     print "Took {0}".format(time.time() - ts)
