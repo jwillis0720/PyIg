@@ -99,7 +99,9 @@ class igblast_output():
                 if not self.header_written:
                     dw.writeheader()
                 dw.writerow(csv_document_trimmed)
+        
         self.raw_seqs_db_handle.close()
+        self.blast_file_handle.close()
 
     def get_raw_seqs_db(self, name):
         self.db_name = os.path.join(self.temporary_directory, name + ".db")

@@ -56,9 +56,10 @@ def run_mp_and_delete(manager):
         current_argument = [argument, arg ]
         _cline += current_argument
 
-    print " ".join(_cline) 
+    _cline = " ".join(_cline) 
+    print _cline 
     print "Running BLAST on processor {0} for split file {1}".format(manager['proc_number'], _file)
-    sub = sp.Popen(_cline,shell=True,stdout=sp.PIPE,stderr=sp.PIPE)
+    sub = sp.Popen(_cline,stdout=sp.PIPE,stderr=sp.PIPE)
     print sub.communicate()
     _output_type = manager['output_type']
     print "Parsing BLAST output to {0} on Processor {1}".format(_output_type, manager['proc_number'])
@@ -97,7 +98,7 @@ def concat(_manager_dict):
                 gf.writelines(f_in)
                 f_in.close()
                 os.remove(file)
-                os.remove(file.split('.json.gz')[0] + '.db.db')
+                os.remove(file.split('.json.gz')[0] + '.db')
 
     elif file_type == "json" and not zip_bool:
         just_json = glob.glob(file_names + "*.json")
@@ -107,7 +108,7 @@ def concat(_manager_dict):
                 gf.writelines(f_in)
                 f_in.close()
                 os.remove(file)
-                os.remove(file.split('.json')[0] + '.db.db')
+                os.remove(file.split('.json')[0] + '.db')
 
     elif zip_bool and file_type == "csv":
         csv_zip = glob.glob(file_names + "*.csv.gz")
@@ -123,7 +124,7 @@ def concat(_manager_dict):
                     f.close()
         for file in csv_zip:
             os.remove(file)
-            os.remove(file.split('.csv.gz')[0] + '.db.db')
+            os.remove(file.split('.csv.gz')[0] + '.db')
 
     elif file_type == "csv" and not zip_bool:
         just_csv = glob.glob(file_names + "*.csv")
@@ -140,7 +141,7 @@ def concat(_manager_dict):
                     f.close()
         for file in just_csv:
             os.remove(file)
-            os.remove(file.split('.csv')[0] + '.db.db')
+            os.remove(file.split('.csv')[0] + '.db')
 
     elif file_type == "blast_out" and not zip_bool:
         blast_only = glob.glob(file_names + "*.blast_out")
