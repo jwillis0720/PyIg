@@ -875,6 +875,6 @@ def main():
 
 
 if __name__ == '__main__':
-    print os.name
-    sys.exit()
+    if os.name == "nt":
+        freeze_support()
     main()
