@@ -50,13 +50,16 @@ def run_mp_and_delete(manager):
     # set up the command line
     _cline = [manager['executable']]  # we know its in this directory since we copied it here to make this executable
     for argument in blast_options:
-        current_argument = [argument, blast_options[argument]]
+        arg = blast_options[argument]
+        if arg.startswith("C"):
+            arg = '"' + arg + '"'
+        current_argument = [argument, arg ]
         _cline += current_argument
 
     print " ".join(_cline) 
     print "Running BLAST on processor {0} for split file {1}".format(manager['proc_number'], _file)
-    sp.call(_cline)
-
+    sub = sp.Popen(_cline,shell=True,stdout=sp.PIPE,stderr=sp.PIPE)
+    print sub.communicate()
     _output_type = manager['output_type']
     print "Parsing BLAST output to {0} on Processor {1}".format(_output_type, manager['proc_number'])
 
