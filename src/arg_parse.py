@@ -1,4 +1,5 @@
 import argparse
+import sys
 import textwrap
 from Bio import SeqIO
 import os
@@ -6,10 +7,12 @@ import shutil
 from multiprocessing import cpu_count
 
 
-class blastargument_parser():
+class argument_parser():
   # call on all our file type parsers in the sequence_anlysis_method
 
     def __init__(self):
+        self.db_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
+
         """A customized argument parser that does a LOT of error checking"""
         self.parser = argparse.ArgumentParser(
             prog="igblast", formatter_class=argparse.RawTextHelpFormatter,
@@ -29,84 +32,101 @@ class blastargument_parser():
             "-q", "--query", metavar="query.fasta", required=True,
             type=self._check_if_fasta,
             help="The fasta file to be input into igBlast")
-        # database path
-        neces.add_argument(
-            "-d", "--db_path", required=True,
+
+        # Database specific
+        database_group = self.parser.add_argument_group(
+            title="\nDatabase Paths")
+        database_group.add_argument(
+            "-d", "--db_path",
             type=self._check_if_db_exists,
+            default=os.path.join(self.db_directory, "datafiles/database/"),
             help="The database path to the germline repertoire")
+
         # internal_data path
-        neces.add_argument(
-            "-i", "--internal_data", required=True,
+        database_group.add_argument(
+            "-i", "--internal_data",
+            default=os.path.join(self.db_directory, "datafiles/internal_data/"),
             type=self._check_if_db_exists,
             help="The database path to internal data repertoire")
 
-        # recommended options
-        recommended = self.parser.add_argument_group(
-            title="\nRecommended",
-            description="Not necessary to run but recommended")
-        recommended.add_argument(
-            "-a", "--aux_path", type=self._check_if_aux_path_exists,
+        # auxilary group
+        database_group.add_argument(
+            "-a", "--aux_path",
+            type=self._check_if_aux_path_exists,
+            default=os.path.join(self.db_directory, "datafiles/optional_file/"),
             help="The auxilariay path that contains the frame origins \
             of the germline genes for each repertoire, \
             helps produce translation and other metrics")
 
-        # IGBlast Specif Options
+        # IGBlast Specific Options
         igspec = self.parser.add_argument_group(
             title="\nIgBlast Sprecific",
             description="IgBlast Specific Options with a Default")
+
         igspec.add_argument(
             "-or", "--organism", default="human",
             choices=["human", "mouse"],
             help="The organism repeortire to blast against")
+
         igspec.add_argument(
-            "-nV", "--num_v", default=3,
+            "-nV", "--num_v", default=1,
             type=int, help="How many V-genes to match?")
+
         igspec.add_argument(
-            "-nD", "--num_d", default=3,
+            "-nD", "--num_d", default=1,
             type=int, help="How many D-genes to match?")
+
         igspec.add_argument(
-            "-nJ", "--num_j", default=3,
+            "-nJ", "--num_j", default=1,
             type=int, help="How many J-genes to match?")
+
         igspec.add_argument("-dgm", "--d_gene_matches",
                             default=5, type=int,
                             help="How many nuclodtieds in the D-gene must\
                              match to call it a hit")
+
         igspec.add_argument("-s", "--domain", default="imgt", choices=[
                             "imgt", "kabat"],
                             help="Which classification system do you want")
-        igspec.add_argument("-sT", "--show_translation", default=False,
-                            action="store_true",
-                            help="Do you want to show the translation\
-                             of the alignments")
 
         # General Blast Settings
         general = self.parser.add_argument_group(
-            title="\nGeneral Settings",
-            description="General Settings for Blast")
+            title="\nGeneral Settings")
+
         general.add_argument(
-            "-x", '--executable', type=self._check_if_executable_exists,
+            "-x", '--executable',
+            default="/usr/bin/igblastn",
+            type=self._check_if_executable_exists,
             help="The location of the executable, default is /usr/bin/igblastn")
+
         general.add_argument(
-            "-o", "--out", help="output file prefix", default="igblast_out")
+            "-o", "--out",
+            help="output file prefix",
+            default="igblast_out")
+
+        general.add_argument(
+            "-t", "--tmp",
+            help="temporary directory to store files in",
+            type=self._check_if_tmp_exists,
+            default="tmp")
+
         general.add_argument(
             "-e", "--e_value", type=str, default="1e-15",
             help="Real value for excpectation value threshold in blast,\
                 put in scientific notation")
+
         general.add_argument(
             "-w", "--word_size", type=int, default=4,
             help="Word size for wordfinder algorithm")
+
         general.add_argument(
             "-pm", "--penalty_mismatch", type=int,
-            default=0, help="Penalty for nucleotide mismatch")
+            default=-4, help="Penalty for nucleotide mismatch")
+
         general.add_argument(
-            "-rm", "--reward_match", type=int,
-            default=0, help="Reward for nucleotide match")
-        general.add_argument(
-            "-mT", "--max_target_seqs", type=int, default=500,
-            help="Maximum number of alingned sequences to \
-            iterate through at a time")
-        general.add_argument(
-            "-nP", "--num_procs", type=int, default=cpu_count(),
+            "-nP", "--num_procs",
+            type=self._validate_cpu_count,
+            default=cpu_count(),
             help="How many do you want to split the job across,\
             default is the number of processors")
 
@@ -122,9 +142,11 @@ class blastargument_parser():
             qstart qend sstart send\n\n\
             The format file is in the database path as format_template.txt.\
             Uncomment out the metrics you want to use")
+
         formatter.add_argument(
             "-z", "--zip", default=False,
             action="store_true", help="Zip up all output files")
+
         formatter.add_argument(
             "-c", "--concatenate", default=True, action="store_false",
             help="Turn off automatic concatenation and \
@@ -132,35 +154,31 @@ class blastargument_parser():
                 Files are split up at the beginning to run \
                 across multiple processors")
 
-        json_specific = self.parser.add_argument_group(
-            title="\nOutput parsing settings",
-            description="These are the options for creating a JSON files \
-            from the blastoutput that is easily uploaded to a mongo database")
-        json_specific.add_argument(
+        formatter.add_argument(
             "-j", "--json", action="store_true", default=False,
             help="Use the JSON output option that will format\
             the text driven igblast output to a json document")
-        json_specific.add_argument(
-            "-jp", "--json_prefix",
-            default="igblast_output", help="The prefix for json_output files")
 
-        # one special boolean case
-        self.show_translation = False
         # return the arguments
         self.args = self.parser.parse_args()
-        # get them ready to ship out
         self._make_args_dict()
 
-    # helper functions
+    # helper functions to validate arguments
     def _check_if_fasta(self, f_file):
         try:
             SeqIO.parse(f_file, "fasta").next()
             return f_file
-
-            # return SeqIO.parse(f_file,"fasta")
         except StopIteration:
             msg = "{0} is not a fasta file\n".format(f_file)
             raise argparse.ArgumentTypeError(msg)
+
+    def _validate_cpu_count(self, cpus):
+        if int(cpus) > cpu_count():
+            msg = "You have requested more processors than you have available\
+            Currently have {0} available".format(cpu_count)
+            raise argparse.ArgumentTypeError(msg)
+        else:
+            return int(cpus)
 
     def _check_if_executable_exists(self, x_path):
         if not os.path.exists(x_path):
@@ -168,7 +186,7 @@ class blastargument_parser():
             does not exist, use -h for help\n".format(x_path)
             raise argparse.ArgumentTypeError(msg)
         if not os.access(x_path, os.R_OK):
-            msg1 = "executable {0} does not permission to run\n".format(x_path)
+            msg1 = "executable {0} does have not permission to run\n".format(x_path)
             raise argparse.ArgumentTypeError(msg1)
         else:
             return x_path
@@ -180,6 +198,15 @@ class blastargument_parser():
             msg = "{0} path for does not exist for database\n".format(db_path)
             raise argparse.ArgumentTypeError(msg)
 
+    def _check_if_tmp_exists(self, db_path):
+        if os.path.exists(db_path):
+            return db_path
+        else:
+            msg = "{0} path does not exist...making".format(db_path)
+            print msg
+            os.makedirs(db_path)
+            return db_path
+
     def _check_if_aux_path_exists(self, aux_path):
         if os.path.exists(aux_path):
             return aux_path
@@ -188,43 +215,26 @@ class blastargument_parser():
             raise argparse.ArgumentTypeError(msg)
 
     def _make_args_dict(self):
-        # copy internal data directory to current location
-        # shutil.copytree(self.args.internal_data,'.')
-        try:
-            shutil.copytree(self.args.internal_data, './internal_data')
-        except OSError:
-            print "Internal Data direcotry file exists in this directory, skipping..."
-
         self.args_dict = {
-            '-query': self.args.query,
             '-organism': self.args.organism,
             '-num_alignments_V': self.args.num_v,
             '-num_alignments_D': self.args.num_d,
             '-num_alignments_J': self.args.num_j,
             '-min_D_match': self.args.d_gene_matches,
             '-domain_system': self.args.domain,
-            '-out': self.args.out,
             '-evalue': self.args.e_value,
             '-word_size': self.args.word_size,
-            '-max_target_seqs': self.args.max_target_seqs,
             '-germline_db_V': "{0}{1}_gl_V".format(
                 self.args.db_path, self.args.organism),
             '-germline_db_D': "{0}{1}_gl_D".format(
                 self.args.db_path, self.args.organism),
             '-germline_db_J': "{0}{1}_gl_J".format(
-                self.args.db_path, self.args.organism)
+                self.args.db_path, self.args.organism),
+            '-D_penalty': self.args.penalty_mismatch,
+            '-auxiliary_data': "{0}{1}_gl.aux".format(
+                self.args.aux_path, self.args.organism)
 
         }
-        # add bool opition
-        if self.args.penalty_mismatch:
-            self.args_dict['-penalty'] = self.args.penalty_mismatch
-        if self.args.reward_match:
-            self.args_dict['-reward'] = self.args.reward_match
-        if self.args.show_translation:
-            self.show_translation = True
-        if self.args.aux_path:
-            self.args_dict['-auxiliary_data'] = "{0}{1}_gl.aux".format(
-                self.args.aux_path, self.args.organism)
 
         # add formatting option
         if self.args.format_options == 'default':
@@ -242,50 +252,32 @@ class blastargument_parser():
             format = "7 " + " ".join(formatting_titles)
             self.args_dict['-outfmt'] = format
 
-    # only non memeber functions needed
-    def return_parsed_args(self):
-        return self.args_dict
+    def get_command(self):
+        return self.args.executable
 
-    def return_command_line(self):
-        '''return solid strin of command line'''
-        return ' '.join(self.return_command_line_from_dict(self.args_dict))
+    def get_query(self):
+        return self.args.query
 
-    def return_command_line_from_dict(self, cline_dict):
-        '''return command line as a list to put in subprocess
-        --args
-        cline_dict - The command line dictionary to return. \
-        We add in the executable'''
-        if self.args.executable:
-            cline = [self.args.executable]
-        else:
-            cline = [self._check_if_executable_exists("/usr/bin/igblastn")]
-        for command in cline_dict:
-            cline.append(str(command))
-            cline.append(str(self.args_dict[command]))
-        return cline
-
-    def return_number_procs(self):
+    def get_procs(self):
         return self.args.num_procs
 
-    def return_zip_bool(self):
+    def get_tmp_dir(self):
+        return self.args.tmp
+
+    def get_internal_directory(self):
+        return self.args.internal_data
+
+    def get_zip_bool(self):
         return self.args.zip
 
-    def return_concat_bool(self):
+    def get_concat_bool(self):
         return self.args.concatenate
 
-    def return_json_bool(self):
+    def get_json_bool(self):
         return self.args.json
 
-    def return_translation_bool(self):
-        return self.args.show_translation
-
-    def return_json_prefix(self):
-        return self.args.json_prefix
-
-    def return_output_prefix(self):
+    def get_output_prefix(self):
         return self.args.out
 
-
-if __name__ == '__main__':
-    args = blastargument_parser().return_command_line()
-    print(args)
+    def get_blast_options(self):
+        return self.args_dict

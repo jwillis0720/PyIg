@@ -14,18 +14,15 @@ def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
 
     # return all fasta so we can get the raw sequence from it which blast does not provide.
     #@todo, find a way to get the memory down in these functions
-    all_fasta = {}
-    print path
-    if not os.path.exists(path):
-        os.makedirs(path)
     parent_file = []
+    print path
     file_prefix = os.path.basename(file_name).split('.fasta')[0]
-    print "Counting entries in fasta files {0}".format(file_name)
+    print "Counting entries in fasta files {0}".format(os.path.abspath(file_name))
     for i, j in enumerate(Bio.SeqIO.parse(file_name, 'fasta')):
         if i % 10000 == 0 and i != 0:
             print "coutned {0} entries".format(i)
         parent_file.append(j)
-    print "{0} in fasta file".format(len(parent_file))
+    print "{0} entry in fasta file".format(len(parent_file))
 
     files_per_tmp = float(len(parent_file)) / float(num_procs)
     # print "{0} processors, blasting {1} entries per processor".format(num_procs, files_per_tmp)
@@ -39,12 +36,11 @@ def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
     for record in parent_file:
         # append records to our list holder
         joiner.append(">" + record.id + "\n" + str(record.seq))
-        all_fasta[record.id] = str(record.seq)
         # if we have reached the maximum numbers to be in that file, write
         # to a file, and then clear
         if num > files_per_tmp:
             joiner.append("")
-            file_name = path + "/" + file_prefix + "_" + str(file_counter) + suffix
+            file_name = os.path.join(path, file_prefix + "_" + str(file_counter) + suffix)
             with open(file_name, 'w') as f:
                 f.write("\n".join(joiner))
 
@@ -59,10 +55,9 @@ def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
         # for left over fasta entries, very important or else they will
         # just hang out in limbo
         joiner.append("")
-        file_name = path + "/" + file_prefix + "_" + str(file_counter) + suffix
+        file_name = os.path.join(path, file_prefix + "_" + str(file_counter) + suffix)
         with open(file_name, 'w') as f:
             f.write("\n".join(joiner))
-    return all_fasta
 
 if __name__ == '__main__':
     blash = split_fasta(sys.argv[1], os.path.dirname(os.path.abspath(sys.argv[2])), sys.argv[2])
