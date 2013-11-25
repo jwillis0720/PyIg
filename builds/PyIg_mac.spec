@@ -1,5 +1,5 @@
 # -*- mode: python -*-
-datafiles = Tree('../src/datafiles/', prefix = 'datafiles')
+datafiles = Tree('../src/datafiles', prefix = 'datafiles')
 bin = Tree('../igblast_source/darwin/ncbi-igblast-1.2.0/bin/','bin')
 a = Analysis(['../src/PyIg_gui'],
              pathex=['/Users/jordanwillis/utilities/pyigblast/builds'],
