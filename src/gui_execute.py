@@ -4,7 +4,6 @@ import multiprocessing as mp
 import glob
 import os
 import gzip
-import shutil
 from split_fasta import split_fasta
 import time
 import datetime
@@ -53,13 +52,12 @@ def run_mp_and_delete(manager):
         arg = blast_options[argument]
         if arg.startswith("C"):
             arg = '"' + arg + '"'
-        current_argument = [argument, arg ]
+        current_argument = [argument, arg]
         _cline += current_argument
 
-    _cline = " ".join(_cline) 
-    print _cline 
+    _cline = " ".join(_cline)
     print "Running BLAST on processor {0} for split file {1}".format(manager['proc_number'], _file)
-    sub = sp.Popen(_cline,stdout=sp.PIPE,stderr=sp.PIPE)
+    sub = sp.Popen(_cline, stdout=sp.PIPE, stderr=sp.PIPE)
     print sub.communicate()
     _output_type = manager['output_type']
     print "Parsing BLAST output to {0} on Processor {1}".format(_output_type, manager['proc_number'])
@@ -203,8 +201,8 @@ def execute(blast_options, outputoptions):
         _manager_dict = {}
 
     # run_protocol
-    
-    #for i in _manager_list:
+
+    # for i in _manager_list:
      #       run_mp_and_delete(i)
 
     pool.map(run_mp_and_delete, _manager_list)
