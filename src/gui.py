@@ -6,12 +6,11 @@ import Tkinter
 import ttk
 import tkFileDialog as filedialog
 import tkMessageBox
+import collections
 from Tkconstants import *
 from Bio import SeqIO as so
 from multiprocessing import cpu_count, freeze_support
 from gui_execute import execute
-import
-jk
 from output_tabs_checkboxes import all_checkboxes_dict
 
 
@@ -784,7 +783,7 @@ class PyIg_gui():
         readme_text.config(yscrollcommand=scroll_bar.set)
         readme_frame.pack(side=TOP, expand=1, fill=BOTH)
         notebook_frame.update_idletasks()
-        for line in open(self._directory_name + '/README_gui.txt').readlines():
+        for line in open(os.path.join(self._directory_name,'datafiles/README_gui.txt')).readlines():
             readme_text.insert(END, line)
             readme_text.see(END)
             readme_text.update_idletasks()
