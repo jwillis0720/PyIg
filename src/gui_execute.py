@@ -7,8 +7,8 @@ import gzip
 from split_fasta import split_fasta
 import time
 import datetime
-from distutils.dir_util import copy_tree as copytree
 import output_parser
+import shutil
 
 
 def run_mp_and_delete(manager):
@@ -38,13 +38,6 @@ def run_mp_and_delete(manager):
 
     # output options
     _output_options = manager['output_options']
-
-    # check on internal data
-    _internal_data = manager['internal_data']
-    _current_directory = os.getcwd()
-    if not os.path.exists(os.path.join(_current_directory, os.path.basename(_internal_data))):
-        print "Copying internal data to current directory"
-        copytree(_internal_data, os.getcwd())
 
     # set up the command line
     _cline = [manager['executable']]  # we know its in this directory since we copied it here to make this executable
@@ -116,15 +109,14 @@ def concat(_manager_dict):
     elif zip_bool and file_type == "csv":
         csv_zip = glob.glob(file_names + "*.csv.gz")
         with gzip.open(out_file + ".csv.gz", 'wb') as gf:
-            for file in csv_zip:
-                for line in gzip.open(file, 'rb'):
+            for line in gzip.open(csv_zip[0], 'rb'):
+                gf.write(line)
+            for files in csv_zip[1:]:
+                f = gzip.open(files, 'rb')
+                f.next()
+                for line in f:
                     gf.write(line)
-                for files in csv_zip[1:]:
-                    f = gzip.open(files, 'rb')
-                    f.next()
-                    for line in f:
-                        gf.write(line)
-                    f.close()
+                f.close()
         for file in csv_zip:
             os.remove(file)
             os.remove(file.split('.csv.gz')[0] + '.db')
@@ -132,16 +124,14 @@ def concat(_manager_dict):
     elif file_type == "csv" and not zip_bool:
         just_csv = glob.glob(file_names + "*.csv")
         with open(out_file + ".csv", 'w') as gf:
-            for file in just_csv:
-                for line in open(file):
+            for line in open(just_csv[0]):
+                gf.write(line)
+            for files in just_csv[1:]:
+                f = open(files)
+                f.next()
+                for line in f:
                     gf.write(line)
-
-                for files in just_csv[1:]:
-                    f = open(files)
-                    f.next()
-                    for line in f:
-                        gf.write(line)
-                    f.close()
+                f.close()
         for file in just_csv:
             os.remove(file)
             os.remove(file.split('.csv')[0] + '.db')
@@ -179,6 +169,10 @@ def execute(blast_options, outputoptions):
         os.makedirs(os.path.abspath(path))
         print msg
 
+    if not os.path.exists(os.path.join(os.getcwd() + "/internal_data")):
+        print "Copying internal data to current directory"
+        shutil.copytree(outputoptions['internal_data_directory'], os.getcwd() + "/internal_data")
+
     # split fasta file up
     all_fasta = split_fasta(processors, path, file_name, suffix=".tmp_fasta")
     glob_path = os.path.join(path, os.path.basename(file_name).split('.fasta')[0] + "*.tmp_fasta")
@@ -200,7 +194,6 @@ def execute(blast_options, outputoptions):
         _manager_dict['zip_bool'] = zip_bool
         _manager_dict['all_fasta'] = all_fasta
         _manager_dict['blast_options'] = blast_options  # all the blast options
-        _manager_dict['internal_data'] = outputoptions['internal_data_directory']
         _manager_dict['output_type'] = outputoptions['output_type']
         _manager_dict['output_file'] = output_file
         _manager_dict['output_options'] = outputoptions['output_options']
@@ -212,7 +205,7 @@ def execute(blast_options, outputoptions):
     # run_protocol
 
     # for i in _manager_list:
-     #   run_mp_and_delete(i)
+    #    run_mp_and_delete(i)
 
     pool.map(run_mp_and_delete, _manager_list)
     concat(_manager_list[0])
