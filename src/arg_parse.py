@@ -18,11 +18,11 @@ class argument_parser():
         self.parser = argparse.ArgumentParser(
             prog="igblast", formatter_class=argparse.RawTextHelpFormatter,
             description=textwrap.dedent('''\
-                                    PyIgBlast
+                                                            PyIgBlast
                     __________________________________________________________________________________________\n
-                    PyIgBlast calls upon igblastn for nucleotides. Uses multiproecessing to split up fasta file.
-                    Parses the output to a csv/tsv/JSON and allows upload to MongoDB or MySQL databases
-                    author - Joran Willis
+                    PyIgBlast calls upon BLAST for nucleotides. Uses multiproecessing to split up fasta file.
+                    Parses the output to a csv/JSON and translates junctions using internal data structure.
+                    \nAuthor - Joran Willis
                     '''))
 
         # Necessary Arguments
@@ -55,9 +55,7 @@ class argument_parser():
             "-a", "--aux_path",
             type=self._check_if_aux_path_exists,
             default=os.path.join(self.db_directory, "datafiles/optional_file/"),
-            help="The auxilariay path that contains the frame origins \
-            of the germline genes for each repertoire, \
-            helps produce translation and other metrics")
+            help="The auxilariay path that contains the frame origins of the germline genes for each repertoire.\n Helps produce translation and other metrics")
 
         # IGBlast Specific Options
         igspec = self.parser.add_argument_group(
@@ -83,8 +81,7 @@ class argument_parser():
 
         igspec.add_argument("-dgm", "--d_gene_matches",
                             default=5, type=int,
-                            help="How many nuclodtieds in the D-gene must\
-                             match to call it a hit")
+                            help="How many nuclodtieds in the D-gene must match to call it a hit")
 
         igspec.add_argument("-s", "--domain", default="imgt", choices=[
                             "imgt", "kabat"],
@@ -107,14 +104,13 @@ class argument_parser():
 
         general.add_argument(
             "-t", "--tmp",
-            help="temporary directory to store files in",
+            help="temporary directory to store files in.\nDefaults to ./tmp",
             type=self._check_if_tmp_exists,
             default="tmp")
 
         general.add_argument(
             "-e", "--e_value", type=str, default="1e-15",
-            help="Real value for excpectation value threshold in blast,\
-                put in scientific notation")
+            help="Real value for excpectation value threshold in blast.\nPut in scientific notation")
 
         general.add_argument(
             "-w", "--word_size", type=int, default=4,
@@ -128,8 +124,7 @@ class argument_parser():
             "-nP", "--num_procs",
             type=self._validate_cpu_count,
             default=cpu_count(),
-            help="How many do you want to split the job across,\
-            default is the number of processors")
+            help="How many do you want to split the job across, default is the number of processors")
 
         formatter = self.parser.add_argument_group(
             title="Outputting Options")
@@ -139,9 +134,7 @@ class argument_parser():
             "--output_options",
             type=self._validate_output_options,
             default="datafiles/output_options.txt",
-            help="Open this file and comment out options you don't want in your final file.\
-            The first column is the name of the option. The second column is used by the parser and should\
-            not be changed.")
+            help="Open this file and comment out options you don't want in your final file.\nThe first column is the name of the option.\nThe second column is used by the parser and should not be changed.")
 
         formatter.add_argument(
             "-z",
@@ -152,16 +145,11 @@ class argument_parser():
 
         formatter.add_argument(
             "-c", "--concatenate", default=True, action="store_false",
-            help="Turn off automatic concatenation and \
-                deletion of temporary files.\
-                Files are split up at the beginning to run \
-                across multiple processors")
+            help="Turn off automatic concatenation and deletion of temporary files.\nFiles are split up at the beginning to run across multiple processors")
 
         formatter.add_argument(
             "-j", "--json", action="store_true", default=False,
-            help="Use the JSON output option that will format\
-            the text driven igblast output to a json document.\
-            Defaults to a CSV")
+            help="Use the JSON output option that will format the text driven igblast output to a json document.\nDefaults to CSV")
 
         # return the arguments
         self.args = self.parser.parse_args()
@@ -178,7 +166,7 @@ class argument_parser():
 
     def _validate_cpu_count(self, cpus):
         if int(cpus) > cpu_count():
-            msg = "You have requested more processors than you have available\
+            msg = "You have requested more processors than you have available\n\
             Currently have {0} available".format(cpu_count)
             raise argparse.ArgumentTypeError(msg)
         else:
@@ -186,8 +174,7 @@ class argument_parser():
 
     def _check_if_executable_exists(self, x_path):
         if not os.path.exists(x_path):
-            msg = "path to executable {0} \
-            does not exist, use -h for help\n".format(x_path)
+            msg = "path to executable {0} does not exist, use -h for help\n".format(x_path)
             raise argparse.ArgumentTypeError(msg)
         if not os.access(x_path, os.R_OK):
             msg1 = "executable {0} does have not permission to run\n".format(x_path)
