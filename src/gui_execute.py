@@ -55,10 +55,15 @@ def run_mp_and_delete(manager):
         current_argument = [argument, arg]
         _cline += current_argument
 
-    _cline = " ".join(_cline)
     print "Running BLAST on processor {0} for split file {1}".format(manager['proc_number'], _file)
+
     sub = sp.Popen(_cline, stdout=sp.PIPE, stderr=sp.PIPE)
-    print sub.communicate()
+    stdout, stderr = sub.communicate()
+
+    # if we have output, lets print it
+    if stdout or stderr:
+        print stdout, stderr
+
     _output_type = manager['output_type']
     print "Parsing BLAST output to {0} on Processor {1}".format(_output_type, manager['proc_number'])
 
@@ -68,7 +73,7 @@ def run_mp_and_delete(manager):
     else:
         print _blast_out, _file, _temporary_path
         op = output_parser.igblast_output(_blast_out, _file, _temporary_path,
-                                          _output_options, zip_bool=_zip_bool)
+                                          _output_options, gui=True, zip_bool=_zip_bool)
         op.parse_blast_file_to_type(_json_out, _output_type)
         print "Done parsing {0} type\nRemoving {1} and {2}".format(_output_type, _file, _blast_out)
         os.remove(_file)
@@ -169,6 +174,10 @@ def execute(blast_options, outputoptions):
     pool = mp.Pool(processes=processors)
     file_name = outputoptions['pre_split_up_input']
     path = outputoptions['tmp_data_directory']
+    if not os.path.exists(path):
+        msg = "{0} is not found, creating directory...".format(path)
+        os.makedirs(os.path.abspath(path))
+        print msg
 
     # split fasta file up
     all_fasta = split_fasta(processors, path, file_name, suffix=".tmp_fasta")
@@ -202,8 +211,8 @@ def execute(blast_options, outputoptions):
 
     # run_protocol
 
-    # for i in _manager_list:
-     #       run_mp_and_delete(i)
+    # or i in _manager_list:
+    #    run_mp_and_delete(i)
 
     pool.map(run_mp_and_delete, _manager_list)
     concat(_manager_list[0])

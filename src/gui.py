@@ -79,14 +79,24 @@ class PyIg_gui():
         self.output_entry = ""
         self.all_checkboxes_dict = all_checkboxes_dict
         # argument dictionary we will pass to the arg parser eventually
+        if os.name == "posix":
+            self.os = "mac"
+        else:
+            self.os = "windows"
+
         self.argument_dict = {
             'query': '',
-            'executable': os.path.join(self._directory_name, "igblastn.exe"),
-            'database': os.path.join(self._directory_name, "database"),
-            'in_data': os.path.join(self._directory_name, "internal_data"),
-            'aux_data': os.path.join(self._directory_name, "optional_file"),
+            'database': os.path.join(self._directory_name, "datafiles/database"),
+            'in_data': os.path.join(self._directory_name, "datafiles/internal_data"),
+            'aux_data': os.path.join(self._directory_name, "datafiles/optional_file"),
             'output_file': os.path.join(self._user_directory, "pyigblast_output"),
             'tmp_data': os.path.join(self._user_directory, "pyigblast_temporary")}
+        if self.os == "mac":
+            self.argument_dict['executable'] = os.path.join(self._directory_name,
+                                                            "../igblast_source/darwin/ncbi-igblast-1.2.0/bin/igblastn")
+        else:
+            self.argument_dict['executable'] = os.path.join(self._directory_name,
+                                                            "../igblast_source/windows/ncbi-igblast-1.2.0/bin/igblast.exe")
         window_info = self.root.winfo_toplevel()
         window_info.wm_title('PyIg - GUI')
 
@@ -762,8 +772,8 @@ class PyIg_gui():
         create_output_frame = ttk.Frame(notebook_frame, name="o_frame")
         self.output_stream_text = Tkinter.Text(create_output_frame)
         self.output_stream_text.pack(side=LEFT, expand=1, fill=BOTH, anchor=NW)
-        #sys.stdout = StdoutRedirector(self.output_stream_text)
-        #sys.stderr = StdoutRedirector(self.output_stream_text)
+        sys.stdout = StdoutRedirector(self.output_stream_text)
+        sys.stderr = StdoutRedirector(self.output_stream_text)
         scroll = ttk.Scrollbar(create_output_frame)
         scroll.pack(side=RIGHT, fill=Y)
         scroll.config(command=self.output_stream_text.yview)
@@ -783,15 +793,15 @@ class PyIg_gui():
         readme_text.config(yscrollcommand=scroll_bar.set)
         readme_frame.pack(side=TOP, expand=1, fill=BOTH)
         notebook_frame.update_idletasks()
-        for line in open(os.path.join(self._directory_name,'datafiles/README_gui.txt')).readlines():
+        for line in open(os.path.join(self._directory_name, 'datafiles/README_gui.txt')).readlines():
             readme_text.insert(END, line)
             readme_text.see(END)
             readme_text.update_idletasks()
         notebook_frame.add(readme_frame, text="Readme", underline=0, padding=2)
 
     def _update(self):
-        import gui_setup
-        gui_setup.main_refresh(self.root, gui_setup)
+        import gui
+        gui.main_refresh(self.root, gui)
 
     def execute(self):
         self.main_notebook_frame.select(2)
@@ -860,10 +870,10 @@ def center(win):
     win.geometry('{0}x{1}+{2}+{3}'.format(*geom))
 
 
-def main_refresh(root, gui_setup):
-    reload(gui_setup)
+def main_refresh(root, gui):
+    reload(gui)
     root.destroy()
-    gui_setup.main()
+    gui.main()
 
 
 def main():
