@@ -74,10 +74,10 @@ class PyIg_gui():
         # get directories
         self._directory_name = os.path.dirname(os.path.abspath(sys.argv[0]))
         self._user_directory = os.path.expanduser("~")
-
         # this will later become a widget. I initialize it here because it needs to update
         self.output_entry = ""
         self.all_checkboxes_dict = all_checkboxes_dict
+
         # argument dictionary we will pass to the arg parser eventually
         if os.name == "posix":
             self.os = "mac"
@@ -93,10 +93,10 @@ class PyIg_gui():
             'tmp_data': os.path.join(self._user_directory, "pyigblast_temporary")}
         if self.os == "mac":
             self.argument_dict['executable'] = os.path.join(self._directory_name,
-                                                            "../igblast_source/darwin/ncbi-igblast-1.2.0/bin/igblastn")
+                                                            "bin/igblastn")
         else:
             self.argument_dict['executable'] = os.path.join(self._directory_name,
-                                                            "../igblast_source/windows/ncbi-igblast-1.2.0/bin/igblast.exe")
+                                                            "bin/igblast.exe")
         window_info = self.root.winfo_toplevel()
         window_info.wm_title('PyIg - GUI')
 

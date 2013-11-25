@@ -211,10 +211,10 @@ def execute(blast_options, outputoptions):
 
     # run_protocol
 
-    # or i in _manager_list:
-    #    run_mp_and_delete(i)
+    for i in _manager_list:
+        run_mp_and_delete(i)
 
-    pool.map(run_mp_and_delete, _manager_list)
+    #pool.map(run_mp_and_delete, _manager_list)
     concat(_manager_list[0])
     print "Process is done"
     print "Took {0}".format(time.time() - ts)

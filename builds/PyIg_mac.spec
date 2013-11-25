@@ -1,4 +1,6 @@
 # -*- mode: python -*-
+datafiles = Tree('../src/datafiles/', prefix = 'datafiles')
+bin = Tree('../igblast_source/darwin/ncbi-igblast-1.2.0/bin/','bin')
 a = Analysis(['../src/PyIg_gui'],
              pathex=['/Users/jordanwillis/utilities/pyigblast/builds'],
              hiddenimports=[],
@@ -12,14 +14,16 @@ exe = EXE(pyz,
           debug=True,
           strip=None,
           upx=True,
-          console=False , icon='../splashes/full_antibody.icns')
+          console=False , icon='../src/splashes/full_antibody.icns')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
                a.datas,
+               datafiles,
+               bin,
                strip=None,
                upx=True,
                name='PyIg')
 app = BUNDLE(coll,
              name='PyIg.app',
-             icon='../splashes/full_antibody.icns')
+             icon='../src/splashes/full_antibody.icns')
