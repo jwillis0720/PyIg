@@ -10,7 +10,8 @@ from Tkconstants import *
 from Bio import SeqIO as so
 from multiprocessing import cpu_count, freeze_support
 from gui_execute import execute
-import collections 
+import
+jk
 from output_tabs_checkboxes import all_checkboxes_dict
 
 

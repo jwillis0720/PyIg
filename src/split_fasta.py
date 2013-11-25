@@ -15,7 +15,6 @@ def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
     # return all fasta so we can get the raw sequence from it which blast does not provide.
     #@todo, find a way to get the memory down in these functions
     parent_file = []
-    print path
     file_prefix = os.path.basename(file_name).split('.fasta')[0]
     print "Counting entries in fasta files {0}".format(os.path.abspath(file_name))
     for i, j in enumerate(Bio.SeqIO.parse(file_name, 'fasta')):

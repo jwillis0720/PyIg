@@ -4,6 +4,7 @@ import textwrap
 from Bio import SeqIO
 import os
 import shutil
+
 from multiprocessing import cpu_count
 
 
@@ -131,21 +132,23 @@ class argument_parser():
             default is the number of processors")
 
         formatter = self.parser.add_argument_group(
-            title="Formatting Options",
-            description="Formatting options mostly available"
-        )
+            title="Outputting Options")
 
         formatter.add_argument(
-            "-f", "--format_options", type=str, default="default",
-            help="default is a tab seperated format of\n\n\
-            qseqid sseqid pident length mismatch gapopen \
-            qstart qend sstart send\n\n\
-            The format file is in the database path as format_template.txt.\
-            Uncomment out the metrics you want to use")
+            "-op",
+            "--output_options",
+            type=self._validate_output_options,
+            default="datafiles/output_options.txt",
+            help="Open this file and comment out options you don't want in your final file.\
+            The first column is the name of the option. The second column is used by the parser and should\
+            not be changed.")
 
         formatter.add_argument(
-            "-z", "--zip", default=False,
-            action="store_true", help="Zip up all output files")
+            "-z",
+            "--zip",
+            default=False,
+            action="store_true",
+            help="Zip up all output files")
 
         formatter.add_argument(
             "-c", "--concatenate", default=True, action="store_false",
@@ -157,7 +160,8 @@ class argument_parser():
         formatter.add_argument(
             "-j", "--json", action="store_true", default=False,
             help="Use the JSON output option that will format\
-            the text driven igblast output to a json document")
+            the text driven igblast output to a json document.\
+            Defaults to a CSV")
 
         # return the arguments
         self.args = self.parser.parse_args()
@@ -214,6 +218,13 @@ class argument_parser():
             msg = "{0} path for aux files does not exist\n".format(aux_path)
             raise argparse.ArgumentTypeError(msg)
 
+    def _validate_output_options(self, options_file):
+        if os.path.exists(options_file):
+            return os.path.abspath(options_file)
+        else:
+            msg = "{0} does not exists.\nThis file is necessary for the parser to run.".format(options_file)
+            raise argparse.ArgumentTypeError(msg)
+
     def _make_args_dict(self):
         self.args_dict = {
             '-organism': self.args.organism,
@@ -236,21 +247,16 @@ class argument_parser():
 
         }
 
-        # add formatting option
-        if self.args.format_options == 'default':
-            self.args_dict['-outfmt'] = 7
-        else:
-            self.args.format_options = self._check_if_db_exists(
-                self.args.format_options)
-            formatting_titles = []
-            for line in open(self.args.format_options).readlines():
-                if line.startswith("#"):
-                    continue
-                else:
-                    formatting_titles.append(line.split()[0])
-
-            format = "7 " + " ".join(formatting_titles)
-            self.args_dict['-outfmt'] = format
+        # add special formatting instructions
+        self.args.format_options = self._check_if_db_exists("datafiles/format_template.txt")
+        formatting_titles = []
+        for line in open(self.args.format_options).readlines():
+            if line.startswith("#"):
+                continue
+            else:
+                formatting_titles.append(line.split()[0])
+        format = "7 " + " ".join(formatting_titles)
+        self.args_dict['-outfmt'] = format
 
     def get_command(self):
         return self.args.executable
@@ -281,3 +287,6 @@ class argument_parser():
 
     def get_blast_options(self):
         return self.args_dict
+
+    def get_output_options(self):
+        return self.args.output_options

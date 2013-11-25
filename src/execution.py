@@ -21,8 +21,7 @@ def run_mp_and_delete(manager):
     _zip_bool = manager['zip_bool']
     _json_bool = manager['json_bool']
     _concat_bool = manager['concat_bool']
-    _output_file = manager['output_prefix']
-    #_output_options = manager['output_options']
+    _output_options = manager['output_options']
 
     if _json_bool:
         _output_type = "json"
@@ -32,6 +31,7 @@ def run_mp_and_delete(manager):
     # file name outputs, these will all be temp files to be parsed later
     _file = manager['split_file']
     _blast_out = _file.split('.')[0] + ".blast_out"
+    _output_file = _file.split('.')[0] + "." + _output_type
 
     # temporary path
     _temporary_path = manager['tmp_path']
@@ -69,12 +69,11 @@ def run_mp_and_delete(manager):
     stderr, stdout = sub.communicate()
     if stderr or stdout:
         print stderr, stdout
-    sys.exit()
 
     # Now parse the output
     print "Parsing BLAST output to {0} on Processor {1}".format(_output_type, manager['proc_number'])
     op = output_parser.igblast_output(_blast_out, _file,
-                                      _temporary_path, _output_options, zip_bool=_zip_bool)
+                                      _temporary_path, _output_options, gui=False, zip_bool=_zip_bool)
     op.parse_blast_file_to_type(_output_file, _output_type)
     print "Done parsing {0} type".format(_output_type)
     if _concat_bool:
@@ -84,86 +83,68 @@ def run_mp_and_delete(manager):
 
 
 def concat(_manager_dict):
-    out_file = _manager_dict['output_file']
-    file_type = _manager_dict['output_type']
+    out_file = _manager_dict['output_prefix']
     zip_bool = _manager_dict['zip_bool']
+    json_bool = _manager_dict['json_bool']
+    concat_bool = _manager_dict['concat_bool']
 
-    file_names = os.path.dirname(_manager_dict['split_file']) \
-        + "/" + os.path.basename(_manager_dict['non_split']).split('.')[0]
+    # join the tmp file path with the query name to get all files that should be concatenated
+    file_names = os.path.join(_manager_dict['tmp_path'],
+                              os.path.basename(_manager_dict['non_split']).split('.')[0])
 
-    marker = ""
-    if zip_bool:
-        marker = ".gz"
-    print "Concatinating {0} files to {1}.{2}{3}".format(file_type, out_file, file_type, marker)
-
-    if zip_bool and file_type == "json":
+    if zip_bool and json_bool:
         zipped_and_json = glob.glob(file_names + "*.json.gz")
         with gzip.open(out_file + ".json.gz", 'wb') as gf:
             for file in zipped_and_json:
                 f_in = gzip.open(file, 'rb')
                 gf.writelines(f_in)
                 f_in.close()
-                os.remove(file)
-                os.remove(file.split('.json.gz')[0] + '.db')
+                if concat_bool:
+                    os.remove(file)
+                    os.remove(file.split('.json.gz')[0] + '.db')
 
-    elif file_type == "json" and not zip_bool:
+    elif json_bool and not zip_bool:
         just_json = glob.glob(file_names + "*.json")
         with open(out_file + ".json", 'w') as gf:
             for file in just_json:
                 f_in = open(file, 'r')
                 gf.writelines(f_in)
                 f_in.close()
-                os.remove(file)
-                os.remove(file.split('.json')[0] + '.db')
+                if concat_bool:
+                    os.remove(file)
+                    os.remove(file.split('.json')[0] + '.db')
 
-    elif zip_bool and file_type == "csv":
+    elif zip_bool:
         csv_zip = glob.glob(file_names + "*.csv.gz")
         with gzip.open(out_file + ".csv.gz", 'wb') as gf:
-            for file in csv_zip:
-                for line in gzip.open(file, 'rb'):
+            for line in gzip.open(csv_zip[0], 'rb'):
                     gf.write(line)
-                for files in csv_zip[1:]:
-                    f = gzip.open(files, 'rb')
-                    f.next()
-                    for line in f:
-                        gf.write(line)
-                    f.close()
-        for file in csv_zip:
-            os.remove(file)
-            os.remove(file.split('.csv.gz')[0] + '.db')
+            for files in csv_zip[1:]:
+                f = gzip.open(files, 'rb')
+                f.next()
+                for line in f:
+                    gf.write(line)
+                f.close()
+        if concat_bool:
+            for file in csv_zip:
+                os.remove(file)
+                os.remove(file.split('.csv.gz')[0] + '.db')
 
-    elif file_type == "csv" and not zip_bool:
+    else:
         just_csv = glob.glob(file_names + "*.csv")
         with open(out_file + ".csv", 'w') as gf:
+            for line in open(just_csv[0]):
+                    gf.write(line)
+            for files in just_csv[1:]:
+                f = open(files)
+                f.next()
+                for line in f:
+                    gf.write(line)
+                f.close()
+        if concat_bool:
             for file in just_csv:
-                for line in open(file):
-                    gf.write(line)
-
-                for files in just_csv[1:]:
-                    f = open(files)
-                    f.next()
-                    for line in f:
-                        gf.write(line)
-                    f.close()
-        for file in just_csv:
-            os.remove(file)
-            os.remove(file.split('.csv')[0] + '.db')
-
-    elif file_type == "blast_out" and not zip_bool:
-        blast_only = glob.glob(file_names + "*.blast_out")
-        with open(out_file + ".blast_out", 'w') as gf:
-            for file in blast_only:
-                for line in open(file):
-                    gf.write(line)
                 os.remove(file)
-
-    elif zip_bool and file_type == "blast_out":
-        blast_only = glob.glob(file_names + "*.blast_out")
-        with gzip.open(out_file + ".blast_out.gz", 'wb') as gf:
-            for file in blast_only:
-                for lines in open(file):
-                    gf.write(lines)
-                os.remove(file)
+                os.remove(file.split('.csv')[0] + '.db')
 
 
 def execute(argument_class):
@@ -184,6 +165,7 @@ def execute(argument_class):
     json_bool = argument_class.get_json_bool()
     concat_bool = argument_class.get_concat_bool()
     output_prefix = argument_class.get_output_prefix()
+    output_options = argument_class.get_output_options()
 
     # blast options - all the options specific to blast executable
     executable = argument_class.get_command()
@@ -200,6 +182,7 @@ def execute(argument_class):
     # manager_dict and list, holds all our values so we can pass them to varias processors
     _manager_list = []
     _manager_dict = {}
+
     for i, _file in enumerate(split_up_starting_files, start=1):  # the full file name
         _manager_dict['executable'] = executable
         _manager_dict['non_split'] = query_name
@@ -211,16 +194,17 @@ def execute(argument_class):
         _manager_dict['tmp_path'] = tmp_path
         _manager_dict['internal_data'] = internal_data
         _manager_dict['blast_options'] = blast_options
+        _manager_dict['output_options'] = output_options
         _manager_dict['proc_number'] = i
         _manager_list.append(_manager_dict)
         _manager_dict = {}
 
     # run_protocol
-    for i in _manager_list:
-        run_mp_and_delete(i)
+    # for i in _manager_list:
+    #    run_mp_and_delete(i)
 
     pool = mp.Pool(processes=processors)
-    #pool.map(run_mp_and_delete, _manager_list)
+    pool.map(run_mp_and_delete, _manager_list)
     concat(_manager_list[0])
     print "Process is done"
     print "Took {0}".format(time.time() - ts)

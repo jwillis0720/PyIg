@@ -30,8 +30,9 @@ class igblast_output():
 
         # bool to tell us if we want the file zipped
         self.zip = kwargs['zip_bool']
-
         self.option_list = options
+        # asks if we are parsing to the gui or not
+        self.gui = kwargs['gui']
 
         # where you want to store the output before it gets concat
         self.temporary_directory = temporary_directory
@@ -43,12 +44,11 @@ class igblast_output():
         self.raw_seqs_db_handle = self.get_raw_seqs_db(os.path.basename(blast_file).split('.')[0])
 
         try:
-            for line in open('../junctional_data/human_germ_properties.txt').readlines():
+            for line in open('datafiles/human_germ_properties.txt').readlines():
                 line_split = line.split()
                 self.end_dict[line_split[0]] = int(line_split[1])
         except IOError:
-            print "Cant open human_germ_properties.txt, \
-            need this file to process CDR3 regions"
+            print "Cant open human_germ_properties.txt.\nNeed this file to process CDR3 regions"
             sys.exit()
 
     def parse_blast_file_to_type(self, output_file, o_type="json"):
@@ -67,13 +67,13 @@ class igblast_output():
                         sbe = single_blast_entry(focus_lines, self.raw_seqs_db_handle, self.end_dict)
                         blast_dictionary = sbe.generate_blast_dict()  # return single blast entry
                         if o_type == "json":
-                            json_document_trimmed = trim_json(blast_dictionary, self.option_list)  # trim the json according to input
+                            json_document_trimmed = trim_json(blast_dictionary, self.option_list, gui=self.gui)  # trim the json according to input
                             openfile.write(json.dumps(json_document_trimmed, indent=4))
                             openfile.write("\n")
                               # write it out
                             focus_lines = []
                         if o_type == "csv":
-                            csv_document_trimmed = trim_json(blast_dictionary, self.option_list)  # trim the json according to input
+                            csv_document_trimmed = trim_json(blast_dictionary, self.option_list, gui=self.gui)  # trim the json according to input
                             dw = csv.DictWriter(openfile, fieldnames=csv_document_trimmed.keys(), delimiter=",", quotechar="|", quoting=csv.QUOTE_MINIMAL)
                             if not self.header_written:
                                 dw.writeheader()
@@ -88,23 +88,22 @@ class igblast_output():
 
             sbe = single_blast_entry(focus_lines, self.raw_seqs_db_handle, self.end_dict)
             blast_dictionary = sbe.generate_blast_dict()  # return single blast entry
-
             if o_type == "json":
-                json_document_trimmed = trim_json(blast_dictionary, self.option_list)  # trim the json according to input
+                json_document_trimmed = trim_json(blast_dictionary, self.option_list, gui=self.gui)  # trim the json according to input
                 openfile.write(json.dumps(json_document_trimmed, indent=4))
                 openfile.write("\n")  # write it out
             elif o_type == "csv":
-                csv_document_trimmed = trim_json(blast_dictionary, self.option_list)
+                csv_document_trimmed = trim_json(blast_dictionary, self.option_list, gui=self.gui)
                 dw = csv.DictWriter(openfile, fieldnames=csv_document_trimmed.keys(), delimiter=",", quotechar="|", quoting=csv.QUOTE_MINIMAL)
                 if not self.header_written:
                     dw.writeheader()
                 dw.writerow(csv_document_trimmed)
-        
+
         self.raw_seqs_db_handle.close()
         self.blast_file_handle.close()
 
     def get_raw_seqs_db(self, name):
-        self.db_name = os.path.join(self.temporary_directory, name + ".db")
+        self.db_name = os.path.join(self.temporary_directory, name)
         shelf = shelve.open(self.db_name)
         for sequence_object in SeqIO.parse(self.input_file, 'fasta'):
             shelf[str(sequence_object.id)] = str(sequence_object.seq)
@@ -454,33 +453,56 @@ class single_blast_entry():
         return _return_dict
 
 
-def trim_json(blast_dictionary, all_options):
+def trim_json(blast_dictionary, all_options, gui=False):
     '''Our Main Function that will return a json type document'''
     # to be converted to a json document
     json_dictionary = OrderedDict()
-    for options in all_options:
-        json_dictionary.update(add_entries(blast_dictionary, json_dictionary, options))
+    if gui:
+        for options in all_options:
+            json_dictionary.update(add_entries(blast_dictionary, json_dictionary, options, gui))
+    else:
+        json_dictionary.update(add_entries(blast_dictionary, json_dictionary, all_options, gui))
+
     return json_dictionary
 
 
-def add_entries(blast_dictionary, dictionary, options):
-    for gentry in options:
-        formal = gentry
-        state = options[gentry]['state']
-        json_key = options[gentry]['json_key']
-        split_keys = json_key.split('.')
-        length_of_key = len(split_keys)
-        if state == 0:
-            continue
-        try:
-            if length_of_key == 1:
-                dictionary[formal] = blast_dictionary[json_key]
-            elif length_of_key == 2:
-                dictionary[formal] = blast_dictionary[split_keys[0]][split_keys[1]]
-            elif length_of_key == 3:
-                dictionary[formal] = blast_dictionary[split_keys[0]][split_keys[1]][split_keys[2]]
-        except KeyError:
-            dictionary[formal] = ""
+def add_entries(blast_dictionary, dictionary, options, gui):
+    if gui:
+        for gentry in options:
+            formal = gentry
+            state = options[gentry]['state']
+            json_key = options[gentry]['json_key']
+            split_keys = json_key.split('.')
+            length_of_key = len(split_keys)
+            if state == 0:
+                continue
+            try:
+                if length_of_key == 1:
+                    dictionary[formal] = blast_dictionary[json_key]
+                elif length_of_key == 2:
+                    dictionary[formal] = blast_dictionary[split_keys[0]][split_keys[1]]
+                elif length_of_key == 3:
+                    dictionary[formal] = blast_dictionary[split_keys[0]][split_keys[1]][split_keys[2]]
+            except KeyError:
+                dictionary[formal] = ""
+
+    else:
+        for entry in open(options).readlines():
+            formal = entry.split(',')[0]
+            json_key = entry.split(',')[1].strip()
+            split_keys = json_key.split('.')
+            length_of_key = len(split_keys)
+            if formal.startswith('#'):
+                continue
+            try:
+                if length_of_key == 1:
+                    dictionary[formal] = blast_dictionary[json_key]
+                elif length_of_key == 2:
+                    dictionary[formal] = blast_dictionary[split_keys[0]][split_keys[1]]
+                elif length_of_key == 3:
+                    dictionary[formal] = blast_dictionary[split_keys[0]][split_keys[1]][split_keys[2]]
+            except KeyError:
+                dictionary[formal] = ""
 
     return dictionary
 
