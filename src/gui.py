@@ -7,6 +7,7 @@ import ttk
 import tkFileDialog as filedialog
 import tkMessageBox
 import collections
+import time
 from Tkconstants import *
 from Bio import SeqIO as so
 from multiprocessing import cpu_count, freeze_support
@@ -116,8 +117,8 @@ class PyIg_gui():
             command=lambda root=self.root: root.destroy())
         refresh_button = ttk.Button(
             main_menu, text="Refresh", command=lambda self=self: self._update())
-        run_button = ttk.Button(
-            main_menu, text="Run", command=lambda self=self: self.execute())
+        run_button = ttk.Button(main_menu, text="Run",
+                                command=lambda self=self: self.execute_dummy())
         author_label.pack(side=LEFT, fill=X, padx=10, pady=10)
         run_button.pack(side=LEFT, expand=1, fill=X, padx=10, pady=10)
         refresh_button.pack(side=LEFT, expand=1, fill=X, padx=10, pady=10)
@@ -769,19 +770,19 @@ class PyIg_gui():
                 instance.vars[options]['state'].set(on)
 
     def _create_output_stream(self, notebook_frame):
-        create_output_frame = ttk.Frame(notebook_frame, name="o_frame")
-        self.output_stream_text = Tkinter.Text(create_output_frame)
+        self.create_output_frame = ttk.Frame(notebook_frame, name="o_frame")
+        self.output_stream_text = Tkinter.Text(self.create_output_frame)
         self.output_stream_text.pack(side=LEFT, expand=1, fill=BOTH, anchor=NW)
         sys.stdout = StdoutRedirector(self.output_stream_text)
         sys.stderr = StdoutRedirector(self.output_stream_text)
-        scroll = ttk.Scrollbar(create_output_frame)
+        scroll = ttk.Scrollbar(self.create_output_frame)
         scroll.pack(side=RIGHT, fill=Y)
         scroll.config(command=self.output_stream_text.yview)
         self.output_stream_text.config(yscrollcommand=scroll.set)
-        create_output_frame.pack(side=TOP, expand=1, fill=BOTH)
+        self.create_output_frame.pack(side=TOP, expand=1, fill=BOTH)
         self.output_stream_text.bind('<Key>', lambda e: 'break')
-        create_output_frame.update_idletasks()
-        notebook_frame.add(create_output_frame, text="Output Stream", underline=0, padding=2)
+        # self.create_output_frame.update_idletasks()
+        notebook_frame.add(self.create_output_frame, text="Output Stream", underline=0, padding=2)
 
     def _create_readme(self, notebook_frame):
         readme_frame = ttk.Frame(notebook_frame, name="r_frame")
@@ -803,8 +804,12 @@ class PyIg_gui():
         import gui
         gui.main_refresh(self.root, gui)
 
-    def execute(self):
+    def execute_dummy(self):
+        self.root.focus()
         self.main_notebook_frame.select(2)
+        self.root.after(100, self.execute)
+
+    def execute(self):
         os.chdir(self._directory_name)
         print "Starting Execution"
 
