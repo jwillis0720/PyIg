@@ -43,7 +43,6 @@ class igblast_output():
         # get back the db handle to the raw seqs
         self.raw_seqs_db_handle = self.get_raw_seqs_db(os.path.basename(blast_file).split('.')[0])
 
-        print self.species
         try:
             for line in open('datafiles/' + self.species + '_germ_properties.txt').readlines():
                 line_split = line.split()
