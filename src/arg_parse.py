@@ -4,6 +4,7 @@ import textwrap
 from Bio import SeqIO
 import os
 import shutil
+import glob
 
 from multiprocessing import cpu_count
 
@@ -61,6 +62,10 @@ class argument_parser():
         igspec = self.parser.add_argument_group(
             title="\nIgBlast Sprecific",
             description="IgBlast Specific Options with a Default")
+
+        igspec.add_argument(
+            '-y', '--type', default='Ig', choices=['Ig', 'TCR', 'custom'],
+            help="Is this an IG or TCR recombination")
 
         igspec.add_argument(
             "-or", "--organism", default="human",
@@ -156,6 +161,16 @@ class argument_parser():
         self._make_args_dict()
 
     # helper functions to validate arguments
+    def _get_germline(self, vdj):
+        if self.args.type.lower() == "ig":
+            self.args.type = "Ig"
+        if self.args.type.lower() == "tcr":
+            self.args.type = "TCR"
+        path_to_data = os.path.join(self.args.db_path, self.args.type, self.args.organism)
+        files_in = glob.glob(os.path.join(path_to_data, "*"))
+        common_prefix = os.path.basename(os.path.commonprefix(files_in))
+        return os.path.join(self.args.db_path, self.args.type, self.args.organism, common_prefix + vdj)
+
     def _check_if_fasta(self, f_file):
         try:
             SeqIO.parse(f_file, "fasta").next()
@@ -222,12 +237,10 @@ class argument_parser():
             '-domain_system': self.args.domain,
             '-evalue': self.args.e_value,
             '-word_size': self.args.word_size,
-            '-germline_db_V': "{0}{1}_gl_V".format(
-                self.args.db_path, self.args.organism),
-            '-germline_db_D': "{0}{1}_gl_D".format(
-                self.args.db_path, self.args.organism),
-            '-germline_db_J': "{0}{1}_gl_J".format(
-                self.args.db_path, self.args.organism),
+            '-germline_db_V': self._get_germline("V"),
+            '-germline_db_D': self._get_germline("D"),
+            '-germline_db_J': self._get_germline("J"),
+            '-ig_seqtype': self.args.type,
             '-D_penalty': self.args.penalty_mismatch,
             '-auxiliary_data': "{0}{1}_gl.aux".format(
                 self.args.aux_path, self.args.organism)
