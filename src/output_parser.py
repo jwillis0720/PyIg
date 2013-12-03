@@ -33,7 +33,7 @@ class igblast_output():
         self.option_list = options
         # asks if we are parsing to the gui or not
         self.gui = kwargs['gui']
-
+        self.species = kwargs['species']
         # where you want to store the output before it gets concat
         self.temporary_directory = temporary_directory
 
@@ -43,12 +43,13 @@ class igblast_output():
         # get back the db handle to the raw seqs
         self.raw_seqs_db_handle = self.get_raw_seqs_db(os.path.basename(blast_file).split('.')[0])
 
+        print self.species
         try:
-            for line in open('datafiles/human_germ_properties.txt').readlines():
+            for line in open('datafiles/' + self.species + '_germ_properties.txt').readlines():
                 line_split = line.split()
                 self.end_dict[line_split[0]] = int(line_split[1])
         except IOError:
-            print "Cant open human_germ_properties.txt.\nNeed this file to process CDR3 regions"
+            print "Cant open germ_properties.txt.\nNeed this file to process CDR3 regions"
             sys.exit()
 
     def parse_blast_file_to_type(self, output_file, o_type="json"):

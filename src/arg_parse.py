@@ -290,3 +290,6 @@ class argument_parser():
 
     def get_output_options(self):
         return self.args.output_options
+
+    def get_organism(self):
+        return self.args.organism

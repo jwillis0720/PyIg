@@ -40,6 +40,8 @@ def run_mp_and_delete(manager):
     _internal_data = manager['internal_data']
     _current_directory = os.getcwd()
 
+    _species = manager['species']
+
     if not os.path.exists(os.path.join(_current_directory, os.path.basename(_internal_data))):
         print "Copying internal data to current directory"
         copytree(_internal_data, os.getcwd())
@@ -73,7 +75,7 @@ def run_mp_and_delete(manager):
     # Now parse the output
     print "Parsing BLAST output to {0} on Processor {1}".format(_output_type, manager['proc_number'])
     op = output_parser.igblast_output(_blast_out, _file,
-                                      _temporary_path, _output_options, gui=False, zip_bool=_zip_bool)
+                                      _temporary_path, _output_options, species=_species, gui=False, zip_bool=_zip_bool)
     op.parse_blast_file_to_type(_output_file, _output_type)
     print "Done parsing {0} type".format(_output_type)
     if _concat_bool:
@@ -171,6 +173,9 @@ def execute(argument_class):
     executable = argument_class.get_command()
     blast_options = argument_class.get_blast_options()
 
+    # species
+    species = argument_class.get_organism()
+
     # split fasta file up
     print "Splitting up file {0} into {1}".format(os.path.abspath(query_name), tmp_path)
     split_fasta(processors, tmp_path, query_name, suffix=".tmp_fasta")
@@ -195,6 +200,7 @@ def execute(argument_class):
         _manager_dict['internal_data'] = internal_data
         _manager_dict['blast_options'] = blast_options
         _manager_dict['output_options'] = output_options
+        _manager_dict['species'] = species
         _manager_dict['proc_number'] = i
         _manager_list.append(_manager_dict)
         _manager_dict = {}
