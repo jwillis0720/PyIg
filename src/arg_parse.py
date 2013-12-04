@@ -3,7 +3,6 @@ import sys
 import textwrap
 from Bio import SeqIO
 import os
-import shutil
 import glob
 
 from multiprocessing import cpu_count
@@ -164,9 +163,12 @@ class argument_parser():
     def _get_germline(self, vdj):
         if self.args.type.lower() == "ig":
             self.args.type = "Ig"
+            path_to_data = os.path.join(self.args.db_path, self.args.type, self.args.organism)
         if self.args.type.lower() == "tcr":
             self.args.type = "TCR"
-        path_to_data = os.path.join(self.args.db_path, self.args.type, self.args.organism)
+            path_to_data = os.path.join(self.args.db_path, self.args.type, self.args.organism)
+        if self.args.type.lower() == "custom":
+            path_to_data = os.path.join(self.args.db_path, self.args.type)
         files_in = glob.glob(os.path.join(path_to_data, "*"))
         common_prefix = os.path.basename(os.path.commonprefix(files_in))
         return os.path.join(self.args.db_path, self.args.type, self.args.organism, common_prefix + vdj)
