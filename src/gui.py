@@ -2,17 +2,21 @@
 import os
 import os.path
 import sys
+import collections
+import time
+
+# TK standard library
 import Tkinter
 import ttk
 import tkFileDialog as filedialog
 import tkMessageBox
-import collections
-import time
 from Tkconstants import *
-from Bio import SeqIO as so
+
+# Non Standard Library
 from multiprocessing import cpu_count, freeze_support
-from gui_execute import execute
+from gui_execute import g_execute
 from output_tabs_checkboxes import all_checkboxes_dict
+from Bio import SeqIO as so
 
 
 class Checkbar():
@@ -67,24 +71,28 @@ class StdoutRedirector(IORedirector):
 
 class PyIg_gui():
 
-    '''gui class, will do everything including calling on executables'''
+    '''GUI Class, calls gui_execute function when it grabs all the input data'''
 
     def __init__(self, root):
         # Initialization
         self.root = root
+
         # get directories
         self._directory_name = os.path.dirname(os.path.abspath(sys.argv[0]))
         self._user_directory = os.path.expanduser("~")
+
         # this will later become a widget. I initialize it here because it needs to update
         self.output_entry = ""
+
+        # Each output field is a term in the all_checkboxes dict found in another file for code tidiness
         self.all_checkboxes_dict = all_checkboxes_dict
 
-        # argument dictionary we will pass to the arg parser eventually
         if os.name == "posix":
             self.os = "mac"
         else:
             self.os = "windows"
 
+        # argument dictionary we will pass to the arg parser eventually
         self.argument_dict = {
             'query': '',
             'database': os.path.join(self._directory_name, "datafiles/database"),
@@ -92,33 +100,43 @@ class PyIg_gui():
             'aux_data': os.path.join(self._directory_name, "datafiles/optional_file"),
             'output_file': os.path.join(self._user_directory, "pyigblast_output"),
             'tmp_data': os.path.join(self._user_directory, "pyigblast_temporary")}
+
         if self.os == "mac":
             self.argument_dict['executable'] = os.path.join(self._directory_name,
                                                             "bin/igblastn")
-        else:
+        elif self.os == "windows":
             self.argument_dict['executable'] = os.path.join(self._directory_name,
                                                             "bin/igblast.exe")
+        # Basic info about the window
         window_info = self.root.winfo_toplevel()
         window_info.wm_title('PyIg - GUI')
 
-        '''creates main menu - this will use pack geometry manager but some of the sub-frames
-        will use the grid geometry manager...that may be confusing but it is needed since
-        some of the options just take up to much space'''
         self.MainMenu()
+        '''Creates main menu - this will use pack geometry manager but some of the sub-frames
+        will use the grid geometry manager...that may be confusing but it is needed since
+        some of the options just take up too much space and need to be used by the grid manager'''
 
+        # now created tabbed notebook that will house input and output inside the main menu
+        self.TabNotebook()
+
+    # Mainmenu Holder
     def MainMenu(self):
-        '''The main menu has 3 buttons and 2 labels that. The rest is a tabbed notebook'''
-        # 3 buttons and 2 labels in the bottom of the main menu frame
+        '''The main menu has 3 buttons and 2 labels that. The remaining calls on the tab notebookis a tabbed notebook'''
+
+        # Main Menu will have a frame
         main_menu = ttk.Frame(self.root)
         author_label = ttk.Label(main_menu, text="Jordan Willis")
         university_label = ttk.Label(main_menu, text="Vanderbilt University")
+
+        # 3 buttons in the bottom of the rame
         exit_button = ttk.Button(
-            main_menu, text="Exit",
-            command=lambda root=self.root: root.destroy())
+            main_menu, text="Exit", command=lambda root=self.root: root.destroy())
         refresh_button = ttk.Button(
             main_menu, text="Refresh", command=lambda self=self: self._update())
-        run_button = ttk.Button(main_menu, text="Run",
-                                command=lambda self=self: self.execute_dummy())
+        run_button = ttk.Button(
+            main_menu, text="Run", command=lambda self=self: self.execute_dummy())
+
+        # Pack widgets
         author_label.pack(side=LEFT, fill=X, padx=10, pady=10)
         run_button.pack(side=LEFT, expand=1, fill=X, padx=10, pady=10)
         refresh_button.pack(side=LEFT, expand=1, fill=X, padx=10, pady=10)
@@ -126,9 +144,7 @@ class PyIg_gui():
         university_label.pack(side=RIGHT, fill=X, padx=10, pady=10)
         main_menu.pack(side=BOTTOM, fill=X, pady=10)
 
-        # now created tabbed notebook that will house input and output
-        self.TabNotebook()
-
+    # Notebook holds different tabs of the output gui
     def TabNotebook(self):
         # top level method, creates notbook inside of root. Then we will fill each tab
         self.main_notebook_frame = ttk.Notebook(self.root, name='main_notebook')
@@ -138,6 +154,79 @@ class PyIg_gui():
         self._create_format_output(self.main_notebook_frame)
         self._create_output_stream(self.main_notebook_frame)
         self._create_readme(self.main_notebook_frame)
+
+    # Execution functions - Run Button
+    def execute_dummy(self):
+        '''A dummy function that switches to the output frame then executes blast'''
+        self.root.focus()
+        self.main_notebook_frame.select(2)
+        self.root.after(100, self.execute)
+
+    def execute(self):
+        # We can print anything and it will be captured by standard out
+        print "Starting Execution"
+
+        if not self.argument_dict['query']:
+            tkMessageBox.showwarning(
+                "Input Missing",
+                "At the very least we need a fasta\n")
+
+        # Grabs all information from the GUI output tabs that are checked that need will be parsed from the BLAST
+        output_options = [self.general_class.state(),
+                          self.nucleotide_class.state(),
+                          self.amino_class.state(),
+                          self.total_alignments_class.state(),
+                          self.fw1_alignments_class.state(),
+                          self.fw2_alignments_class.state(),
+                          self.fw3_alignments_class.state(),
+                          self.cdr1_alignments_class.state(),
+                          self.cdr2_alignments_class.state(),
+                          self.cdr3_alignments_class.state(),
+                          self.v_hits_class.state(),
+                          self.d_hits_class.state(),
+                          self.j_hits_class.state()]
+
+        # These go into blast
+        blast_args_dict = {
+            '-query': "",  # Will be put in the executable file
+            '-organism': self.species_var.get(),
+            '-num_alignments_V': self.v_gene_numb.get(),
+            '-num_alignments_D': self.d_gene_numb.get(),
+            '-num_alignments_J': self.j_gene_numb.get(),
+            '-min_D_match': str(self.min_d_match.get()),
+            '-D_penalty': str(int(self.penalty_mismatch.get())),
+            '-domain_system': self.scheme_var.get(),
+            '-out': "",
+            '-evalue': str(self.evalue.get()),
+            '-word_size': str(self.word_size.get()),
+            '-max_target_seqs': str(500),
+            '-germline_db_V': "{0}_gl_V".format(
+                os.path.join(self.argument_dict['database'], "Ig", self.species_var.get(), self.species_var.get())),
+            '-germline_db_D': "{0}_gl_D".format(
+                os.path.join(self.argument_dict['database'], "Ig", self.species_var.get(), self.species_var.get())),
+            '-germline_db_J': "{0}_gl_J".format(
+                os.path.join(self.argument_dict['database'], "Ig", self.species_var.get(), self.species_var.get())),
+            '-auxiliary_data': "{0}_gl.aux".format(
+                os.path.join(self.argument_dict['aux_data'], self.species_var.get())),
+            '-domain_system': self.scheme_var.get(),
+            '-outfmt': str(7)  # it has to be this tab seperated format
+        }
+
+        # These go into the parser
+        output_options_dict = {
+            'executable': self.argument_dict['executable'],
+            'final_outfile': self.output_file_entry.get().split('.')[0],
+            'num_procs': self.proc_count.get(),
+            'pre_split_up_input': self.argument_dict['query'],
+            'zip_bool': self.zip_var.get(),
+            'tmp_data_directory': self.argument_dict['tmp_data'],
+            'internal_data_directory': self.argument_dict['in_data'],
+            'output_type': self.output_type_var.get(),
+            'output_options': output_options
+        }
+
+        # both dictionaries are put into execute
+        g_execute(blast_args_dict, output_options_dict)
 
     def _create_files_and_directories(self, notebook_frame):
         # This is the first tab that houses files, directories and Option
@@ -171,6 +260,7 @@ class PyIg_gui():
         notebook_frame.add(
             f_and_d_frame, text="Input Options", underline=0, padding=2)
 
+    # Internal GUI Functions
     def _make_fasta_entry(self, fasta_input_frame):
         fasta_entry = ttk.Entry(fasta_input_frame)
         fasta_entry_button = ttk.Button(fasta_input_frame, width=25, text="Browse...",
@@ -803,64 +893,6 @@ class PyIg_gui():
     def _update(self):
         import gui
         gui.main_refresh(self.root, gui)
-
-    def execute_dummy(self):
-        self.root.focus()
-        self.main_notebook_frame.select(2)
-        self.root.after(100, self.execute)
-
-    def execute(self):
-        os.chdir(self._directory_name)
-        print "Starting Execution"
-
-        # okay here we go
-        if not self.argument_dict['query']:
-            tkMessageBox.showwarning(
-                "Input Missing",
-                "At the very least we need a fasta\n")
-        output_options = [self.general_class.state(), self.nucleotide_class.state(),
-                          self.amino_class.state(), self.total_alignments_class.state(), self.fw1_alignments_class.state(),
-                          self.fw2_alignments_class.state(), self.fw3_alignments_class.state(), self.cdr1_alignments_class.state(),
-                          self.cdr2_alignments_class.state(), self.cdr3_alignments_class.state(),
-                          self.v_hits_class.state(), self.d_hits_class.state(), self.j_hits_class.state()]
-
-        blast_args_dict = {
-            '-query': "",
-            '-organism': self.species_var.get(),
-            '-num_alignments_V': self.v_gene_numb.get(),
-            '-num_alignments_D': self.d_gene_numb.get(),
-            '-num_alignments_J': self.j_gene_numb.get(),
-            '-min_D_match': str(self.min_d_match.get()),
-            '-D_penalty': str(int(self.penalty_mismatch.get())),
-            '-domain_system': self.scheme_var.get(),
-            '-out': "",
-            '-evalue': str(self.evalue.get()),
-            '-word_size': str(self.word_size.get()),
-            '-max_target_seqs': str(500),
-            '-germline_db_V': "{0}_gl_V".format(
-                os.path.join(self.argument_dict['database'], self.species_var.get())),
-            '-germline_db_D': "{0}_gl_D".format(
-                os.path.join(self.argument_dict['database'], self.species_var.get())),
-            '-germline_db_J': "{0}_gl_J".format(
-                os.path.join(self.argument_dict['database'], self.species_var.get())),
-            '-auxiliary_data': "{0}_gl.aux".format(
-                os.path.join(self.argument_dict['aux_data'], self.species_var.get())),
-            '-domain_system': self.scheme_var.get(),
-            '-outfmt': str(7)
-        }
-
-        output_options_dict = {
-            'executable': self.argument_dict['executable'],
-            'final_outfile': self.output_file_entry.get().split('.')[0],
-            'num_procs': self.proc_count.get(),
-            'pre_split_up_input': self.argument_dict['query'],
-            'zip_bool': self.zip_var.get(),
-            'tmp_data_directory': self.argument_dict['tmp_data'],
-            'internal_data_directory': self.argument_dict['in_data'],
-            'output_type': self.output_type_var.get(),
-            'output_options': output_options
-        }
-        execute(blast_args_dict, output_options_dict)
 
 
 def center(win):

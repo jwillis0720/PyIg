@@ -66,7 +66,7 @@ def run_mp_and_delete(manager):
     else:
         print _blast_out, _file, _temporary_path
         op = output_parser.igblast_output(_blast_out, _file, _temporary_path,
-                                          _output_options, gui=True, zip_bool=_zip_bool)
+                                          _output_options, species="human", gui=True, zip_bool=_zip_bool)
         op.parse_blast_file_to_type(_json_out, _output_type)
         print "Done parsing {0} type\nRemoving {1} and {2}".format(_output_type, _file, _blast_out)
         os.remove(_file)
@@ -153,7 +153,7 @@ def concat(_manager_dict):
                 os.remove(file)
 
 
-def execute(blast_options, outputoptions):
+def g_execute(blast_options, outputoptions):
     '''A function that takes in and executes options from the gui widgets'''
     # variables
     mp.freeze_support()
@@ -211,7 +211,3 @@ def execute(blast_options, outputoptions):
     concat(_manager_list[0])
     print "Process is done"
     print "Took {0}".format(time.time() - ts)
-
-
-if __name__ == '__main__':
-    execute()
