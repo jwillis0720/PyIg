@@ -228,39 +228,49 @@ class PyIg_gui():
         # both dictionaries are put into execute
         g_execute(blast_args_dict, output_options_dict)
 
+    # Internal GUI Functions
     def _create_files_and_directories(self, notebook_frame):
-        # This is the first tab that houses files, directories and Option
-        # first frame
-        f_and_d_frame = ttk.Frame(notebook_frame, name='f_and_d')
-        message = ttk.Label(anchor=W, text="Enter FASTA File", font=("Arial", 20))
-        fasta_input_frame = ttk.LabelFrame(f_and_d_frame, labelwidget=message)
-        fasta_input_frame.pack(side=TOP, expand=0, fill=X, padx=10)
+        '''This is the first frame that will house 3 subframes with fasta directories and options'''
 
-        # put in fasta_entry frame to take in input
+        # First frame that contains input file
+        f_and_d_frame = ttk.Frame(
+            notebook_frame, name='f_and_d')
+        message = ttk.Label(
+            anchor=W, text="Enter FASTA File", font=("Arial", 20))
+        fasta_input_frame = ttk.LabelFrame(
+            f_and_d_frame, labelwidget=message)
+        fasta_input_frame.pack(
+            side=TOP, expand=0, fill=X, padx=10)
+
+        # Put in fasta_entry frame to take in input
         self._make_fasta_entry(fasta_input_frame)
 
-        # Set up directory frame within the tab that takes in all the
-        # directories needed to run run blast
-        directory_label = ttk.Label(font=('Arial', 20), text="Directories for BLAST:")
-        directories_frame = ttk.LabelFrame(f_and_d_frame, labelwidget=directory_label)
-        directories_frame.pack(side=LEFT, expand=1, fill=BOTH, pady=10, padx=10)
+        # Second Frame - Set up directory frame within the tab that takes in all the directories needed to run blast
+        directory_label = ttk.Label(
+            font=('Arial', 20), text="Directories for BLAST:")
+        directories_frame = ttk.LabelFrame(
+            f_and_d_frame, labelwidget=directory_label)
+        directories_frame.pack(
+            side=LEFT, expand=1, fill=BOTH, pady=10, padx=10)
 
-        # set now run functions to place directories within that frame
+        # Now run functions to place directories within that frame
         self._set_up_directories(directories_frame)
 
         # On the other side of this tab we will put in the basic options
-        # including output type and blast
-        option_label = ttk.Label(font=('Arial', 20), text="Options:")
-        basic_options_frame = ttk.LabelFrame(f_and_d_frame, labelwidget=option_label)
-        basic_options_frame.pack(side=LEFT, expand=1, fill=BOTH, pady=10)
+        option_label = ttk.Label(
+            font=('Arial', 20), text="Options:")
+        basic_options_frame = ttk.LabelFrame(
+            f_and_d_frame, labelwidget=option_label)
+        basic_options_frame.pack(
+            side=LEFT, expand=1, fill=BOTH, pady=10)
 
+        # Set up defaults for basic options
         self._set_up_basic_options(basic_options_frame)
 
-        # and add it to the big frame
+        # Now add all frames into the notebook frame which is in turn inside main frame :)
         notebook_frame.add(
             f_and_d_frame, text="Input Options", underline=0, padding=2)
 
-    # Internal GUI Functions
     def _make_fasta_entry(self, fasta_input_frame):
         fasta_entry = ttk.Entry(fasta_input_frame)
         fasta_entry_button = ttk.Button(fasta_input_frame, width=25, text="Browse...",
