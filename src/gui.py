@@ -171,7 +171,8 @@ class PyIg_gui():
                 "Input Missing",
                 "At the very least we need a fasta\n")
 
-        # Grabs all information from the GUI output tabs that are checked that need will be parsed from the BLAST
+        print self.j_gene_numb.get()
+	# Grabs all information from the GUI output tabs that are checked that need will be parsed from the BLAST
         output_options = [self.general_class.state(),
                           self.nucleotide_class.state(),
                           self.amino_class.state(),
