@@ -103,7 +103,6 @@ def concat(_manager_dict):
                 f_in.close()
                 if concat_bool:
                     os.remove(file)
-                    os.remove(file.split('.json.gz')[0] + '.db')
 
     elif json_bool and not zip_bool:
         just_json = glob.glob(file_names + "*.json")
@@ -114,7 +113,6 @@ def concat(_manager_dict):
                 f_in.close()
                 if concat_bool:
                     os.remove(file)
-                    os.remove(file.split('.json')[0] + '.db')
 
     elif zip_bool:
         csv_zip = glob.glob(file_names + "*.csv.gz")
@@ -130,7 +128,6 @@ def concat(_manager_dict):
         if concat_bool:
             for file in csv_zip:
                 os.remove(file)
-                os.remove(file.split('.csv.gz')[0] + '.db')
 
     else:
         just_csv = glob.glob(file_names + "*.csv")
@@ -146,7 +143,6 @@ def concat(_manager_dict):
         if concat_bool:
             for file in just_csv:
                 os.remove(file)
-                os.remove(file.split('.csv')[0] + '.db')
 
 
 def execute(argument_class):
@@ -214,7 +210,7 @@ def execute(argument_class):
     concat(_manager_list[0])
     print "Process is done"
     print "Took {0}".format(time.time() - ts)
-
+    os.removedirs(manager_dict['tmp_path'])
 
 if __name__ == '__main__':
     argument_class = ap()

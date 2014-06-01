@@ -68,7 +68,7 @@ class igblast_output():
                         blast_dictionary = sbe.generate_blast_dict()  # return single blast entry
                         if o_type == "json":
                             json_document_trimmed = trim_json(blast_dictionary, self.option_list, gui=self.gui)  # trim the json according to input
-                            openfile.write(json.dumps(json_document_trimmed, indent=4))
+                            openfile.write(json.dumps(json_document_trimmed))
                             openfile.write("\n")
                               # write it out
                             focus_lines = []
@@ -90,7 +90,7 @@ class igblast_output():
             blast_dictionary = sbe.generate_blast_dict()  # return single blast entry
             if o_type == "json":
                 json_document_trimmed = trim_json(blast_dictionary, self.option_list, gui=self.gui)  # trim the json according to input
-                openfile.write(json.dumps(json_document_trimmed, indent=4))
+                openfile.write(json.dumps(json_document_trimmed))
                 openfile.write("\n")  # write it out
             elif o_type == "csv":
                 csv_document_trimmed = trim_json(blast_dictionary, self.option_list, gui=self.gui)
