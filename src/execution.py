@@ -210,7 +210,7 @@ def execute(argument_class):
     concat(_manager_list[0])
     print "Process is done"
     print "Took {0}".format(time.time() - ts)
-    os.removedirs(manager_dict['tmp_path'])
+    os.removedirs(_manager_dict['tmp_path'])
 
 if __name__ == '__main__':
     argument_class = ap()
