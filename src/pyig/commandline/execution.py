@@ -1,30 +1,16 @@
 #!/usr/bin/env python
-import sys
 import subprocess as sp
 import multiprocessing as mp
 import glob
 import os
 import gzip
 import datetime
-from distutils.dir_util import copy_tree as copytree
-import inspect
+from shutil import copytree
 
-
-def import_backend():
-	#realpath() with make your script run, even if you symlink it :)
-	cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
-	if cmd_folder not in sys.path:
-		sys.path.insert(0, cmd_folder)
-
-	# use this if you want to include modules from a subforder
-	cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],"../backend")))
-	if cmd_subfolder not in sys.path:
-		sys.path.insert(0, cmd_subfolder)
-
-import_backend()
-from backend import split_fasta
-from backend import output_parser
-from arg_parse import argument_parser
+#Non Standard Library
+from pyig.backend import split_fasta
+from pyig.backend import output_parser
+from pyig.commandline import arg_parse
 
 def run_mp_and_delete(manager):
     '''main method to run igblast through multiprocessing protocol,
@@ -161,7 +147,7 @@ def concat(_manager_dict):
 def execute(argument_class):
     '''A function that takes in and executes options from the gui widgets'''
     # variables
-    ts = time.time()
+    ts = datetime.time()
     fomatted_time = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
     print "Process Started {0}".format(fomatted_time)
 
@@ -222,8 +208,11 @@ def execute(argument_class):
     pool.map(run_mp_and_delete, _manager_list)
     concat(_manager_list[0])
     print "Process is done"
-    print "Took {0}".format(time.time() - ts)
+    print "Took {0}".format(datetime.time() - ts)
     os.removedirs(_manager_dict['tmp_path'])
 
+def main():
+    execute(arg_parse.argument_parser())
+
 if __name__ == '__main__':
-    execute(argument_parser())
+    main()

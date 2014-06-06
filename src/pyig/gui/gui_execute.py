@@ -1,15 +1,15 @@
-import sys
 import subprocess as sp
 import multiprocessing as mp
 import glob
 import os
 import gzip
-from split_fasta import split_fasta
 import time
 import datetime
-import output_parser
 import shutil
 
+#Non-Standard
+from pyig.backend import split_fasta
+from pyig.backend import output_parser
 
 def run_mp_and_delete(manager):
     '''main method to run igblast through multiprocessing protocol,

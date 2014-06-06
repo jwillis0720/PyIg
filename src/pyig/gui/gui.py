@@ -92,6 +92,7 @@ class PyIg_gui():
         else:
             self.os = "windows"
 
+
         # argument dictionary we will pass to the arg parser eventually
         self.argument_dict = {
             'query': '',
@@ -100,6 +101,7 @@ class PyIg_gui():
             'aux_data': os.path.join(self._directory_name, "datafiles/optional_file"),
             'output_file': os.path.join(self._user_directory, "pyigblast_output"),
             'tmp_data': os.path.join(self._user_directory, "pyigblast_temporary")}
+
 
         if self.os == "mac":
             self.argument_dict['executable'] = os.path.join(self._directory_name,
@@ -112,10 +114,10 @@ class PyIg_gui():
         window_info.wm_title('PyIg - GUI')
 
         self.MainMenu()
+
         '''Creates main menu - this will use pack geometry manager but some of the sub-frames
         will use the grid geometry manager...that may be confusing but it is needed since
         some of the options just take up too much space and need to be used by the grid manager'''
-
         # now created tabbed notebook that will house input and output inside the main menu
         self.TabNotebook()
 
@@ -136,6 +138,7 @@ class PyIg_gui():
         run_button = ttk.Button(
             main_menu, text="Run", command=lambda self=self: self.execute_dummy())
 
+
         # Pack widgets
         author_label.pack(side=LEFT, fill=X, padx=10, pady=10)
         run_button.pack(side=LEFT, expand=1, fill=X, padx=10, pady=10)
@@ -153,7 +156,7 @@ class PyIg_gui():
         self._create_files_and_directories(self.main_notebook_frame)
         self._create_format_output(self.main_notebook_frame)
         self._create_output_stream(self.main_notebook_frame)
-        self._create_readme(self.main_notebook_frame)
+        #self._create_readme(self.main_notebook_frame)
 
     # Execution functions - Run Button
     def execute_dummy(self):
