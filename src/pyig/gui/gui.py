@@ -4,6 +4,7 @@ import os.path
 import sys
 import collections
 import time
+import pickle
 
 # TK standard library
 import Tkinter
@@ -78,7 +79,8 @@ class PyIg_gui():
         self.root = root
 
         # get directories
-        self._directory_name = os.path.dirname(os.path.abspath(sys.argv[0]))
+        self._directory_name = pickle.load(open('library_dir.txt'))
+        #self._directory_name = os.path.dirname(os.path.abspath(sys.argv[0]))
         self._user_directory = os.path.expanduser("~")
 
         # this will later become a widget. I initialize it here because it needs to update
@@ -96,9 +98,9 @@ class PyIg_gui():
         # argument dictionary we will pass to the arg parser eventually
         self.argument_dict = {
             'query': '',
-            'database': os.path.join(self._directory_name, "datafiles/database"),
-            'in_data': os.path.join(self._directory_name, "datafiles/internal_data"),
-            'aux_data': os.path.join(self._directory_name, "datafiles/optional_file"),
+            'database': os.path.join(self._directory_name, "database"),
+            'in_data': os.path.join(self._directory_name, "internal_data"),
+            'aux_data': os.path.join(self._directory_name, "optional_file"),
             'output_file': os.path.join(self._user_directory, "pyigblast_output"),
             'tmp_data': os.path.join(self._user_directory, "pyigblast_temporary")}
 
