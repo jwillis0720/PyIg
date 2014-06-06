@@ -15,10 +15,9 @@ from Tkconstants import *
 
 # Non Standard Library
 from multiprocessing import cpu_count, freeze_support
-from gui_execute import g_execute
+import gui_execute
 from output_tabs_checkboxes import all_checkboxes_dict
 from Bio import SeqIO as so
-
 
 class Checkbar():
 
@@ -79,7 +78,8 @@ class PyIg_gui():
         self.root = root
 
         # get directories
-        self._directory_name = pickle.load(open('library_dir.txt'))
+        data_name = os.path.join(os.path.dirname(gui_execute.__file__),'library_dir.txt')
+        self._directory_name = pickle.load(open(data_name))
         #self._directory_name = os.path.dirname(os.path.abspath(sys.argv[0]))
         self._user_directory = os.path.expanduser("~")
 
@@ -158,7 +158,7 @@ class PyIg_gui():
         self._create_files_and_directories(self.main_notebook_frame)
         self._create_format_output(self.main_notebook_frame)
         self._create_output_stream(self.main_notebook_frame)
-        #self._create_readme(self.main_notebook_frame)
+        self._create_readme(self.main_notebook_frame)
 
     # Execution functions - Run Button
     def execute_dummy(self):
@@ -232,7 +232,7 @@ class PyIg_gui():
         }
 
         # both dictionaries are put into execute
-        g_execute(blast_args_dict, output_options_dict)
+        gui_execute.g_execute(blast_args_dict, output_options_dict)
 
     # Internal GUI Functions
     def _create_files_and_directories(self, notebook_frame):
@@ -900,7 +900,7 @@ class PyIg_gui():
         readme_text.config(yscrollcommand=scroll_bar.set)
         readme_frame.pack(side=TOP, expand=1, fill=BOTH)
         notebook_frame.update_idletasks()
-        for line in open(os.path.join(self._directory_name, 'datafiles/README_gui.txt')).readlines():
+        for line in open(os.path.join(self._directory_name, 'README_gui.txt')).readlines():
             readme_text.insert(END, line)
             readme_text.see(END)
             readme_text.update_idletasks()

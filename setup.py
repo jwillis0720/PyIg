@@ -20,7 +20,7 @@ if not os.path.exists(pyig_lib):
         sys.exit(1)
 
 
-pickle.dump(pyig_lib,open('src/pyig/library_dir.txt','w'))
+pickle.dump(pyig_lib,open('src/library_dir.txt','w'))
 setup(name='PyIg',
       version='1.1',
       description='Python Immunoglobulin Analysis Tools',
