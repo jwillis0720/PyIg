@@ -155,6 +155,21 @@ class argument_parser():
             "-j", "--json", action="store_true", default=False,
             help="Use the JSON output option that will format the text driven igblast output to a json document.\nDefaults to CSV")
 
+        formatter.add_argument(
+            "-f",
+            "--format_options",
+            type=self._validate_output_options,
+            default="datafiles/format_options.txt",
+            help="Open this file and comment out the final options you don't want in your final file.\nThe first column is the name of the option.\nThe second column is used by the parser and should not be changed.")
+
+        formatter.add_argument(
+            "-g",
+            "--germline_files",
+            type=self._validate_output_options,
+            default="datafiles/germline_files.txt",
+            help="Open this file and comment out the final options you don't want in your final file.\nThe first column is the name of the option.\nThe second column is used by the parser and should not be changed.")
+
+
         # return the arguments
         self.args = self.parser.parse_args()
         self._make_args_dict()
@@ -250,7 +265,7 @@ class argument_parser():
         }
 
         # add special formatting instructions
-        self.args.format_options = self._check_if_db_exists("datafiles/format_template.txt")
+        self.args.format_options = self._check_if_db_exists(self.args.format_options)
         formatting_titles = []
         for line in open(self.args.format_options).readlines():
             if line.startswith("#"):
@@ -295,3 +310,6 @@ class argument_parser():
 
     def get_organism(self):
         return self.args.organism
+
+    def get_germ_file(self):
+        return self.args.germline_files

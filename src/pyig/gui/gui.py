@@ -73,7 +73,7 @@ class PyIg_gui():
 
     '''GUI Class, calls gui_execute function when it grabs all the input data'''
 
-    def __init__(self, root):
+    def __init__(self, root):    
         # Initialization
         self.root = root
 
@@ -105,12 +105,13 @@ class PyIg_gui():
             'tmp_data': os.path.join(self._user_directory, "pyigblast_temporary")}
 
 
+        #hmmm how do i get back to /usr/local/bin dynamically
         if self.os == "mac":
             self.argument_dict['executable'] = os.path.join(self._directory_name,
-                                                            "bin/igblastn")
+                                                            "../../bin/igblastn")
         elif self.os == "windows":
             self.argument_dict['executable'] = os.path.join(self._directory_name,
-                                                            "bin/igblast.exe")
+                                                            "../../bin/igblast.exe")
         # Basic info about the window
         window_info = self.root.winfo_toplevel()
         window_info.wm_title('PyIg - GUI')
@@ -148,6 +149,7 @@ class PyIg_gui():
         exit_button.pack(side=LEFT, expand=1, fill=X, padx=10, pady=10)
         university_label.pack(side=RIGHT, fill=X, padx=10, pady=10)
         main_menu.pack(side=BOTTOM, fill=X, pady=10)
+
 
     # Notebook holds different tabs of the output gui
     def TabNotebook(self):
@@ -879,10 +881,12 @@ class PyIg_gui():
         self.create_output_frame = ttk.Frame(notebook_frame, name="o_frame")
         self.output_stream_text = Tkinter.Text(self.create_output_frame)
         self.output_stream_text.pack(side=LEFT, expand=1, fill=BOTH, anchor=NW)
+        #comment out next two lines for regular output
         sys.stdout = StdoutRedirector(self.output_stream_text)
         sys.stderr = StdoutRedirector(self.output_stream_text)
         scroll = ttk.Scrollbar(self.create_output_frame)
         scroll.pack(side=RIGHT, fill=Y)
+
         scroll.config(command=self.output_stream_text.yview)
         self.output_stream_text.config(yscrollcommand=scroll.set)
         self.create_output_frame.pack(side=TOP, expand=1, fill=BOTH)

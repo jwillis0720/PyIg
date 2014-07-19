@@ -74,7 +74,7 @@ def run_mp_and_delete(manager):
     # Now parse the output
     print "Parsing BLAST output to {0} on Processor {1}".format(_output_type, manager['proc_number'])
     op = output_parser.igblast_output(_blast_out, _file,
-                                      _temporary_path, _output_options, species=_species, gui=False, zip_bool=_zip_bool)
+                                      _temporary_path, _output_options, species=_species, gui=False, zip_bool=_zip_bool, germ_properties=manager['germ_properties'])
     op.parse_blast_file_to_type(_output_file, _output_type)
     print "Done parsing {0} type".format(_output_type)
     if _concat_bool:
@@ -148,8 +148,8 @@ def execute(argument_class):
     '''A function that takes in and executes options from the gui widgets'''
     # variables
     ts = datetime.time()
-    fomatted_time = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-    print "Process Started {0}".format(fomatted_time)
+    #fomatted_time = datetime.datetime.fromtimestamp(float(ts)).strftime('%Y-%m-%d %H:%M:%S')
+    print "Process Started {0}".format(ts)
 
     # query, path and internal database
     query_name = argument_class.get_query()
@@ -171,9 +171,13 @@ def execute(argument_class):
     # species
     species = argument_class.get_organism()
 
+
+    #germ_properties_files
+    germ_properties = argument_class.get_germ_file()
+
     # split fasta file up
     print "Splitting up file {0} into {1}".format(os.path.abspath(query_name), tmp_path)
-    split_fasta(processors, tmp_path, query_name, suffix=".tmp_fasta")
+    split_fasta.split_fasta(processors, tmp_path, query_name, suffix=".tmp_fasta")
     glob_path = os.path.join(tmp_path, os.path.basename(query_name).split('.')[0] + "*.tmp_fasta")
 
     # now grab all the temporary files in the temporary directory
@@ -197,15 +201,16 @@ def execute(argument_class):
         _manager_dict['output_options'] = output_options
         _manager_dict['species'] = species
         _manager_dict['proc_number'] = i
+        _manager_dict['germ_properties'] = germ_properties
         _manager_list.append(_manager_dict)
         _manager_dict = {}
 
     # run_protocol
-    # for i in _manager_list:
-    #    run_mp_and_delete(i)
+    for i in _manager_list:
+        run_mp_and_delete(i)
 
-    pool = mp.Pool(processes=processors)
-    pool.map(run_mp_and_delete, _manager_list)
+    #pool = mp.Pool(processes=processors)
+    #pool.map(run_mp_and_delete, _manager_list)
     concat(_manager_list[0])
     print "Process is done"
     print "Took {0}".format(datetime.time() - ts)

@@ -1,0 +1,3 @@
+S'/usr/local/lib/pyig'
+p0
+.

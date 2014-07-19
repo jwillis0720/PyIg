@@ -54,8 +54,11 @@ def run_mp_and_delete(manager):
     stdout, stderr = sub.communicate()
 
     # if we have output, lets print it
-    if stdout or stderr:
-        print stdout, stderr
+    if stdout:
+        print stdout
+
+    if stderr:
+        raise Exception("ERROR FROM BLAST {0}".format(stderr))
 
     _output_type = manager['output_type']
     print "Parsing BLAST output to {0} on Processor {1}".format(_output_type, manager['proc_number'])
@@ -169,12 +172,14 @@ def g_execute(blast_options, outputoptions):
         os.makedirs(os.path.abspath(path))
         print msg
 
-    if not os.path.exists(os.path.join(os.getcwd() + "/internal_data")):
-        print "Copying internal data to current directory"
+    if not os.path.exists(os.getcwd() + "/internal_data"):
+        print "Copying internal data to current directory {0} to {1}".format(outputoptions['internal_data_directory'],
+                                                                              os.getcwd() + "/internal_data")
         shutil.copytree(outputoptions['internal_data_directory'], os.getcwd() + "/internal_data")
+        raw_input()
 
     # split fasta file up
-    all_fasta = split_fasta(processors, path, file_name, suffix=".tmp_fasta")
+    all_fasta = split_fasta.split_fasta(processors, path, file_name, suffix=".tmp_fasta")
     glob_path = os.path.join(path, os.path.basename(file_name).split('.fasta')[0] + "*.tmp_fasta")
 
     print "Splitting up file {0} into {1}".format(file_name, path)

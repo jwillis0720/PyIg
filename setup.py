@@ -2,26 +2,28 @@
 from distutils.core import setup
 import os
 import pickle
-from shutil import copytree
+from shutil import copytree, rmtree
 import sys
 import platform
 
 library_dir = "/usr/local/lib/"
 pyig_lib = os.path.join(library_dir, 'pyig')
 
-if not os.path.exists(pyig_lib):
-    try:
-      print "Trying...copying data to {0}".format(pyig_lib)
-      copytree('data_files', pyig_lib)
-      os.putenv('PYIGLIB',library_dir)
-    except OSError:
-        print "Need root to install in {0} directory location," \
-              "use --library-path flag to specify where you want" \
-              "to install the library".format(pyig_lib)
-        sys.exit(1)
+if os.path.exists(pyig_lib):
+  print "Deleting old copy of".format(pyig_lib)
+  rmtree(pyig_lib)
+try:
+  print "Trying...copying data to {0}".format(pyig_lib)
+  copytree('data_files', pyig_lib)
+  os.putenv('PYIGLIB',library_dir)
+except OSError:
+    print "Need root to install in {0} directory location," \
+          "use --library-path flag to specify where you want" \
+          "to install the library".format(pyig_lib)
+    sys.exit(1)
 
 #my hack way of knowking the directory location. This is supernice for dynamic code. THERE HAS TO BE A BETTER WAY OF DOING THIS
-pickle.dump(pyig_lib,open('src/library_dir.txt','w'))
+pickle.dump(pyig_lib,open('src/pyig/gui/library_dir.txt','w'))
 
 
 def get_os():
