@@ -2,7 +2,8 @@
 	"folders":
 	[
 		{
-			"path": "/Users/jordanwillis/GoogleDrive/utilities/pyig"
+			"follow_symlinks": true,
+			"path": "."
 		}
 	]
 }
