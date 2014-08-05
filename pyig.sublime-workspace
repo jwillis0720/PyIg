@@ -3,130 +3,17 @@
 	{
 		"selected_items":
 		[
-			[
-				"i",
-				"i"
-			],
-			[
-				"retu",
-				"return_dict	statement"
-			],
-			[
-				"max",
-				"max_overlap	statement"
-			],
-			[
-				"min",
-				"min_overlap	statement"
-			],
-			[
-				"revers",
-				"reverse_coverage	statement"
-			],
-			[
-				"reverse",
-				"reverse_tm	statement"
-			],
-			[
-				"froward",
-				"forward_tm	statement"
-			],
-			[
-				"forward",
-				"forward_gc	statement"
-			],
-			[
-				"_ind",
-				"_index_of_roi	statement"
-			],
-			[
-				"rever",
-				"reverse_coverage	statement"
-			],
-			[
-				"forwar",
-				"forward_coverage	statement"
-			],
-			[
-				"reve",
-				"reverse_read"
-			],
-			[
-				"_index",
-				"_index_of_end_of_roi	statement"
-			],
-			[
-				"_index_of_",
-				"_index_of_revprimer"
-			],
-			[
-				"forw",
-				"forward_read	statement"
-			],
-			[
-				"ill",
-				"illumina_read_length"
-			],
-			[
-				"for",
-				"forward_read	statement"
-			],
-			[
-				"forware",
-				"forward_length	statement"
-			],
-			[
-				"Read",
-				"readlength"
-			],
-			[
-				"full",
-				"full_seq	statement"
-			],
-			[
-				"ful",
-				"full_seq	statement"
-			],
-			[
-				"pa",
-				"paired_read_lengths	statement"
-			],
-			[
-				"region",
-				"region_of_interest_name"
-			],
-			[
-				"cla",
-				"cla_dict"
-			],
-			[
-				"pair",
-				"paired_read_lengths"
-			],
-			[
-				"Illu",
-				"IlluminaPrimer"
-			],
-			[
-				"Im",
-				"ImportError	class"
-			],
-			[
-				"p",
-				"parse_args	function"
-			],
-			[
-				"if",
-				"ifmain	if __name__ == '__main__'"
-			],
-			[
-				"arg",
-				"arg_parse	statement"
-			]
 		]
 	},
 	"buffers":
 	[
+		{
+			"settings":
+			{
+				"buffer_size": 0,
+				"line_ending": "Unix"
+			}
+		}
 	],
 	"build_system": "",
 	"command_palette":
@@ -135,75 +22,15 @@
 		"selected_items":
 		[
 			[
-				"install",
-				"Package Control: Install Package"
-			],
-			[
-				"forma",
-				"Anaconda: Autoformat PEP8 Errors"
-			],
-			[
-				"python",
-				"Set Syntax: Python"
-			],
-			[
-				"set syn",
-				"Set Syntax: R"
-			],
-			[
-				"ana",
-				"Anaconda: Autoformat PEP8 Errors"
-			],
-			[
-				"disable",
-				"Package Control: Disable Package"
-			],
-			[
-				"diab",
-				"Package Control: Disable Package"
-			],
-			[
-				"Package Control: ",
-				"Package Control: Disable Package"
-			],
-			[
-				"convert to",
-				"Indentation: Convert to Spaces"
-			],
-			[
-				"set syntax py",
-				"Set Syntax: Python"
-			],
-			[
-				"sidebar",
-				"View: Toggle Open Files in Side Bar"
-			],
-			[
-				"instal",
-				"Package Control: Install Package"
-			],
-			[
-				"package control",
-				"Preferences: Package Control Settings – Default"
-			],
-			[
-				"package sett",
-				"Preferences: Package Control Settings – User"
-			],
-			[
-				"",
-				"Package Control: Install Package"
+				"package",
+				"Preferences: Browse Packages"
 			]
 		],
-		"width": 449.0
+		"width": 392.0
 	},
 	"console":
 	{
-		"height": 126.0,
-		"history":
-		[
-			"import urllib.request,os,hashlib; h = '7183a2d3e96f11eeadd761d777e62404' + 'e330c659d4bb41d3bdf022e94cab3cd0'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://sublime.wbond.net/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)"
-		]
+		"height": 125.0
 	},
 	"distraction_free":
 	{
@@ -216,138 +43,10 @@
 	},
 	"file_history":
 	[
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/util/floating_point.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/algo/blast/api/blast_options_builder.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/scripts/common/impl/generate_all_objects.sh",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/objects/gbproj/gbproj__.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/objects/seqres/Int_graph.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/ReleaseMT/bin/igblastn",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/objects/id2/ID2_Get_Blob_Details.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/algo/blast/blastinput/igblastn_args.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/algo/blast/igblast/igblast.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/compilers/msvc1000_prj/install.sh",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/objects/blast/blast.asn",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/objects/blast/blastclient.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/objects/blast/Blast4_archive.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/algo/blast/core/blast_lookup.h",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/compilers/cygwin/build.sh",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/objects/blast/blast__.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/objects/blastxml/BlastOutput.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/objects/cn3d/Cn3d_backbone_label_style.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/objects/biblio/Cit_book.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/configure",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/optional_file/human_gl.aux",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/optional_file/human_gl.aux.testonly",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/optional_file/mouse_gl.aux",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/optional_file/rabbit_gl.aux",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/optional_file/rat_gl.aux",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/optional_file/rhesus_monkey_gl.aux",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/algo/blast/api/blast_options_local_priv.cpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/objects/pcassay/PC_ConcentrationAttr.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/algo/blast/api/blast_options.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/algo/blast/composition_adjustment/optimize_target_freq.h",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/corelib/obj_pool.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/serial/objcopy.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/html/html.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/algo/blast/core/blast_hspstream_mt_utils.c",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/compilers/xCode/Application.applescript",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/include/objtools/readers/agp_util.hpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/algo/blast/api/blast_aux_priv.cpp",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/compilers/msvc1000_prj/static/build/util/xutil.lib.vcxproj",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/ReleaseMT/status/.xutil-static.dep",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/scripts/internal/projects/lb_scripting/post_build/build_tarball.sh",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rhesus_monkey/rhesus_monkey_V.psq",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rhesus_monkey/rhesus_monkey_V.psi",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rhesus_monkey/rhesus_monkey_V.pog",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rhesus_monkey/rhesus_monkey_V.pin",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rhesus_monkey/rhesus_monkey_V.phr",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rhesus_monkey/rhesus_monkey_V.nsq",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rhesus_monkey/rhesus_monkey_V.nsi",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rhesus_monkey/rhesus_monkey_V.nsd",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rhesus_monkey/rhesus_monkey_V.nog",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rhesus_monkey/rhesus_monkey_V.nin",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rhesus_monkey/rhesus_monkey_V.nhr",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rhesus_monkey/rhesus_monkey.pdm.kabat",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rhesus_monkey/rhesus_monkey.pdm.imgt",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rhesus_monkey/rhesus_monkey.ndm.kabat",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rhesus_monkey/rhesus_monkey.ndm.imgt",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rat/rat_V.psq",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rat/rat_V.psi",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rat/rat_V.pog",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rat/rat_V.pin",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rat/rat_V.phr",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rat/rat_V.nsq",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rat/rat_V.nsi",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rat/rat_V.nsd",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rat/rat_V.nog",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rat/rat_V.nin",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rat/rat_V.nhr",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rat/rat.pdm.kabat",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rat/rat.pdm.imgt",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rat/rat.ndm.kabat",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rat/rat.ndm.imgt",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rabbit/rabbit_V.psq",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rabbit/rabbit_V.psi",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rabbit/rabbit_V.pog",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rabbit/rabbit_V.pin",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rabbit/rabbit_V.phr",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rabbit/rabbit_V.nsq",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rabbit/rabbit_V.nsi",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rabbit/rabbit_V.nsd",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rabbit/rabbit_V.nog",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rabbit/rabbit_V.nin",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rabbit/rabbit_V.nhr",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rabbit/rabbit.pdm.kabat",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rabbit/rabbit.pdm.imgt",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rabbit/rabbit.ndm.kabat",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/rabbit/rabbit.ndm.imgt",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_V.psq",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_V.psi",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_V.pog",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_V.pin",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_V.phr",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_V.nsq",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_V.nsi",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_V.nsd",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_V.nog",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_V.nin",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_V.nhr",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_TR_V.psq",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_TR_V.psi",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_TR_V.pog",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_TR_V.pin",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_TR_V.phr",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_TR_V.nsq",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_TR_V.nsi",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_TR_V.nsd",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_TR_V.nog",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_TR_V.nin",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse_TR_V.nhr",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse.pdm.kabat",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse.pdm.imgt",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse.ndm.kabat",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/mouse/mouse.ndm.imgt",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/human/human_V.psq",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/human/human_V.psi",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/human/human_V.pog",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/human/human_V.pin",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/human/human_V.phr",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/human/human_V.nsq",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/human/human_V.nsi",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/human/human_V.nsd",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/human/human_V.nog",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/human/human_V.nin",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/human/human_V.nhr",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/human/human_TR_V.psq",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/human/human_TR_V.psi",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/human/human_TR_V.pog",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/human/human_TR_V.pin",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/human/human_TR_V.phr",
-		"/Users/jordanwillis/Hal10K_utilities/ncbi-igblast-1.4.0-src/c++/src/app/igblast/internal_data/human/human_TR_V.nsq"
 	],
 	"find":
 	{
-		"height": 27.0
+		"height": 0.0
 	},
 	"find_in_files":
 	{
@@ -361,13 +60,6 @@
 		"case_sensitive": false,
 		"find_history":
 		[
-			"Germline",
-			"paierd",
-			"4MUT",
-			":",
-			",",
-			"()\n",
-			"Luc"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -385,14 +77,40 @@
 	"groups":
 	[
 		{
+			"selected": 0,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"settings":
+					{
+						"buffer_size": 0,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
 			]
 		}
 	],
 	"incremental_find":
 	{
-		"height": 27.0
+		"height": 0.0
 	},
 	"input":
 	{
@@ -421,14 +139,9 @@
 		]
 	},
 	"menu_visible": true,
-	"output.find_results":
-	{
-		"height": 0.0
-	},
-	"project": "pyig.sublime-project",
 	"replace":
 	{
-		"height": 50.0
+		"height": 0.0
 	},
 	"save_all_on_build": true,
 	"select_file":
@@ -436,54 +149,10 @@
 		"height": 0.0,
 		"selected_items":
 		[
-			[
-				"ig_opts",
-				"c++/include/algo/blast/api/blast_options.hpp"
-			],
-			[
-				"igblastn_a",
-				"c++/src/app/igblast/igblastn_app.cpp"
-			],
-			[
-				"igba",
-				"c++/src/app/igblast/igblastn_app.cpp"
-			],
-			[
-				"blast_options",
-				"c++/src/algo/blast/core/blast_options.c"
-			],
-			[
-				"blast_op",
-				"c++/include/algo/blast/api/blast_options.hpp"
-			],
-			[
-				"cblastoptions",
-				"c++/include/algo/blast/core/blast_options.h"
-			],
-			[
-				"optional_file",
-				"c++/src/app/igblast/optional_file/human_gl.aux.testonly"
-			],
-			[
-				"aux",
-				"c++/include/algo/blast/api/blast_aux.hpp"
-			],
-			[
-				"",
-				"~/Library/Application Support/Sublime Text 3/Packages/User/BioPythonUtils.sublime-settings"
-			]
 		],
 		"width": 0.0
 	},
 	"select_project":
-	{
-		"height": 500.0,
-		"selected_items":
-		[
-		],
-		"width": 380.0
-	},
-	"select_symbol":
 	{
 		"height": 0.0,
 		"selected_items":
@@ -491,16 +160,10 @@
 		],
 		"width": 0.0
 	},
-	"settings":
-	{
-	},
 	"show_minimap": true,
-	"show_open_files": true,
+	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 197.0,
-	"status_bar_visible": true,
-	"template_settings":
-	{
-	}
+	"side_bar_width": 202.0,
+	"status_bar_visible": true
 }
