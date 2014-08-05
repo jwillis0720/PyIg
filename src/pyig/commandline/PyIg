@@ -1,19 +1,18 @@
 #!/usr/bin/env python
-from pyig.commandline import PyIgArgumentParser as PyIg_Parse
-import os
+from pyig.commandline.PyIgArgumentParser import PyIgArgumentParser 
 import subprocess 
 from multiprocessing import Process
 from pyig.backend.split_fasta import split_fasta
 import tempfile
+import os
 
-arg_dict = PyIg_Parse().parse_arguments()
 class IgBlast_SingleRun():
 	'''IgBlast SubProcess for a Single Run -
 	Use - IgBlast_SingRun(fasta_file).run()
 	Just pass a single fasta file'''
 
-	def __init__(self):
-		'''Constructor takes fasta file'''
+	def __init__(self, arg_dict):
+		'''Constructor takes argument dictionary'''
 		self.ig_blast_executable = [arg_dict['executable']]
 		self.minD = ["-min_D_match",str(arg_dict['minD'])]
 		self.numV = ["-num_alignments_V",arg_dict['num_V_alignments']]
@@ -69,9 +68,10 @@ class IgBlast_SingleRun():
 		p = subprocess.Popen(self._collect())
 		p.wait()
 		
-def run_all_process(fasta_file):
-	num_procs = int(arg_dict['multi'])
-	IgBlast = IgBlast_SingleRun()
+def run_all_process(PyIgParse):
+	fasta_file = PyIgParse['query'] 
+	num_procs = int(PyIgParse['multi'])
+	IgBlast = IgBlast_SingleRun(PyIgParse)
 	if num_procs > 1:
 		jobs = []
 		split_fasta_file_names = split_fasta(num_procs,fasta_file,delete=False)
@@ -88,4 +88,5 @@ def run_all_process(fasta_file):
 		p.start()
 
 if __name__ == '__main__':
-	run_all_process(arg_dict['query'])
+	PyIg_ParseDict = PyIgArgumentParser().parse_arguments()
+	run_all_process(PyIg_ParseDict)

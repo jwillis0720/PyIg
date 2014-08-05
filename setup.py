@@ -10,8 +10,8 @@ bin = "/usr/local/bin/"
 
 if os.path.exists(library_dir):
       print "Deleting old copy of".format(library_dir)
-      rmtree(library_dir)
 try:
+      rmtree(library_dir)
       print "Trying...copying data to {0}".format(library_dir)
       copytree('data_dir', library_dir)
 except OSError:
@@ -51,25 +51,3 @@ setup(name='PyIg',
       packages=['pyig.backend', 'pyig.commandline', 'pyig'],
       package_dir={'pyig': 'src/pyig'},
       scripts=['src/pyig/commandline/PyIg'])
-      
-
-
-
-
-      #'igblast_source/'+get_os()+"/bin/igblastn"])
-
-
-
-      # #package_data = {'pyig':['data_files/*.txt',
-      #  #                       'data_files/*.py',
-      #                         'data_files/database/Ig/human/*',
-      #                         'data_files/database/Ig/mouse/*',
-      #                         'data_files/database/TCR/human/*',
-      #                         'data_files/database/TCR/mouse/*',
-      #                         'data_files/internal_data/human/*',
-      #                         'data_files/internal_data/mouse/*',
-      #                         'data_files/internal_data/rabbit/*',
-      #                         'data_files/internal_data/rat/*',
-      #                         'data_files/optional_file/*',
-                            #  ]},
-      #package_data={'pyig.gui':['library_dir.txt']},
