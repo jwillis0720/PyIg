@@ -50,7 +50,7 @@ setup(name='PyIg',
       author_email='jwillis0720@gmail.com',
       packages=['pyig.backend', 'pyig.commandline', 'pyig'],
       package_dir={'pyig': 'src/pyig'},
-      scripts=['scripts/PyIg'])
+      scripts=['src/pyig/commandline/PyIg'])
       
 
 

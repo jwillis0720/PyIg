@@ -1,8 +1,9 @@
-from PyIgArgumentParser import PyIgArgumentParser as PyIg_Parse
+#!/usr/bin/env python
+from pyig.commandline import PyIgArgumentParser as PyIg_Parse
 import os
 import subprocess 
 from multiprocessing import Process
-from split_fasta import split_fasta
+from pyig.backend.split_fasta import split_fasta
 import tempfile
 
 arg_dict = PyIg_Parse().parse_arguments()
