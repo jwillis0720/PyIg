@@ -51,11 +51,11 @@ class PyIgArgumentParser():
             title="BLAST Specific Arguments", description="Arguments Specific to IgBlast")
 
         blast_arguments.add_argument(
-            "-nV","--num_v_alignments",default="1",type=str,
+            "-nV","--num_V_alignments",default="1",type=str,
             help="How many V genes do you want to match?")
 
         blast_arguments.add_argument(
-            "-nD","--num_d_alignments",default="1",type=str,
+            "-nD","--num_D_alignments",default="1",type=str,
             help="How many D genes do you want to match?, does not apply for kappa and lambda")
 
         blast_arguments.add_argument(
@@ -73,6 +73,11 @@ class PyIgArgumentParser():
              type=self._validate_executable,
              help="The location of IGBlastn, default is /usr/local/bin/igblastn if used setup.py")
 
+        general_args = self.arg_parse.add_argument_group(
+            title="General Arguments", description="Output and Miscellaneous Arguments")
+        general_args.add_argument("-m","--multi",default=cpu_count(),help="Multiprocess by the amount of CPUs you have. \
+            Or you can enter a number or type 0 to turn it off")
+
     def _check_d_match_validity(self, amount):
         if int(amount) >= 5:
             return str(amount)
@@ -82,8 +87,7 @@ class PyIgArgumentParser():
     def _validate_fasta(self, text):
         try:
             SeqIO.parse(text, 'fasta').next()
-            return SeqIO.parse(text, 'fasta')
-
+            return text
         except StopIteration:
             raise argparse.ArgumentTypeError(
                 "{0} is not fasta file".format(text))
