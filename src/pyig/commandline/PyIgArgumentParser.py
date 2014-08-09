@@ -77,6 +77,7 @@ class PyIgArgumentParser():
             title="General Arguments", description="Output and Miscellaneous Arguments")
         general_args.add_argument("-m","--multi",default=cpu_count(),help="Multiprocess by the amount of CPUs you have. \
             Or you can enter a number or type 0 to turn it off")
+        general_args.add_argument("-o","--out",default="PyIg_out.json",help="Output_file_name")
 
     def _check_d_match_validity(self, amount):
         if int(amount) >= 5:

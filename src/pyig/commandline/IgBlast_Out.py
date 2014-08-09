@@ -47,26 +47,26 @@ class SingleOutput_Entry():
                         ('CDR 1 AA Length' , ""),
                         ('CDR 2 AA Length' , ""),
                         ('CDR 3 AA Length' , ""),
-                        ('Total Alignment Matches' , ""),
-                        ('Total Alignment Mismatches' , ""),
-                        ('Total Alignment Length' , ""),
-                        ('Total Alignment Gaps' , ""),
-                        ('Total Alignment Percent Identity' , ""),
+                        ('Total V Alignment Matches' , ""),
+                        ('Total V Alignment Mismatches' , ""),
+                        ('Total V Alignment Length' , ""),
+                        ('Total V Alignment Gaps' , ""),
+                        ('Total V Alignment Identity' , ""),
                         ('FW1 Alignment Matches' , ""),
                         ('FW1 Alignment Mismatches' , ""),
                         ('FW1 Alignment Length' , ""),
                         ('FW1 Alignment Gaps' , ""),
-                        ('FW1 Identity' , ""),
+                        ('FW1 Alignment Identity' , ""),
                         ('FW2 Alignment Matches' , ""),
                         ('FW2 Alignment Mismatches' , ""),
                         ('FW2 Alignment Length' , ""),
                         ('FW2 Alignment Gaps' , ""),
-                        ('FW2 Identity' , ""),
+                        ('FW2 Alignment Identity' , ""),
                         ('FW3 Alignment Matches' , ""),
                         ('FW3 Alignment Mismatches' , ""),
                         ('FW3 Alignment Length' , ""),
                         ('FW3 Alignment Gaps' , ""),
-                        ('FW3 Identity' , ""),
+                        ('FW3 Alignment Identity' , ""),
                         ('CDR1 Alignment Matches' , ""),
                         ('CDR1 Alignment Mismatches' , ""),
                         ('CDR1 Alignment Length' , ""),
@@ -82,27 +82,27 @@ class SingleOutput_Entry():
                         ('CDR3 Alignment Length' , ""),
                         ('CDR3 Alignment Gaps' , ""),
                         ('CDR3 Alignment Identity' , ""),
-                        ('Top V gene match' , ""),
-                        ('V-Gene Mismatches' , ""),
-                        ('V-Gene Percent Identity' , ""),
-                        ('V-Gene Gaps' , ""),
-                        ('V-Gene e-Value' , ""),
-                        ('V-Gene Bit Score' , ""),
-                        ('V-Gene Alignment Length' , ""),
-                        ('Top D gene match' , ""),
-                        ('D-Gene Mismatches' , ""),
-                        ('D-Gene Percent Identity' , ""),
-                        ('D-Gene Gaps' , ""),
-                        ('D-Gene e-Value' , ""),
-                        ('D-Gene Bit Score' , ""),
-                        ('D-Gene Alignment Length' , ""),
-                        ('Top J gene match' , ""),
-                        ('J-Gene Mismatches' , ""),
-                        ('J-Gene Percent Identity' , ""),
-                        ('J-Gene Gaps' , ""),
-                        ('J-Gene e-Value' , ""),
-                        ('J-Gene Bit Score' , ""),
-                        ('J-Gene Alignment Length' , ""),
+                        # ('Top V gene match' , ""),
+                        # ('V-Gene Mismatches' , ""),
+                        # ('V-Gene Percent Identity' , ""),
+                        # ('V-Gene Gaps' , ""),
+                        # ('V-Gene e-Value' , ""),
+                        # ('V-Gene Bit Score' , ""),
+                        # ('V-Gene Alignment Length' , ""),
+                        # ('Top D gene match' , ""),
+                        # ('D-Gene Mismatches' , ""),
+                        # ('D-Gene Percent Identity' , ""),
+                        # ('D-Gene Gaps' , ""),
+                        # ('D-Gene e-Value' , ""),
+                        # ('D-Gene Bit Score' , ""),
+                        # ('D-Gene Alignment Length' , ""),
+                        # ('Top J gene match' , ""),
+                        # ('J-Gene Mismatches' , ""),
+                        # ('J-Gene Percent Identity' , ""),
+                        # ('J-Gene Gaps' , ""),
+                        # ('J-Gene e-Value' , ""),
+                        # ('J-Gene Bit Score' , ""),
+                        # ('J-Gene Alignment Length' , ""),
                         ('Junction V-End',""),
                         ('V-D Junction',""),    
                         ('Junction D-Gene',""),
@@ -149,10 +149,15 @@ class SingleOutput_Entry():
         self.hits_j = []  # to be parsed in another function
 
     def get_json_entry(self):
-        self.parse()
         self.json = json.dumps(self.output,indent=4)
         return self.json
     
+    def get_id(self):
+        return self.output['Sequence Id']
+
+    def set_seq(self, sequence):
+        self.output['Query Sequence'] = str(sequence).upper()
+
     def parse(self):
 
         _rearrangment_breaker = False
@@ -206,23 +211,7 @@ class SingleOutput_Entry():
                 self.alignment_summary_titles = line.strip().split(
                     "(")[1].split(")")[0].split(",")
 
-                for entry in self.alignment_summary_titles:
-                    if entry.strip() == "from":
-                        entry = "From"           
-                    if entry.strip() == "to":
-                        entry = "To"
-                    if entry.strip() == "length":
-                        entry = "Length"
-                    if entry.strip() == "matches":
-                        entry = "Matches"
-                    if entry.strip() == "mismatches":
-                        entry = "Mismatches"
-                    if entry.strip() == "gaps":
-                        entry = "Gaps"
-                    if entry.strip() == "percent identity":
-                        entry = "Percent Identity"
-
-                 
+                       
             '''Ok, in some blast versions, the line starts with just the field we are looking for,
             In other versions it has a '-', so I will just check for both'''
             # check for hypen
@@ -260,6 +249,21 @@ class SingleOutput_Entry():
             if line.startswith("Total"):
                 self.total_alignment_summary = line.strip().split()[1:]
 
+        
+            #Finally parse VDJ hits
+            if "# Fields:" in line:
+                self.hit_titles = line.strip().split(":")[1].split(",")
+                _fields_breaker = True
+            if _fields_breaker:
+                '''vdj hits have to be a list, since there can be more than one depending
+                what the user asked for'''
+                if line.startswith("V"):
+                    self.hits_v.append(line)
+                elif line.startswith("D"):
+                    self.hits_d.append(line)
+                elif line.startswith("J"):
+                    self.hits_j.append(line)
+
         self.parse_rearranment()
         self.parse_junction()
         self.parse_fw1_align()
@@ -269,6 +273,7 @@ class SingleOutput_Entry():
         self.parse_cdr2_align()
         self.parse_cdr3_align()
         self.parse_total_v_align()
+        self.parse_v_hits()
 
 
     def parse_rearranment(self):
@@ -325,52 +330,61 @@ class SingleOutput_Entry():
     #Now lets start parsing the alignment summaries into each sections FW1,2,3,4,CDR1,2,3
     def parse_fw1_align(self):
         for title, value in zip(self.alignment_summary_titles, self.fr1_alignment_summary):
-            self.framework1_align["Framework 1 "+title] = value
+            if title.strip() == 'percent identity':
+                title = 'Identity'
+            self.output["FW1 Alignment "+title.strip().capitalize()] = value
             
     def parse_fw2_align(self):
         for title, value in zip(self.alignment_summary_titles, self.fr2_alignment_summary):
-            self.framework1_align["Framework 2 "+title] = value   
+            if title.strip() == 'percent identity':
+                title = 'Identity'
+            self.output["FW2 Alignment "+title.strip().capitalize()] = value   
 
     def parse_fw3_align(self):
         for title, value in zip(self.alignment_summary_titles, self.fr3_alignment_summary):
-            self.framework1_align["Framework 3 "+title] = value   
+            if title.strip() == 'percent identity':
+                title = 'Identity'
+            self.output["FW3 Alignment "+title.strip().capitalize()] = value   
 
     def parse_cdr1_align(self):
         for title, value in zip(self.alignment_summary_titles, self.cdr1_alignment_summary):
-            self.cdr1_align['CDR1 '+ title] = value
+            if title.strip() == 'percent identity':
+                title = 'Identity'
+            self.output['CDR1 Alignment '+ title.strip().capitalize()] = value
 
     def parse_cdr2_align(self):
         for title, value in zip(self.alignment_summary_titles, self.cdr2_alignment_summary):
-            self.cdr2_align['CDR2 '+ title] = value
+            if title.strip() == 'percent identity':
+                title = 'Identity'
+            self.output['CDR2 Alignment '+ title.strip().capitalize()] = value
 
     def parse_cdr3_align(self):
         for title, value in zip(self.alignment_summary_titles, self.cdr3_alignment_summary):
-            self.cdr3_align['CDR3 '+ title] = value
+            if title.strip() == 'percent identity':
+                title = 'Identity'
+            self.output['CDR3 Alignment '+ title.strip().capitalize()] = value
 
     def parse_total_v_align(self):
         '''The total alignment is just the Whole V region region which is pretty nice'''
         for title, value in zip(self.alignment_summary_titles, self.total_alignment_summary):
-            self.total_v_align["Total V "+ title] = value
+            if title.strip() == 'percent identity':
+                title = 'Identity'
+            if title.strip() == 'from' or title.strip() == 'to':
+                continue
+            self.output["Total V Alignment "+ title.strip().capitalize()] = value
 
 
-#             info about them that blast gives, the VDJ hits can give a ton of information
-#             about the junction, the identity to each gene, the frame, gaps, evalue, etc,
-#             these are ranked and put into a list'''
-#             if "# Fields:" in line:
-#                 self.hit_fields = line.strip().split(":")[1].split(",")
-#                 _fields_breaker = True
-#             if _fields_breaker:
-#                 '''vdj hits have to be a list, since there can be more than one depending
-#                 what the user asked for'''
-#                 if line.startswith("V"):
-#                     self.hits_v.append(line)
-#                 elif line.startswith("D"):
-#                     self.hits_d.append(line)
-#                 elif line.startswith("J"):
-#                     self.hits_j.append(line)
-#         '''now that I got all the blast output parsed,
-#         lets put it into the requested format, before we do that however lets make
-#         one dictionary'''
+    def parse_v_hits(self):       
+        for rank,entry in enumerate(self.hits_v,start=1):
+            _entry_dict = OrderedDict()
+            for value, title in zip(entry.split()[1:], self.hit_titles):
+                # sometimes there is nothing there so it can't cast to a float
+                try:
+                    _entry_dict['V-Gene Rank_'+ str(rank) +" "+title.strip().capitalize().replace("%", "Percent")] = float(value)
+                except ValueError:
+                    _entry_dict['V-Gene Rank_'+ str(rank) +" "+title.strip().capitalize().replace("%", "Percent")] = value 
+            self.output['V-Gene Rank_' + str(rank)] = _entry_dict
+
 
 #     def generate_blast_dict(self):
 #         '''THE blast dict is a dictionary of dictionaries containing all of
@@ -567,8 +581,16 @@ class IgBlast_Out():
         self.blast_output_handle = ""
         self.parsed_output = tempfile.NamedTemporaryFile(suffix=".json",delete=False).name
 
+    def set_seq_dictionary(self, seq_dictionary):
+        self.seq_dictionary = seq_dictionary
+
     def set_blast_output(self,blast_handle):
         self.blast_output_handle = blast_handle
+
+    def set_input_query(self,query):
+        self.input_query = {}
+        for entry in SeqIO.parse(query, 'fasta'):
+            self.input_query[entry.id] = entry.seq
 
     def get_output_name(self):
         return self.parsed_output
@@ -579,10 +601,14 @@ class IgBlast_Out():
             for line in open(self.blast_output_handle):
                 if "IGBLASTN" in line:
                     if _focus_lines:
-                        Single_Blast_Entry = SingleOutput_Entry(_focus_lines,'human')
-                        out.write(Single_Blast_Entry.get_json_entry())
-                        out.write("\n")
-                        _focus_lines = []                    
+                            Single_Blast_Entry = SingleOutput_Entry(_focus_lines,'human')
+                            Single_Blast_Entry.parse()
+                            Single_Blast_Entry.get_id()
+                            Single_Blast_Entry.set_seq(
+                                self.seq_dictionary[Single_Blast_Entry.get_id()])
+                            out.write(Single_Blast_Entry.get_json_entry())
+                            out.write("\n")
+                            _focus_lines = []                    
                     else:
                          continue
                 else:
@@ -590,9 +616,12 @@ class IgBlast_Out():
             #for last line -
             if _focus_lines:
                 Single_Blast_Entry = SingleOutput_Entry(_focus_lines,'human')
+                Single_Blast_Entry.parse()
+                Single_Blast_Entry.get_id()
+                Single_Blast_Entry.set_seq(self.seq_dictionary[Single_Blast_Entry.get_id()])
                 out.write(Single_Blast_Entry.get_json_entry())
                 out.write("\n")
-
+        
 
 #         # The blast file that was output, format it to a handle
 #         self.blast_file_handle = ""
