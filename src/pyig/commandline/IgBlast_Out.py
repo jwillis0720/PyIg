@@ -8,110 +8,102 @@ import os.path
 from collections import OrderedDict
 import csv
 import tempfile
+from TranslateAndJoin import TranslateAndJoin
 from pyig.backend.DefaultOrderedDict import DefaultOrderedDict
 
 
 class SingleOutput_Entry():
 
-    def __init__(self,entry,species):
+    def __init__(self,entry,j_trans,species):
         self.entry = entry 
+        self.j_trans = j_trans
         self.species = species
         self.output =  OrderedDict((('Sequence Id' ,  ""),
-                        ('Query Sequence' , ""),
-                        ('Chain type' , ""),
-                        ('Format Type', ""),
-                        ('Top V Hit', ""),
-                        ('Top D Hit', ""),
-                        ('Top J Hit', ""),
-                        ('Productive', "False"),
-                        ('Productive CDR3', 'False'),
-                        ('Strand', ""),
-                        ('Framework 1 Nucleotides',""),
-                        ('Framework 2 Nucleotides',""),
-                        ('Framework 3 Nucleotides',""),
-                        ('Framework 4 Nucleotides',""),
-                        ('CDR1 Nucleotides', ""),
-                        ('CDR2 Nucleotides', ""),
-                        ('CDR3 Nucleotides', ""),
-                        ('Framework 1 AA' , ""),
-                        ('Framework 2 AA' , ""),
-                        ('Framework 3 AA' , ""),
-                        ('Framework 4 AA' , ""),
-                        ('Framework 1 AA Length', ""),
-                        ('Framework 2 AA Length', ""),
-                        ('Framework 3 AA Length', ""),
-                        ('Framework 4 AA Length', ""),
-                        ('CDR 1 AA' , ""),
-                        ('CDR 2 AA' , ""),
-                        ('CDR 3 AA' , ""),
-                        ('CDR 1 AA Length' , ""),
-                        ('CDR 2 AA Length' , ""),
-                        ('CDR 3 AA Length' , ""),
-                        ('Total V Alignment Matches' , ""),
-                        ('Total V Alignment Mismatches' , ""),
-                        ('Total V Alignment Length' , ""),
-                        ('Total V Alignment Gaps' , ""),
-                        ('Total V Alignment Identity' , ""),
-                        ('FW1 Alignment Matches' , ""),
-                        ('FW1 Alignment Mismatches' , ""),
-                        ('FW1 Alignment Length' , ""),
-                        ('FW1 Alignment Gaps' , ""),
-                        ('FW1 Alignment Identity' , ""),
-                        ('FW2 Alignment Matches' , ""),
-                        ('FW2 Alignment Mismatches' , ""),
-                        ('FW2 Alignment Length' , ""),
-                        ('FW2 Alignment Gaps' , ""),
-                        ('FW2 Alignment Identity' , ""),
-                        ('FW3 Alignment Matches' , ""),
-                        ('FW3 Alignment Mismatches' , ""),
-                        ('FW3 Alignment Length' , ""),
-                        ('FW3 Alignment Gaps' , ""),
-                        ('FW3 Alignment Identity' , ""),
-                        ('CDR1 Alignment Matches' , ""),
-                        ('CDR1 Alignment Mismatches' , ""),
-                        ('CDR1 Alignment Length' , ""),
-                        ('CDR1 Alignment Gaps' , ""),
-                        ('CDR1 Alignment Identity' , ""),
-                        ('CDR2 Alignment Matches' , ""),
-                        ('CDR2 Alignment Mismatches' , ""),
-                        ('CDR2 Alignment Length' , ""),
-                        ('CDR2 Alignment Gaps' , ""),
-                        ('CDR2 Alignment Idenity' , ""),
-                        ('CDR3 Alignment Matches' , ""),
-                        ('CDR3 Alignment Mismatches' , ""),
-                        ('CDR3 Alignment Length' , ""),
-                        ('CDR3 Alignment Gaps' , ""),
-                        ('CDR3 Alignment Identity' , ""),
-                        # ('Top V gene match' , ""),
-                        # ('V-Gene Mismatches' , ""),
-                        # ('V-Gene Percent Identity' , ""),
-                        # ('V-Gene Gaps' , ""),
-                        # ('V-Gene e-Value' , ""),
-                        # ('V-Gene Bit Score' , ""),
-                        # ('V-Gene Alignment Length' , ""),
-                        # ('Top D gene match' , ""),
-                        # ('D-Gene Mismatches' , ""),
-                        # ('D-Gene Percent Identity' , ""),
-                        # ('D-Gene Gaps' , ""),
-                        # ('D-Gene e-Value' , ""),
-                        # ('D-Gene Bit Score' , ""),
-                        # ('D-Gene Alignment Length' , ""),
-                        # ('Top J gene match' , ""),
-                        # ('J-Gene Mismatches' , ""),
-                        # ('J-Gene Percent Identity' , ""),
-                        # ('J-Gene Gaps' , ""),
-                        # ('J-Gene e-Value' , ""),
-                        # ('J-Gene Bit Score' , ""),
-                        # ('J-Gene Alignment Length' , ""),
-                        ('Junction V-End',""),
-                        ('V-D Junction',""),    
-                        ('Junction D-Gene',""),
-                        ('D-J Junction',""),
-                        ('Junction J-Start',""),
-                        ('D or J Junction',"")))
-
-         # Where to end translation for CDR3 loops specified in an output file
-        self.end_cdr3_dicts = os.path.join(os.environ['IGDATA'],"germ_props",self.species,"proerties.txt")
+                                    ('Query Sequence' , ""),
+                                    ('Chain type' , ""),
+                                    ('Format Type', ""),
+                                    ('Species', self.species),
+                                    ('Top V Hit', ""),
+                                    ('Top D Hit', ""),
+                                    ('Top J Hit', ""),
+                                    ('Productive', "False"),
+                                    ('Productive CDR3', 'False'),
+                                    ('Strand', ""),
+                                    ('Framework 1 Nucleotides',""),
+                                    ('Framework 2 Nucleotides',""),
+                                    ('Framework 3 Nucleotides',""),
+                                    ('Framework 4 Nucleotides',""),
+                                    ('CDR1 Nucleotides', ""),
+                                    ('CDR2 Nucleotides', ""),
+                                    ('CDR3 Nucleotides', ""),
+                                    ('Framework 1 AA' , ""),
+                                    ('Framework 2 AA' , ""),
+                                    ('Framework 3 AA' , ""),
+                                    ('Framework 4 AA' , ""),
+                                    ('Framework 1 AA Length', ""),
+                                    ('Framework 2 AA Length', ""),
+                                    ('Framework 3 AA Length', ""),
+                                    ('Framework 4 AA Length', ""),
+                                    ('CDR1 AA' , ""),
+                                    ('CDR2 AA' , ""),
+                                    ('CDR3 AA' , ""),
+                                    ('CDR1 AA Length' , ""),
+                                    ('CDR2 AA Length' , ""),
+                                    ('CDR3 AA Length' , ""),
+                                    ('Total V Alignment Matches' , ""),
+                                    ('Total V Alignment Mismatches' , ""),
+                                    ('Total V Alignment Length' , ""),
+                                    ('Total V Alignment Gaps' , ""),
+                                    ('Total V Alignment Identity' , ""),
+                                    ('FW1 Alignment Matches' , ""),
+                                    ('FW1 Alignment Mismatches' , ""),
+                                    ('FW1 Alignment Length' , ""),
+                                    ('FW1 Alignment Gaps' , ""),
+                                    ('FW1 Alignment Identity' , ""),
+                                    ('FW2 Alignment Matches' , ""),
+                                    ('FW2 Alignment Mismatches' , ""),
+                                    ('FW2 Alignment Length' , ""),
+                                    ('FW2 Alignment Gaps' , ""),
+                                    ('FW2 Alignment Identity' , ""),
+                                    ('FW3 Alignment Matches' , ""),
+                                    ('FW3 Alignment Mismatches' , ""),
+                                    ('FW3 Alignment Length' , ""),
+                                    ('FW3 Alignment Gaps' , ""),
+                                    ('FW3 Alignment Identity' , ""),
+                                    ('CDR1 Alignment Matches' , ""),
+                                    ('CDR1 Alignment Mismatches' , ""),
+                                    ('CDR1 Alignment Length' , ""),
+                                    ('CDR1 Alignment Gaps' , ""),
+                                    ('CDR1 Alignment Identity' , ""),
+                                    ('CDR2 Alignment Matches' , ""),
+                                    ('CDR2 Alignment Mismatches' , ""),
+                                    ('CDR2 Alignment Length' , ""),
+                                    ('CDR2 Alignment Gaps' , ""),
+                                    ('CDR2 Alignment Idenity' , ""),
+                                    ('CDR3 Alignment Matches' , ""),
+                                    ('CDR3 Alignment Mismatches' , ""),
+                                    ('CDR3 Alignment Length' , ""),
+                                    ('CDR3 Alignment Gaps' , ""),
+                                    ('CDR3 Alignment Identity' , ""),
+                                    ('Junction V-End',""),
+                                    ('V-D Junction',""),    
+                                    ('Junction D-Gene',""),
+                                    ('D-J Junction',""),
+                                    ('Junction J-Start',""),
+                                    ('D or J Junction',""),
+                                    ("FW1 Alignment From",""),
+                                    ("FW1 Alignment To","",),
+                                    ("FW2 Alignment From",""),
+                                    ("FW2 Alignment To",""),
+                                    ("FW3 Alignment From",""),
+                                    ("FW3 Alignment To",""),
+                                    ("CDR1 Alignment From",""),
+                                    ("CDR1 Alignment To",""),
+                                    ("CDR2 Alignment From",""),
+                                    ("CDR2 Alignment To",""),
+                                    ("CDR2 Alignment Identity",""),
+                                    ("CDR3 Alignment From",""),
+                                    ("CDR3 Alignment To","")))
 
         # Title fields, these are the four sections it divides up to.
         # The fields are essentially the header to each section.
@@ -142,7 +134,6 @@ class SingleOutput_Entry():
         self.cdr3_align = {}
         self.total_v_align = {}
 
-
         # VD and J hits
         self.hits_v = []  # to be parsed in another function
         self.hits_d = []  # to be parsed in another function
@@ -164,7 +155,7 @@ class SingleOutput_Entry():
         _junction_breaker = False
         _fields_breaker = False 
        
-       #Query Name 
+        #Query Name 
         for line in self.entry:
             if "Query" in line:
                 self.output['Sequence Id'] = line.split(":")[1].strip()
@@ -274,6 +265,8 @@ class SingleOutput_Entry():
         self.parse_cdr3_align()
         self.parse_total_v_align()
         self.parse_v_hits()
+        self.parse_d_hits()
+        self.parse_j_hits()
 
 
     def parse_rearranment(self):
@@ -385,184 +378,30 @@ class SingleOutput_Entry():
                     _entry_dict['V-Gene Rank_'+ str(rank) +" "+title.strip().capitalize().replace("%", "Percent")] = value 
             self.output['V-Gene Rank_' + str(rank)] = _entry_dict
 
+    def parse_d_hits(self):       
+        for rank,entry in enumerate(self.hits_d,start=1):
+            _entry_dict = OrderedDict()
+            for value, title in zip(entry.split()[1:], self.hit_titles):
+                # sometimes there is nothing there so it can't cast to a float
+                try:
+                    _entry_dict['D-Gene Rank_'+ str(rank) +" "+title.strip().capitalize().replace("%", "Percent")] = float(value)
+                except ValueError:
+                    _entry_dict['D-Gene Rank_'+ str(rank) +" "+title.strip().capitalize().replace("%", "Percent")] = value 
+            self.output['D-Gene Rank_' + str(rank)] = _entry_dict
 
-#     def generate_blast_dict(self):
-#         '''THE blast dict is a dictionary of dictionaries containing all of
-#         our information about the hit, this will be filled by several methods,
-#         each of which return their own dictionaries'''
-#         blast_dict = {}
-#         blast_dict[self.query] = {
-#             "domain_classification": self.domain_classification,
-#             "raw_seq": self.get_raw_seq(),
-#             "rearrangement": self.parse_rearranment(),
-#             "junction": self.parse_junction(),
-#             "fr1_align": self.parse_fr1_align(),
-#             "fr2_align": self.parse_fr2_align(),
-#             "fr3_align": self.parse_fr3_align(),
-#             "cdr1_align": self.parse_cdr1_align(),
-#             "cdr2_align": self.parse_cdr2_align(),
-#             "cdr3_align": self.parse_cdr3_align(),
-#             "total_align": self.parse_total_align(),
-#             "v_hits": self.parse_v_hits(),
-#             "d_hits": self.parse_d_hits(),
-#             "j_hits": self.parse_j_hits()
-#         }
+    def parse_j_hits(self):       
+        for rank,entry in enumerate(self.hits_j,start=1):
+            _entry_dict = OrderedDict()
+            for value, title in zip(entry.split()[1:], self.hit_titles):
+                # sometimes there is nothing there so it can't cast to a float
+                try:
+                    _entry_dict['J-Gene Rank_'+ str(rank) +" "+title.strip().capitalize().replace("%", "Percent")] = float(value)
+                except ValueError:
+                    _entry_dict['J-Gene Rank_'+ str(rank) +" "+title.strip().capitalize().replace("%", "Percent")] = value 
+            self.output['J-Gene Rank_' + str(rank)] = _entry_dict
 
-#         # add the analysis
-#         blast_dict = cdr_analyzer(blast_dict, self.end_cdr3_dicts).return_modified_dict()
-#         return blast_dict
-
-#     def get_raw_seq(self):
-#         return self.raw_seqs_handle[self.query].upper()
-
-#     def parse_junction(self):
-#         '''Return a dictionary of the junction that is the
-#         nuceotide sequence of teh CDR3 junctions'''
-#         _return_dict = {}
-#         self.junction_together = ""
-#         for title, value in zip(self.junction_detail_titles, self.junction_detail):
-#             if "(" in value:
-#                 _return_dict["d-or-j_junction"] = value.split(
-#                     "(")[1].split(")")[0]
-#                 self.junction_together += value.split(
-#                     "(")[1].split(")")[0]
-#             else:
-#                 _return_dict[title.strip().lower().replace(" ", "_")] = value
-#                 if value != "N/A":
-#                     self.junction_together += value
-#         return _return_dict
-
-#     # Now lets start parsing the alignment summaries into each sections FW1,2,3,4,CDR1,2,3
-#     def parse_fr1_align(self):
-#         _return_dict = {}
-#         for title, value in zip(self.alignment_summary_titles, self.fr1_alignment_summary):
-#             try:
-#                 _return_dict[title] = int(value)
-#             except ValueError:
-#                 try:
-#                     _return_dict[title] = float(value)
-#                 except ValueError:
-#                     _return_dict[title] = value
-#         return _return_dict
-
-#     def parse_fr2_align(self):
-#         _return_dict = {}
-#         for title, value in zip(self.alignment_summary_titles, self.fr2_alignment_summary):
-#             try:
-#                 _return_dict[title] = int(value)
-#             except ValueError:
-#                 try:
-#                     _return_dict[title] = float(value)
-#                 except ValueError:
-#                     _return_dict[title] = value
-#         return _return_dict
-
-#     def parse_fr3_align(self):
-#         _return_dict = {}
-#         for title, value in zip(self.alignment_summary_titles, self.fr3_alignment_summary):
-#             try:
-#                 _return_dict[title] = int(value)
-#             except ValueError:
-#                 try:
-#                     _return_dict[title] = float(value)
-#                 except ValueError:
-#                     _return_dict[title] = value
-#         return _return_dict
-
-#     def parse_cdr1_align(self):
-#         _return_dict = {}
-#         for title, value in zip(self.alignment_summary_titles, self.cdr1_alignment_summary):
-#             try:
-#                 _return_dict[title] = int(value)
-#             except ValueError:
-#                 try:
-#                     _return_dict[title] = float(value)
-#                 except ValueError:
-#                     _return_dict[title] = value
-#         return _return_dict
-
-#     def parse_cdr2_align(self):
-#         _return_dict = {}
-#         for title, value in zip(self.alignment_summary_titles, self.cdr2_alignment_summary):
-#             try:
-#                 _return_dict[title] = int(value)
-#             except ValueError:
-#                 try:
-#                     _return_dict[title] = float(value)
-#                 except ValueError:
-#                     _return_dict[title] = value
-#         return _return_dict
-
-#     def parse_cdr3_align(self):
-#         _return_dict = {}
-#         for title, value in zip(self.alignment_summary_titles, self.cdr3_alignment_summary):
-#             try:
-#                 _return_dict[title] = int(value)
-#             except ValueError:
-#                 try:
-#                     _return_dict[title] = float(value)
-#                 except ValueError:
-#                     _return_dict[title] = value
-#         return _return_dict
-
-#     def parse_total_align(self):
-#         '''The total alignment is just the Whole region which is pretty nice'''
-#         _return_dict = {}
-#         for title, value in zip(self.alignment_summary_titles, self.total_alignment_summary):
-#             try:
-#                 _return_dict[title] = int(value)
-#             except ValueError:
-#                 try:
-#                     _return_dict[title] = float(value)
-#                 except ValueError:
-#                     _return_dict[title] = value
-#         return _return_dict
-
-#     def parse_v_hits(self):
-#         _return_dict = {}
-#         rank = 1
-#         for entry in self.hits_v:
-#             _entry_dict = {}
-#             for value, title in zip(entry.split()[1:], self.hit_fields):
-#                 # sometimes there is nothing there so it can't cast to a float
-#                 try:
-#                     _entry_dict[title.strip().replace(' ', '_').replace("%", "percent")] = float(value)
-#                 except:
-#                     _entry_dict[title.strip().replace(' ', '_').replace("%", "percent")] = value
-#             _return_dict['rank_' + str(rank)] = _entry_dict
-#             rank += 1
-#         # return a v_hit dictionary that is unsorted, but we kept the rank
-#         # by how it appeared in the balst out
-#         return _return_dict
-
-#     def parse_d_hits(self):
-#         _return_dict = {}
-#         rank = 1
-#         for entry in self.hits_d:
-#             _entry_dict = {}
-#             #_entry_dict["rank"] = int(rank)
-#             for value, title in zip(entry.split()[1:], self.hit_fields):
-#                 try:
-#                     _entry_dict[title.strip().replace(' ', '_').replace("%", "percent")] = float(value)
-#                 except:
-#                     _entry_dict[title.strip().replace(' ', '_').replace("%", "percent")] = value
-#             _return_dict['rank_' + str(rank)] = _entry_dict
-#             rank += 1
-#         return _return_dict
-
-#     def parse_j_hits(self):
-#         _return_dict = {}
-#         rank = 1
-#         for entry in self.hits_j:
-#             _entry_dict = {}
-#             for value, title in zip(entry.split()[1:], self.hit_fields):
-#                 try:
-#                     _entry_dict[title.strip().replace(' ', '_').replace("%", "percent")] = float(value)
-#                 except:
-#                     _entry_dict[title.strip().replace(' ', '_').replace("%", "percent")] = value
-#             _return_dict['rank_' + str(rank)] = _entry_dict
-#             rank += 1
-#         return _return_dict
+    def join_and_translate(self):
+       TranslateAndJoin(self)
 
 
 
@@ -592,20 +431,28 @@ class IgBlast_Out():
         for entry in SeqIO.parse(query, 'fasta'):
             self.input_query[entry.id] = entry.seq
 
+    def set_species(self,species):
+        self.species = species
+
     def get_output_name(self):
         return self.parsed_output
 
     def parse(self):
         _focus_lines = []
+        j_trans = {}
+        j_lines =  open(os.path.join(os.environ['IGDATA'],"germ_props",self.species,"properties.txt")).readlines()
+        for line in j_lines:
+            j_trans[line.split()[0]] = line.split()[1]
         with open(self.parsed_output, 'w') as out:
             for line in open(self.blast_output_handle):
                 if "IGBLASTN" in line:
                     if _focus_lines:
-                            Single_Blast_Entry = SingleOutput_Entry(_focus_lines,'human')
+                            Single_Blast_Entry = SingleOutput_Entry(_focus_lines,j_trans,self.species)
                             Single_Blast_Entry.parse()
                             Single_Blast_Entry.get_id()
                             Single_Blast_Entry.set_seq(
                                 self.seq_dictionary[Single_Blast_Entry.get_id()])
+                            Single_Blast_Entry.join_and_translate()
                             out.write(Single_Blast_Entry.get_json_entry())
                             out.write("\n")
                             _focus_lines = []                    
@@ -615,10 +462,11 @@ class IgBlast_Out():
                      _focus_lines.append(line)
             #for last line -
             if _focus_lines:
-                Single_Blast_Entry = SingleOutput_Entry(_focus_lines,'human')
+                Single_Blast_Entry = SingleOutput_Entry(_focus_lines,j_trans,self.species)
                 Single_Blast_Entry.parse()
                 Single_Blast_Entry.get_id()
                 Single_Blast_Entry.set_seq(self.seq_dictionary[Single_Blast_Entry.get_id()])
+                Single_Blast_Entry.join_and_translate()
                 out.write(Single_Blast_Entry.get_json_entry())
                 out.write("\n")
         

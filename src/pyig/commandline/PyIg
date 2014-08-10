@@ -85,6 +85,7 @@ class IgBlast_SingleRun():
         #Set the name of the blast output file
         IgO.set_seq_dictionary(self.seqs)
         IgO.set_blast_output(self.output_file[1])
+        IgO.set_species(self.organism[1])
         IgO.parse()
 
         #remove temporary file, pass ouput json to queue
