@@ -1,15 +1,17 @@
 #!/usr/bin/env python
-from PyIgArgumentParser import PyIgArgumentParser 
-import subprocess 
-from multiprocessing import Process, Queue
+from pyig.backend.PyIgArgumentParser import PyIgArgumentParser
 from pyig.backend.split_fasta import split_fasta
-from IgBlast_Out import IgBlast_Out #Temp, but in backend after
+from pyig.backend.IgBlast_Out import IgBlast_Out
+from multiprocessing import Process, Queue
+from Bio import SeqIO
+import subprocess
 import tempfile
 import os
-from Bio import SeqIO
+import gzip
 
 
 class IgBlast_SingleRun():
+
     '''IgBlast SubProcess for a Single Run -
     Use - IgBlast_SingRun(fasta_file).run()
     Just pass a single fasta file'''
@@ -18,90 +20,94 @@ class IgBlast_SingleRun():
         '''Constructor takes argument dictionary'''
         self.seqs = sequences
         self.ig_blast_executable = [arg_dict['executable']]
-        self.minD = ["-min_D_match",str(arg_dict['minD'])]
-        self.numV = ["-num_alignments_V",arg_dict['num_V_alignments']]
-        self.numD = ["-num_alignments_D",arg_dict['num_D_alignments']]
-        self.numJ = ["-num_alignments_J",arg_dict['num_J_alignments']]
-        self.organism = ["-organism",arg_dict['species']]
-        self.receptor = ["-ig_seqtype",arg_dict['receptor']]
+        self.minD = ["-min_D_match", str(arg_dict['minD'])]
+        self.numV = ["-num_alignments_V", arg_dict['num_V_alignments']]
+        self.numD = ["-num_alignments_D", arg_dict['num_D_alignments']]
+        self.numJ = ["-num_alignments_J", arg_dict['num_J_alignments']]
+        self.organism = ["-organism", arg_dict['species']]
+        self.receptor = ["-ig_seqtype", arg_dict['receptor']]
 
-        #Out fmt
-        self.outfmt = ["-outfmt","7"]
+        # Out fmt
+        self.outfmt = ["-outfmt", "7"]
 
-        #Non Implemented
+        # Non Implemented
         self.chain = ["", arg_dict['chain']]
 
-        #Not shown to user
-        self.domain_system = ["-domain_system","imgt"]
+        # Not shown to user
+        self.domain_system = ["-domain_system", "imgt"]
         self.translate = ['-show_translation']
 
-        #Add database and auxillary data
-        _path_to_data_base = os.path.join(os.environ['IGDATA'],arg_dict['receptor'],arg_dict['species'])
-        self.germline_v = ["-germline_db_V",os.path.join(_path_to_data_base,arg_dict['species']+"_gl_V")]
-        self.germline_d = ["-germline_db_D",os.path.join(_path_to_data_base,arg_dict['species']+"_gl_D")]
-        self.germline_j = ["-germline_db_J",os.path.join(_path_to_data_base,arg_dict['species']+"_gl_J")]
-        self.auxilary_path = ['-auxiliary_data',os.path.join(os.environ['IGDATA'],"aux",arg_dict['species']+"_gl.aux")]
+        # Add database and auxillary data
+        _path_to_data_base = os.path.join(os.environ['IGDATA'], arg_dict['receptor'], arg_dict['species'])
+        self.germline_v = ["-germline_db_V", os.path.join(_path_to_data_base, arg_dict['species'] + "_gl_V")]
+        self.germline_d = ["-germline_db_D", os.path.join(_path_to_data_base, arg_dict['species'] + "_gl_D")]
+        self.germline_j = ["-germline_db_J", os.path.join(_path_to_data_base, arg_dict['species'] + "_gl_J")]
+        self.auxilary_path = ['-auxiliary_data', os.path.join(
+            os.environ['IGDATA'], "aux", arg_dict['species'] + "_gl.aux")]
 
-
-        #output_file for blast out
-        self.output_file = ['-out', tempfile.NamedTemporaryFile(suffix='.blast_out',delete=False).name]
+        # output_file for blast out
+        self.output_file = ['-out', tempfile.NamedTemporaryFile(suffix='.blast_out', delete=False).name]
         print "Output File for Blast is {0}".format(self.output_file[1])
-    
-    def set_query(self,file,queue):
+
+        # Debug mode
+        self.debug = arg_dict['debug']
+
+    def set_query(self, file, queue):
         print "Setting query for {0}".format(file)
-        self.query = ['-query',file]
+        self.query = ['-query', file]
         self.run_single_process(queue)
         return
 
     def _collect(self):
         '''Collect all blast arguments and put them in one list accessible by subproces.Popen'''
         return self.ig_blast_executable + \
-               self.minD + \
-               self.numV + \
-               self.numD + \
-               self.numJ + \
-               self.organism + \
-               self.receptor + \
-               self.domain_system + \
-               self.translate + \
-               self.germline_v + \
-               self.germline_d + \
-               self.germline_j + \
-               self.auxilary_path +\
-               self.output_file + \
-               self.outfmt + \
-               self.query
+            self.minD + \
+            self.numV + \
+            self.numD + \
+            self.numJ + \
+            self.organism + \
+            self.receptor + \
+            self.domain_system + \
+            self.translate + \
+            self.germline_v + \
+            self.germline_d + \
+            self.germline_j + \
+            self.auxilary_path +\
+            self.output_file + \
+            self.outfmt + \
+            self.query
 
-
-    def run_single_process(self,queue):
+    def run_single_process(self, queue):
         print "Running Process for {0}".format(self.query[1])
-        
+
         p = subprocess.Popen(self._collect())
         p.wait()
-        
-        #The IgBlast output class, set the blast output, retrive the parsed output
-        IgO = IgBlast_Out()
 
-        #Set the name of the blast output file
+        # The IgBlast output class, set the blast output, retrive the parsed output
+        IgO = IgBlast_Out(debug=self.debug)
+
+        # Set the name of the blast output file
         IgO.set_seq_dictionary(self.seqs)
         IgO.set_blast_output(self.output_file[1])
         IgO.set_species(self.organism[1])
         IgO.parse()
 
-        #remove temporary file, pass ouput json to queue
-        
-        #remove blast
-        #os.remove(self.output_file[1])
-        #remove input fasta
-        os.remove(self.query[1])
+        # remove temporary file, pass ouput json to queue
 
-        #get json output
+        if not self.debug:
+            # remove blast
+            os.remove(self.output_file[1])
+            # remove input fasta
+            os.remove(self.query[1])
+
+        # get json output
         queue.put(IgO.get_output_name())
 
+
 def get_seqs_dict(fasta_file):
-    f_dict = {}        
-    for seq in SeqIO.parse(fasta_file,'fasta'):
-        f_dict[seq.id] = str(seq.seq) 
+    f_dict = {}
+    for seq in SeqIO.parse(fasta_file, 'fasta'):
+        f_dict[seq.id] = str(seq.seq)
     return f_dict
 
 
@@ -112,22 +118,22 @@ def run_all_process(PyIgParse):
     num_procs = int(PyIgParse['multi'])
     if num_procs > 1:
         jobs = []
-        split_fasta_file_names = split_fasta(num_procs,fasta_file,delete=False)
+        split_fasta_file_names = split_fasta(num_procs, fasta_file, delete=False)
         for name in split_fasta_file_names:
-            IgBlast = IgBlast_SingleRun(PyIgParse,get_seqs_dict(name))
-            p = Process(target=IgBlast.set_query,args=(name,queue))
-            jobs.append(p)          
+            IgBlast = IgBlast_SingleRun(PyIgParse, get_seqs_dict(name))
+            p = Process(target=IgBlast.set_query, args=(name, queue))
+            jobs.append(p)
             p.start()
-        
-        for job,temp_file in zip(jobs,split_fasta_file_names):
+
+        for job, temp_file in zip(jobs, split_fasta_file_names):
             job.join()
             to_join.append(queue.get())
     else:
         IgBlast = IgBlast_SingleRun(PyIgParse)
-        p = Process(target=IgBlast.set_query,args=(fasta_file,queue))
+        p = Process(target=IgBlast.set_query, args=(fasta_file, queue))
         p.start()
 
-    with open(PyIgParse['out'],'w') as final_out:
+    with gzip.open(PyIgParse['out'], 'wb') as final_out:
         for file in to_join:
             with open(file) as finfile:
                 for line in finfile:
@@ -135,9 +141,6 @@ def run_all_process(PyIgParse):
             os.remove(file)
 
 
-
-
-       
 if __name__ == '__main__':
     PyIg_ParseDict = PyIgArgumentParser().parse_arguments()
     run_all_process(PyIg_ParseDict)
