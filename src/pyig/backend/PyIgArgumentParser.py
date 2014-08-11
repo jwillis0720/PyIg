@@ -105,7 +105,8 @@ class PyIgArgumentParser():
     def _validate_executable(self, path):
         if os.path.exists(os.path.abspath(path)):
             return os.path.abspath(path)
-        raise argparse.ArgumentTypeError("{0} does not exists, please point to where igblastn is".format(path))
+        raise argparse.ArgumentTypeError(
+            "{0} does not exists, please point to where igblastn is".format(path))
 
     def parse_arguments(self):
         return self.arg_parse.parse_args().__dict__

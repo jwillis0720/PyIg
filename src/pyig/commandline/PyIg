@@ -46,7 +46,8 @@ class IgBlast_SingleRun():
         self.translate = ['-show_translation']
 
         # Add database and auxillary data
-        _path_to_data_base = os.path.join(os.environ['IGDATA'], arg_dict['receptor'], self.chain, arg_dict['species'])
+        _path_to_data_base = os.path.join(
+            os.environ['IGDATA'], arg_dict['receptor'], self.chain, arg_dict['species'])
         self.germline_v = ["-germline_db_V", os.path.join(
             _path_to_data_base, arg_dict['species'] + "_gl_V")]
         self.germline_j = ["-germline_db_J", os.path.join(
@@ -58,7 +59,8 @@ class IgBlast_SingleRun():
             _path_to_data_base, arg_dict['species'] + "_gl_D")]
 
         # output_file for blast out
-        self.output_file = ['-out', tempfile.NamedTemporaryFile(suffix='.blast_out', delete=False).name]
+        self.output_file = [
+            '-out', tempfile.NamedTemporaryFile(suffix='.blast_out', delete=False).name]
 
         if self.debug:
             print "Output File for Blast is {0}".format(self.output_file[1])
@@ -100,7 +102,8 @@ class IgBlast_SingleRun():
             for arg in self._collect():
                 print arg,
 
-        # The IgBlast output class, set the blast output, retrive the parsed output
+        # The IgBlast output class, set the blast output, retrive the parsed
+        # output
         IgO = IgBlast_Out(debug=self.debug)
 
         # Set the name of the blast output file
@@ -137,7 +140,8 @@ def run_all_process(PyIgParse):
     num_procs = int(PyIgParse['multi'])
     if num_procs > 1:
         jobs = []
-        split_fasta_file_names = split_fasta(num_procs, fasta_file, delete=False)
+        split_fasta_file_names = split_fasta(
+            num_procs, fasta_file, delete=False)
         for num, name in enumerate(split_fasta_file_names, start=1):
             print "Running IgBlast on processor {0}".format(num)
             IgBlast = IgBlast_SingleRun(PyIgParse, get_seqs_dict(name))
@@ -148,20 +152,31 @@ def run_all_process(PyIgParse):
         for job, temp_file in zip(jobs, split_fasta_file_names):
             job.join()
             to_join.append(queue.get())
+        with gzip.open(PyIgParse['out'], 'wb') as final_out:
+            print "Zipping together output"
+            for file in to_join:
+                with open(file) as finfile:
+                    for line in finfile:
+                        final_out.write(line)
+                os.remove(file)
     else:
         print "Running IgBlast on single processor"
-        IgBlast = IgBlast_SingleRun(PyIgParse)
-        p = Process(target=IgBlast.set_query, args=(fasta_file, queue))
+        split_fasta_file_names = split_fasta(
+            1, fasta_file, delete=False)
+        IgBlast = IgBlast_SingleRun(PyIgParse,
+                                    get_seqs_dict(split_fasta_file_names[0]))
+        p = Process(target=IgBlast.set_query,
+                    args=(split_fasta_file_names[0], queue))
         p.start()
-
-    with gzip.open(PyIgParse['out'], 'wb') as final_out:
-        print "Zipping together output"
-        for file in to_join:
-            with open(file) as finfile:
-                for line in finfile:
-                    final_out.write(line)
-            os.remove(file)
-
+        p.join()
+        print "Zipping up single file"
+        zip_me_up = queue.get()
+        f_in = open(zip_me_up, 'rb')
+        f_out = gzip.open(PyIgParse['out'], 'wb')
+        f_out.writelines(f_in)
+        f_out.close()
+        f_in.close()
+        os.remove(zip_me_up)
 
 if __name__ == '__main__':
     PyIg_ParseDict = PyIgArgumentParser().parse_arguments()
