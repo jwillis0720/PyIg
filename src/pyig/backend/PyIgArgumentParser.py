@@ -11,15 +11,16 @@ class PyIgArgumentParser():
 
     def __init__(self):
         self.arg_parse = argparse.ArgumentParser(
-            prog="PyIg", formatter_class=argparse.RawTextHelpFormatter,
-            description=textwrap.dedent('''\
-                                                             PyIg
-                     __________________________________________________________________________________________\n
-                     PyIg is an easy igblast parser that fixes incorrect calls from  IGBLAST for nucleotides.
-                     It gives a very nice comma seperated feedback, can connect to MongoDatabases, and use
-                     multiproecessing to split up fasta file.
-                     \nAuthor - Joran Willis
-                     '''))
+            prog="PyIg",
+            description='''\
+                    PyIg - Immunoglobulin and T-Cell receptor rearrangment software. \
+                    It uses IgBLAST to call on V(D) and J genes. Then it recombines them to JSON format.\
+                    PyIg is meant to be highly parralizable, so it uses multiple processors to call on \
+                    multiple instances of BLAST making it ideal for high throughput sequencing. \
+                    The JSON documents can be reconfigured to be uploaded to MySQL or NoSQL databases \
+                    for efficient queries. In addition, you can use custom databases for V(D) and J gene lookup.
+                    \nAuthor - Joran Willis
+                     ''')
         necessary_arguments = self.arg_parse.add_argument_group(
             title="Necessary Arguments", description="Arguments that must be included")
         necessary_arguments.add_argument(
@@ -31,8 +32,8 @@ class PyIgArgumentParser():
 
         type_arguments.add_argument(
             '-d', '--database', default="/usr/local/pyig/data_dir/",
-            type=self._validate_path, help="If you used setup.py correctly, this database should \
-            be /usr/local/pyig/database, but if you made custom changes to it, make sure to put in the path here")
+            type=self._validate_path, help="If you used setup.py correctly,\
+                this database should be /usr/local/pyig/database, but if you made custom changes to it, make sure to put in the path here")
 
         type_arguments.add_argument(
             '-r', '--receptor', default="Ig", choices=["Ig", "TCR"],
@@ -77,8 +78,8 @@ class PyIgArgumentParser():
             Or you can enter a number or type 0 to turn it off")
         general_args.add_argument("-o", "--out", default="PyIg_out.json.gz",
                                   help="Output_file_name")
-        general_args.add_argument("--debug", default=False, action="store_true", help="Debug mode, this will not delete the temporary blast files and will\
-            print some other useful things, like which regions did not parse")
+        general_args.add_argument("--debug", default=False, action="store_true",
+                                  help="Debug mode, this will not delete the temporary blast files and will print some other useful things, like which regions did not parse")
 
     def _check_d_match_validity(self, amount):
         if int(amount) >= 5:
