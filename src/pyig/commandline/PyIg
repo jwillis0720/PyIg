@@ -149,7 +149,7 @@ def run_all_process(PyIgParse):
             job.join()
             to_join.append(queue.get())
     else:
-        print "Running IgBlast on single processor".format(num)
+        print "Running IgBlast on single processor"
         IgBlast = IgBlast_SingleRun(PyIgParse)
         p = Process(target=IgBlast.set_query, args=(fasta_file, queue))
         p.start()
