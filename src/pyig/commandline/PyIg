@@ -30,20 +30,24 @@ class IgBlast_SingleRun():
         # Out fmt
         self.outfmt = ["-outfmt", "7"]
 
-        # Non Implemented
-        self.chain = ["", arg_dict['chain']]
+        # DB Path
+        self.chain = arg_dict['chain']
 
         # Not shown to user
         self.domain_system = ["-domain_system", "imgt"]
         self.translate = ['-show_translation']
 
         # Add database and auxillary data
-        _path_to_data_base = os.path.join(os.environ['IGDATA'], arg_dict['receptor'], arg_dict['species'])
-        self.germline_v = ["-germline_db_V", os.path.join(_path_to_data_base, arg_dict['species'] + "_gl_V")]
-        self.germline_d = ["-germline_db_D", os.path.join(_path_to_data_base, arg_dict['species'] + "_gl_D")]
-        self.germline_j = ["-germline_db_J", os.path.join(_path_to_data_base, arg_dict['species'] + "_gl_J")]
+        _path_to_data_base = os.path.join(os.environ['IGDATA'], arg_dict['receptor'], self.chain, arg_dict['species'])
+        self.germline_v = ["-germline_db_V", os.path.join(
+            _path_to_data_base, arg_dict['species'] + "_gl_V")]
+        self.germline_j = ["-germline_db_J", os.path.join(
+            _path_to_data_base, arg_dict['species'] + "_gl_J")]
         self.auxilary_path = ['-auxiliary_data', os.path.join(
             os.environ['IGDATA'], "aux", arg_dict['species'] + "_gl.aux")]
+
+        self.germline_d = ["-germline_db_D", os.path.join(
+            _path_to_data_base, arg_dict['species'] + "_gl_D")]
 
         # output_file for blast out
         self.output_file = ['-out', tempfile.NamedTemporaryFile(suffix='.blast_out', delete=False).name]
@@ -82,6 +86,10 @@ class IgBlast_SingleRun():
 
         p = subprocess.Popen(self._collect())
         p.wait()
+
+        if self.debug:
+            for arg in self._collect():
+                print arg,
 
         # The IgBlast output class, set the blast output, retrive the parsed output
         IgO = IgBlast_Out(debug=self.debug)

@@ -43,7 +43,7 @@ class PyIgArgumentParser():
             help='The Species you are analyzing')
 
         type_arguments.add_argument(
-            '-c', '--chain', default='heavy', choices=['heavy,kappa,lambda'],
+            '-c', '--chain', default='heavy', choices=['heavy', 'light'],
             help="The chain you want to analyze")
 
         blast_arguments = self.arg_parse.add_argument_group(

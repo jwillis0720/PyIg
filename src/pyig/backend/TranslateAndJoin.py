@@ -110,8 +110,14 @@ class TranslateAndJoin():
 
     def CDR3_set_and_translate(self):
         j_gene = self.output['J-Gene Rank_1']['J-Gene Rank_1 Subject id']
+        try:
+            j_length = int(self.IgO.j_trans[j_gene])
+        except KeyError:
+            raise Exception(
+                "Germline Gene {0} not found in CDR3 Lenth Description, this needs to be set to determine when the J reading frame ends for the CDR3, refer to documentation for setting this gene".format(j_gene))
+            sys.exit(1)
+
         j_begin = int(self.output['J-Gene Rank_1']['J-Gene Rank_1 Q. start']) - 1
-        j_length = int(self.IgO.j_trans[j_gene])
         j_end = int(self.output['J-Gene Rank_1']['J-Gene Rank_1 S. start'])
         j_end = (j_length - j_end) + j_begin
 
