@@ -20,10 +20,14 @@ except ImportError:
 
 if os.path.exists(library_dir):
     print "Deleting old copy of".format(library_dir)
-try:
-    rmtree(library_dir)
-    print "Trying...copying data to {0}".format(library_dir)
-    copytree('data_dir', library_dir)
+    if os.access(library_dir, os.W_OK):
+        rmtree(library_dir)
+        copytree('data_dir', library_dir)
+    else:
+        print "Need to root to install {0}".format(library_dir)
+else:
+    try:
+        copytree('data_dir', library_dir)
 except OSError:
     print "Need root to install in {0} directory location," \
         "to install the library".format(library_dir)
@@ -40,18 +44,23 @@ def get_os():
         elif _op[0] == 'redhat':
             return 'redhat'
         else:
-            raise Exception("Can't find your operating system...Compile yourself")
+            print "Can't find your operating system...Compile yourself, see documentation press any key to continue without installation of IgBlastN"
+            raw_input()
     else:
-        raise Exception(
-            "Can't find your architecture...I only have mac, and linux supported in my files for now. Contact the higherups.")
+        print "Can't find your architecture...I only have mac, \
+              and linux supported in my files for now. Compile yourself. Press any key to continue without installation of Igblastn")
+        raw_input()
 
-# copy igblastn
-src = "igblast/" + get_os() + "/bin/igblastn"
-src = os.path.abspath(src)
-try:
+
+#copy igblastn
+os = get_os()
+if os:
+  src = "igblast/" + get_os() + "/bin/igblastn"
+  src = os.path.abspath(src)
+  try:
     copyfile(src, os.path.abspath(bin + "igblastn"))
     os.chmod(os.path.abspath(bin + "igblastn"), 0755)
-except IOError:
+  except IOError:
     raise IOError("You don't have correct permissions, please run as admin")
 
 setup(name='PyIg',
@@ -62,3 +71,4 @@ setup(name='PyIg',
       packages=['pyig.backend', 'pyig.commandline', 'pyig'],
       package_dir={'pyig': 'src/pyig'},
       scripts=['src/pyig/commandline/PyIg'])
+
