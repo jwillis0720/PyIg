@@ -1,12 +1,17 @@
 #!/usr/bin env python
-from distutils.core import setup
-import os
 from shutil import copytree, rmtree, copyfile
-import sys
+from distutils.core import setup
 import platform
+import os
+import sys
 
 library_dir = "/usr/local/pyig/data_dir"
 bin = "/usr/local/bin/"
+
+
+if sys.version_info < (2, 7):
+    raise OSError("You need python 2.7.x")
+
 
 if os.path.exists(library_dir):
     print "Deleting old copy of".format(library_dir)
