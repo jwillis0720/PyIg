@@ -4,6 +4,8 @@ from distutils.core import setup
 import platform
 import os
 import sys
+import glob
+import subprocess
 
 library_dir = "/usr/local/pyig/data_dir"
 bin = "/usr/local/bin/"
@@ -28,40 +30,36 @@ if os.path.exists(library_dir):
 else:
     try:
         copytree('data_dir', library_dir)
-except OSError:
-    print "Need root to install in {0} directory location," \
-        "to install the library".format(library_dir)
-    sys.exit(1)
+    except OSError:
+        print "Need root to install in {0} directory location to install the library".format(library_dir)
+        sys.exit(1)
 
-
-def get_os():
-    _os, _op = sys.platform, platform.system()
-    if _os == 'darwin':
-        return 'darwin'
-    elif _os == 'Linux2':
-        if _op[0] == 'centos':
-            return 'centos'
-        elif _op[0] == 'redhat':
-            return 'redhat'
-        else:
-            print "Can't find your operating system...Compile yourself, see documentation press any key to continue without installation of IgBlastN"
-            raw_input()
-    else:
-        print "Can't find your architecture...I only have mac, \
-              and linux supported in my files for now. Compile yourself. Press any key to continue without installation of Igblastn")
-        raw_input()
-
+def get_igblast():
+    print "Determining OS"
+    igblasts = glob.glob('igblast/igblastn_*')
+    for binary in igblasts:
+      try:
+        if subprocess.check_call([binary,'-h'],stdout=subprocess.PIPE) == 0:
+          return os.path.abspath(binary)
+      except OSError:
+          continue
+      return ""
 
 #copy igblastn
-os = get_os()
-if os:
-  src = "igblast/" + get_os() + "/bin/igblastn"
-  src = os.path.abspath(src)
+igblast = get_igblast()
+if igblast:
   try:
-    copyfile(src, os.path.abspath(bin + "igblastn"))
-    os.chmod(os.path.abspath(bin + "igblastn"), 0755)
+    new_igblast = os.path.abspath(bin + "igblastn")
+    print "Copying {0} to {1}".format(igblast,new_igblast)
+    copyfile(igblast, new_igblast)
+    print "Changing directory permissions of {0}".format(new_igblast)
+    os.chmod(new_igblast, 0755)
   except IOError:
     raise IOError("You don't have correct permissions, please run as admin")
+
+else:
+  print "We don't have a IgBlast that will run, please see documentation to compile yourself, press anykey to continue"
+  raw_input()
 
 setup(name='PyIg',
       version='1.1',

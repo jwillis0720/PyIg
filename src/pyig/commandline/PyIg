@@ -10,6 +10,10 @@ import os
 import gzip
 
 
+if sys.version_info < (2, 7):
+    raise OSError("You need python 2.7.x, rerun with \%python2.7 PyIg")
+
+
 class IgBlast_SingleRun():
 
     '''IgBlast SubProcess for a Single Run -
