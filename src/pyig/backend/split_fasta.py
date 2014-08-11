@@ -1,34 +1,31 @@
-import Bio.SeqIO
 import os
 import os.path
 import sys
+from tempfile import NamedTemporaryFile
+from Bio import SeqIO
 
-
-def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
+def split_fasta(num_procs,fasta_file, suffix=".tmp_fasta",delete=False):
     '''Split the file name by the number of processors you specify
      arguments -
      num_procs - The amount of processors you are running
-     path - the output path you want  the files dumped in
      suffix - gives the fasta files an identifiable suffix to let you know they are  split
      '''
 
     # return all fasta so we can get the raw sequence from it which blast does not provide.
-    #@todo, find a way to get the memory down in these functions
     parent_file = []
-    file_prefix = os.path.basename(file_name).split('.fasta')[0]
-    print "Counting entries in fasta files {0}".format(os.path.abspath(file_name))
-    for i, j in enumerate(Bio.SeqIO.parse(file_name, 'fasta')):
+    print "Counting entries in fasta files {0}".format(os.path.abspath(fasta_file))
+
+    for i, j in enumerate(SeqIO.parse(fasta_file,'fasta')):
         if i % 10000 == 0 and i != 0:
             print "coutned {0} entries".format(i)
         parent_file.append(j)
     print "{0} entry in fasta file".format(len(parent_file))
 
-    files_per_tmp = float(len(parent_file)) / float(num_procs)
-    # print "{0} processors, blasting {1} entries per processor".format(num_procs, files_per_tmp)
+    files_per_temporary_file = float(len(parent_file)) / float(num_procs)
+    list_of_temporary_files = []
 
     # carries all of our records to be written
     joiner = []
-    file_counter = 1
     num = 1
 
     # enumerate huge fasta
@@ -36,27 +33,27 @@ def split_fasta(num_procs, path, file_name, suffix=".tmp_fasta"):
         # append records to our list holder
         joiner.append(">" + record.id + "\n" + str(record.seq))
         # if we have reached the maximum numbers to be in that file, write
-        # to a file, and then clear
-        if num > files_per_tmp:
+        if num > files_per_temporary_file:
             joiner.append("")
-            file_name = os.path.join(path, file_prefix + "_" + str(file_counter) + suffix)
-            with open(file_name, 'w') as f:
+            file_name = NamedTemporaryFile(suffix=suffix,delete=delete)
+            with open(file_name.name, 'w') as f:
                 f.write("\n".join(joiner))
-
-            # change file name,clear record holder, and change the file
-            # count
+            list_of_temporary_files.append(file_name.name)
             joiner = []
-            file_counter += 1
             num = 1
         else:
             num += 1
+    
+    #if joiner still has stuff in it
     if joiner:
         # for left over fasta entries, very important or else they will
         # just hang out in limbo
         joiner.append("")
-        file_name = os.path.join(path, file_prefix + "_" + str(file_counter) + suffix)
-        with open(file_name, 'w') as f:
+        file_name = NamedTemporaryFile(suffix=suffix,delete=delete)
+        with open(file_name.name, 'w') as f:
             f.write("\n".join(joiner))
+        list_of_temporary_files.append(file_name.name)
+    return list_of_temporary_files
 
 if __name__ == '__main__':
     blash = split_fasta(sys.argv[1], os.path.dirname(os.path.abspath(sys.argv[2])), sys.argv[2])

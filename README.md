@@ -26,7 +26,7 @@ Required Arguments
       The fasta file to blast
 
     ex.
-    pyigblast -q query.fasta -d database/ -i internal/
+    pyigblast -q query.fasta 
 
 
 Database Paths
