@@ -27,6 +27,9 @@ class IgBlast_SingleRun():
         self.organism = ["-organism", arg_dict['species']]
         self.receptor = ["-ig_seqtype", arg_dict['receptor']]
 
+        # Debug mode
+        self.debug = arg_dict['debug']
+
         # Out fmt
         self.outfmt = ["-outfmt", "7"]
 
@@ -51,13 +54,13 @@ class IgBlast_SingleRun():
 
         # output_file for blast out
         self.output_file = ['-out', tempfile.NamedTemporaryFile(suffix='.blast_out', delete=False).name]
-        print "Output File for Blast is {0}".format(self.output_file[1])
 
-        # Debug mode
-        self.debug = arg_dict['debug']
+        if self.debug:
+            print "Output File for Blast is {0}".format(self.output_file[1])
 
     def set_query(self, file, queue):
-        print "Setting query for {0}".format(file)
+        if self.debug:
+            print "Setting query for {0}".format(file)
         self.query = ['-query', file]
         self.run_single_process(queue)
         return
@@ -82,7 +85,8 @@ class IgBlast_SingleRun():
             self.query
 
     def run_single_process(self, queue):
-        print "Running Process for {0}".format(self.query[1])
+        if self.debug:
+            print "Running Process for {0}".format(self.query[1])
 
         p = subprocess.Popen(self._collect())
         p.wait()
@@ -98,6 +102,8 @@ class IgBlast_SingleRun():
         IgO.set_seq_dictionary(self.seqs)
         IgO.set_blast_output(self.output_file[1])
         IgO.set_species(self.organism[1])
+
+        print "Parsing IgBlast Output to human readable.."
         IgO.parse()
 
         # remove temporary file, pass ouput json to queue
@@ -127,7 +133,8 @@ def run_all_process(PyIgParse):
     if num_procs > 1:
         jobs = []
         split_fasta_file_names = split_fasta(num_procs, fasta_file, delete=False)
-        for name in split_fasta_file_names:
+        for num, name in enumerate(split_fasta_file_names, start=1):
+            print "Running IgBlast on processor {0}".format(num)
             IgBlast = IgBlast_SingleRun(PyIgParse, get_seqs_dict(name))
             p = Process(target=IgBlast.set_query, args=(name, queue))
             jobs.append(p)
@@ -137,11 +144,13 @@ def run_all_process(PyIgParse):
             job.join()
             to_join.append(queue.get())
     else:
+        print "Running IgBlast on single processor".format(num)
         IgBlast = IgBlast_SingleRun(PyIgParse)
         p = Process(target=IgBlast.set_query, args=(fasta_file, queue))
         p.start()
 
     with gzip.open(PyIgParse['out'], 'wb') as final_out:
+        print "Zipping together output"
         for file in to_join:
             with open(file) as finfile:
                 for line in finfile:

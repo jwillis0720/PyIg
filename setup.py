@@ -12,6 +12,11 @@ bin = "/usr/local/bin/"
 if sys.version_info < (2, 7):
     raise OSError("You need python 2.7.x")
 
+try:
+    import Bio
+except ImportError:
+    raise ImportError("You need the Biopython Package...see documentation")
+
 
 if os.path.exists(library_dir):
     print "Deleting old copy of".format(library_dir)
