@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import os
 import gzip
+import sys
 
 
 if sys.version_info < (2, 7):
