@@ -64,35 +64,34 @@ class IgBlastRun():
         self.germline_j = os.path.join(_path_to_data_base, self.species + "_gl_J")
         self.auxilary_path = os.path.join(os.environ['IGDATA'], "aux", self.species + "_gl.aux")
 
-        #Igblast specific but user can't change without hardcoding
+        # Igblast specific but user can't change without hardcoding
         self.outfmt = "7"
         self.domain_system = "imgt"
-
 
     def set_query(self, file):
         if self.debug:
             print "Setting query for {0}".format(file)
-        self.query =  file
+        self.query = file
         return
 
     def _collect(self):
         '''Collect all blast arguments and put them in one list accessible by subproces.Popen'''
         arguments = [
-                        self.executable,
-                        '-min_D_match',self.minD,
-                        '-num_alignments_V', self.numV, 
-                        '-num_alignments_D', self.numD, 
-                        '-num_alignments_J', self.numJ, 
-                        '-organism', self.species,
-                        '-ig_seqtype', self.receptor,
-                        '-germline_db_V', self.germline_v,
-                        '-germline_db_D', self.germline_d,
-                        '-germline_db_J', self.germline_j,
-                        '-auxiliary_data',self.auxilary_path,
-                        '-outfmt',self.outfmt,
-                        '-domain_system',self.domain_system,
-                        '-out',self.temporary_output_file,
-                        '-query',self.query ]
+            self.executable,
+            '-min_D_match', self.minD,
+            '-num_alignments_V', self.numV,
+            '-num_alignments_D', self.numD,
+            '-num_alignments_J', self.numJ,
+            '-organism', self.species,
+            '-ig_seqtype', self.receptor,
+            '-germline_db_V', self.germline_v,
+            '-germline_db_D', self.germline_d,
+            '-germline_db_J', self.germline_j,
+            '-auxiliary_data', self.auxilary_path,
+            '-outfmt', self.outfmt,
+            '-domain_system', self.domain_system,
+            '-out', self.temporary_output_file,
+            '-query', self.query]
         return arguments
 
     def run_single_process(self, queue):
@@ -105,7 +104,7 @@ class IgBlastRun():
             print "\nOutput File for igblastn is {0}".format(
                 self.temporary_output_file)
 
-        p = subprocess.Popen(self._collect(),stderr=subprocess.PIPE)
+        p = subprocess.Popen(self._collect(), stderr=subprocess.PIPE)
         stderr = p.communicate()
         if stderr[1]:
             raise RuntimeError("Error in calling Igblastn:\n\n {0}".format(stderr[1]))
@@ -123,7 +122,7 @@ class IgBlastRun():
         IgO.set_species(self.species)
 
         print "Parsing IgBlast Output to human readable format.."
-        #Where the magic happens. This class gets all the calls and sets the output dictionary we will use
+        # Where the magic happens. This class gets all the calls and sets the output dictionary we will use
         IgO.parse()
 
         # If we are debugging, we can keep temporary blast output and input
@@ -133,7 +132,6 @@ class IgBlastRun():
             # remove input fasta
             os.remove(self.query)
 
-        #The Queue Object can be passed around processors. 
-        #Here we put the name of the output json from Ig blast output parser
+        # The Queue Object can be passed around processors.
+        # Here we put the name of the output json from Ig blast output parser
         queue.put(IgO.get_output_name())
-
