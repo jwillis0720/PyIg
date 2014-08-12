@@ -12,6 +12,7 @@ if sys.version_info < (2, 7):
     raise OSError("You need python 2.7.X, rerun with \%python2.7 /path/to/PyIg")
 
 def files_zipper(list_of_files,outfile):
+    '''Gzip multiple fiels together'''
     with gzip.open(outfile, 'wb') as final_out:
         print "Zipping together output..."
         for file in list_of_files:
@@ -21,6 +22,7 @@ def files_zipper(list_of_files,outfile):
             os.remove(file) 
 
 def file_zipper(file,outfile):
+    '''zip one file and delete it'''
     print "Zipping up single file"
     f_in = open(file, 'rb')
     f_out = gzip.open(outfile,'wb')
@@ -37,42 +39,78 @@ def get_seqs_dict(fasta_file):
 
 
 def main(PyIgParse):
+    #for multiproc, set up list to hold output and a queue to hold the results of each job.
+    #Queue can be passed around to multiple processors and lives out of scope
     to_join = []
     queue = Queue()
+    jobs = []
+
+    #Grab argments from input dictionary
     fasta_file = PyIgParse['query']
     num_procs = int(PyIgParse['multi'])
     output_file = PyIgParse['out']
+
+    #determine if its multi-procs
     if num_procs > 1:
-        jobs = []
+        
+        #first split fasta file to temporary files
         split_fasta_file_names = split_fasta(
             num_procs, fasta_file, delete=False)
+        
+        #iterate through each new fasta file name
+        #giving it to a new process instance that is the length of how
+        #many processors we have. So number of processors = how many fasta files
         for num, name in enumerate(split_fasta_file_names, start=1):
             print "Running IgBlast on processor {0}".format(num)
+            
+            #Set up run class
             IgBlast = IgBlastRun(PyIgParse, get_seqs_dict(name))
             IgBlast.set_query(name)
+            
+            #P is process class that takes one method and some argument
             p = Process(target=IgBlast.run_single_process, args=(queue, ))
+            
+            #add job to list
             jobs.append(p)
+            
+            #start job
             p.start()
 
         for job, temp_file in zip(jobs, split_fasta_file_names):
+            #join method actually starts the job
             job.join()
+
+            #now we can fetch the output from the Queue class we gave to the instance
             to_join.append(queue.get())
+        
+        #and finally zip up files that come back
         files_zipper(to_join,output_file)
 
-    else:
+    else: #single processor
         print "Running IgBlast on single processor"
+        
+        #still split fasta file, but it only makes one temp file. this is just so we don't have to write a seperate method
+        #for single processors
         split_fasta_file_names = split_fasta(
             1, fasta_file, delete=False)
+        
+        #set up run instance
         IgBlast = IgBlastRun(PyIgParse,
                                     get_seqs_dict(split_fasta_file_names[0]))
         IgBlast.set_query(split_fasta_file_names[0])
+        
+        #Running it like multiprocessing, but only using one processor
         p = Process(target=IgBlast.run_single_process,
                     args=(queue,))
+        #start and join the processes
         p.start()
         p.join()
+
+        #zip up the one file at the end
         file_zipper(queue.get(),output_file)
 
 
 if __name__ == '__main__':
+    #grab the command line arguments and call main with the dictonary
     PyIg_ParseDict = PyIgArgumentParser().parse_arguments()
     main(PyIg_ParseDict)

@@ -1,7 +1,7 @@
 import os
 import subprocess
 import tempfile
-from pyig.backend.IgBlast_Out import IgBlast_Out
+from pyig.backend.IgBlastOut import IgBlastOut
 
 
 class IgBlastRun():
@@ -114,7 +114,7 @@ class IgBlastRun():
         p.wait()
 
         # The IgBlast output class, set the blast output
-        IgO = IgBlast_Out(debug=self.debug)
+        IgO = IgBlastOut(debug=self.debug)
 
         # Set the name of the blast output file
         # Put it as setters, but could put it in the constructor
@@ -123,6 +123,7 @@ class IgBlastRun():
         IgO.set_species(self.species)
 
         print "Parsing IgBlast Output to human readable format.."
+        #Where the magic happens. This class gets all the calls and sets the output dictionary we will use
         IgO.parse()
 
         # If we are debugging, we can keep temporary blast output and input
@@ -133,6 +134,6 @@ class IgBlastRun():
             os.remove(self.query)
 
         #The Queue Object can be passed around processors. 
-        #Here we put the name of the output from Ig blast output parser
+        #Here we put the name of the output json from Ig blast output parser
         queue.put(IgO.get_output_name())
 

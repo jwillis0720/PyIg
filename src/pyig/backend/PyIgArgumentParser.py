@@ -1,11 +1,9 @@
-from multiprocessing import cpu_count
+#!/usr/bin/env python
 import argparse
 import sys
-import textwrap
 import os
-import glob
 from Bio import SeqIO
-
+from multiprocessing import cpu_count
 
 class PyIgArgumentParser():
 
