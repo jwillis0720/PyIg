@@ -453,6 +453,7 @@ class IgBlast_Out():
         return self.parsed_output
 
     def parse(self):
+        message = '''The sequecne ID from IgBlast and the fasta file are not finding each other. This is probably due to a 'strange' character in the fasta identifier. It is much easier to make every 'strange' character an underscore'''
         _focus_lines = []
         j_trans = {}
         j_lines = open(os.path.join(os.environ['IGDATA'], "germ_props", self.species, "properties.txt")).readlines()
@@ -465,8 +466,11 @@ class IgBlast_Out():
                         Single_Blast_Entry = SingleOutput_Entry(_focus_lines, j_trans, self.species, debug=self.debug)
                         Single_Blast_Entry.parse()
                         Single_Blast_Entry.get_id()
-                        Single_Blast_Entry.set_seq(
-                            self.seq_dictionary[Single_Blast_Entry.get_id()])
+                        try:
+                            Single_Blast_Entry.set_seq(
+                                self.seq_dictionary[Single_Blast_Entry.get_id()])
+                        except KeyError:
+                            raise KeyError(message)
                         Single_Blast_Entry.join_and_translate()
                         out.write(Single_Blast_Entry.get_json_entry())
                         out.write("\n")

@@ -63,7 +63,7 @@ class PyIgArgumentParser():
             help="How many J genes do you want to match?")
 
         blast_arguments.add_argument(
-            '-mD', "--minD", type=self._check_d_match_validity, default=5,
+            '-mD', "--minD", type=self._check_d_match_validity, default="5",
             help="The amount of nucleotide matches needed for a D gene match. >= 5 right now")
 
         blast_arguments.add_argument(
