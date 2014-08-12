@@ -11,8 +11,7 @@ bin_path = os.path.abspath("/usr/local/bin/")
 
 print "Checking Permissions for {0} and {1}".format(library_dir, bin_path)
 if not os.access(library_dir, os.W_OK) and not os.access(bin_path, os.W_OK):
-    raise OSError("Can't install libraries or binaries at {0} and {1}, \
-      permission error, seek administrator".format(
+    raise OSError("Can't install libraries or binaries at {0} and {1}, permission error, seek administrator".format(
         library_dir, bin_path))
 
 
