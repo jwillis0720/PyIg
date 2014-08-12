@@ -1,16 +1,13 @@
 import os
 import os.path
 import sys
+import re
 from tempfile import NamedTemporaryFile
 from Bio import SeqIO
 
 
 def replace_non_ascii(string_characters):
-    acceptable = '-_0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    for i in set(filter(lambda x: x not in acceptable, string_characters)):
-        s = string_characters.replace(i, '_')
-        string_characters = s
-    return string_characters
+    return re.sub(r'[\W_-]+', "_", string_characters)
 
 
 def split_fasta(num_procs, fasta_file, suffix=".tmp_fasta", delete=False):
