@@ -52,7 +52,7 @@ if igblast:
     new_igblast = os.path.abspath(bin_path + "igblastn")
     print "Copying {0} to {1}".format(igblast, new_igblast)
     copyfile(igblast, new_igblast)
-    print "Changing directory permissions ofss {0}".format(new_igblast)
+    print "Changing directory permissions of {0}".format(new_igblast)
     os.chmod(new_igblast, 0755)
 else:
     print "Don't have a Igblastn that will run, \

@@ -1,15 +1,9 @@
 import os
 import sys
 import warnings
-
+from Bio.Seq import Seq
+from Bio.Alphabet import IUPAC
 warnings.filterwarnings('ignore')
-
-try:
-    from Bio.Seq import Seq
-    from Bio.Alphabet import IUPAC
-except ImportError:
-    print("Need Biopython to use the IgBlast output parser class")
-
 
 class TranslateAndJoin():
 
