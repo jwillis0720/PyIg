@@ -67,6 +67,8 @@ class IgBlastRun():
         # Igblast specific but user can't change without hardcoding
         self.outfmt = "7"
         self.domain_system = "imgt"
+        self.additional_info = arg_dict['additional_field']
+
 
     def set_query(self, file):
         if self.debug:
@@ -120,6 +122,8 @@ class IgBlastRun():
         IgO.set_seq_dictionary(self.seqs)
         IgO.set_blast_output(self.temporary_output_file)
         IgO.set_species(self.species)
+        if self.additional_info:
+            IgO.set_additional_info(self.additional_info)
 
         print "Parsing IgBlast Output to human readable format.."
         # Where the magic happens. This class gets all the calls and sets the output dictionary we will use

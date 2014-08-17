@@ -28,6 +28,7 @@ class IgBlastOut():
         self.debug = debug
         self.seq_dictionary = {}
         self.species = ""
+        self.additional_info = ""
 
     def set_seq_dictionary(self, seq_dictionary):
         self.seq_dictionary = seq_dictionary
@@ -37,6 +38,9 @@ class IgBlastOut():
 
     def set_species(self, species):
         self.species = species
+
+    def set_additional_info(self, additional_info):
+        self.additional_info = additional_info
 
     def get_output_name(self):
         # the only return method
@@ -78,6 +82,9 @@ class IgBlastOut():
                         # The method to join everything, could be called in single blast entries constructor
                         Single_Blast_Entry.join_and_translate()
 
+                        if self.additional_info:
+                            Single_Blast_Entry.set_additional_info(self.additional_info)
+
                         # get json entry
                         out.write(Single_Blast_Entry.get_json_entry())
                         out.write("\n")
@@ -100,6 +107,10 @@ class IgBlastOut():
                     Single_Blast_Entry.set_seq(self.seq_dictionary[Single_Blast_Entry.get_id()])
                 except KeyError:
                     raise KeyError(message)
+
+                if self.additional_info:
+                    Single_Blast_Entry.set_additional_info(self.additional_info)
+                
                 Single_Blast_Entry.join_and_translate()
                 out.write(Single_Blast_Entry.get_json_entry())
                 out.write("\n")

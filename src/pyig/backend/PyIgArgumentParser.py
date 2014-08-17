@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import argparse
-import sys
 import os
 from Bio import SeqIO
 from multiprocessing import cpu_count
+
 
 class PyIgArgumentParser():
 
@@ -78,6 +78,9 @@ class PyIgArgumentParser():
                                   help="Output_file_name")
         general_args.add_argument("--debug", default=False, action="store_true",
                                   help="Debug mode, this will not delete the temporary blast files and will print some other useful things, like which regions did not parse")
+        general_args.add_argument('--additional_field', type=self._additional_field_parse,
+                                  help="A comma key,value pair for an additional field you want to add to the output json. Example \
+                                  \n '--additional_field=donor,10` adds a donor field with value 10.")
 
     def _check_d_match_validity(self, amount):
         if int(amount) >= 5:
@@ -105,6 +108,17 @@ class PyIgArgumentParser():
             return os.path.abspath(path)
         raise argparse.ArgumentTypeError(
             "{0} does not exists, please point to where igblastn is".format(path))
+
+    def _additional_field_parse(self, keyvaluestring):
+        '''
+        I don't know what an exception will be, but have to have some kind of error checking
+        '''
+        try:
+            keyvalue_split = keyvaluestring.split(',')
+            return (keyvalue_split[0], keyvalue_split[1])
+        except:
+            raise argparse.ArgumentTypeError(
+                "comma seperated error with {0}".format(keyvaluestring))
 
     def parse_arguments(self):
         return self.arg_parse.parse_args().__dict__

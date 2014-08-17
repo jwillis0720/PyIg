@@ -167,6 +167,10 @@ class IgBlastOutSingle():
         '''
         self.output['Query Sequence'] = str(sequence).upper()
 
+    def set_additional_info(self, additional_info):
+      'Set tuple as additional info'
+      self.output[additional_info[0]] = additional_info[1]
+    
     def parse(self):
         '''The method that iterates through the output lines'''
 
