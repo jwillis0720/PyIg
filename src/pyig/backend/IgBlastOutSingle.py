@@ -153,7 +153,7 @@ class IgBlastOutSingle():
     def get_json_entry(self):
         '''Dumps JSON text from this output'''
         #@Todo - Can change around indent if you want, sometimes mongo complains
-        self.json = json.dumps(self.output, indent=4)
+        self.json = json.dumps(self.output)
         return self.json
 
     def get_id(self):
@@ -168,9 +168,9 @@ class IgBlastOutSingle():
         self.output['Query Sequence'] = str(sequence).upper()
 
     def set_additional_info(self, additional_info):
-      'Set tuple as additional info'
-      self.output[additional_info[0]] = additional_info[1]
-    
+        'Set tuple as additional info'
+        self.output[additional_info[0]] = additional_info[1]
+
     def parse(self):
         '''The method that iterates through the output lines'''
 
@@ -461,7 +461,7 @@ class IgBlastOutSingle():
         variables
         '''
         TranslateAndJoin(self)
-        #Finally
+        # Finally
         # Find out if the join is productive by seeing if a stop codon (*) is in there
         if "*" not in self.output['CDR3 AA']:
             self.output['Productive CDR3'] = "True"
