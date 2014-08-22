@@ -8,8 +8,8 @@ from pyig.backend.SplitFasta import split_fasta
 from pyig.backend.IgBlastRun import IgBlastRun
 from multiprocessing import Process, Queue
 
-if sys.version_info < (2, 7):
-    raise OSError("You need python 2.7.X, rerun with \%python2.7 /path/to/PyIg")
+if sys.version_info < (2, 7, 5):
+    raise OSError("You need python 2.7.5 or higher, rerun with \%python2.7 /path/to/PyIg")
 
 
 def files_zipper(list_of_files, outfile):
