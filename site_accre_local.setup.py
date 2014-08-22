@@ -1,13 +1,16 @@
 #!/usr/bin env python
 from shutil import copytree, rmtree, copyfile
 from distutils.core import setup
+from os.path import expanduser
 import os
 import sys
 import glob
 import subprocess
 
-library_dir = os.path.abspath("/usr/local/pyig/data_dir")
-bin_path = os.path.abspath("/usr/local/bin/")
+#expand my home directory
+home = expanduser("~")
+library_dir = os.path.abspath(home+"/lib/pyig/data_dir")
+bin_path = os.path.abspath(home+"/bin/")
 
 print "Checking Permissions for {0} and {1}".format(library_dir, bin_path)
 if not os.access(library_dir, os.W_OK) and not os.access(bin_path, os.W_OK):
@@ -15,8 +18,8 @@ if not os.access(library_dir, os.W_OK) and not os.access(bin_path, os.W_OK):
         library_dir, bin_path))
 
 
-if sys.version_info < (2, 7, 5):
-    raise OSError("You need python 2.7.5 or greater to run")
+if sys.version_info < (2, 7,5):
+    raise OSError("You need python 2.7.5 or greater")
 
 try:
     import Bio
@@ -38,8 +41,9 @@ def get_igblast():
     igblasts = glob.glob('igblast/igblastn_*')
     for binary in igblasts:
         try:
-		subprocess.call([binary, '-h'],stdout=subprocess.PIPE)
-		return os.path.abspath(binary)
+		subprocess.check_call([binary, '-h'],
+                                     stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+                return os.path.abspath(binary)
         except:
             continue
         return ""
@@ -47,7 +51,7 @@ def get_igblast():
 # copy igblastn
 igblast = get_igblast()
 if igblast:
-    new_igblast = os.path.abspath(bin_path + "igblastn")
+    new_igblast = os.path.abspath(bin_path + "/igblastn")
     print "Copying {0} to {1}".format(igblast, new_igblast)
     copyfile(igblast, new_igblast)
     print "Changing directory permissions of {0}".format(new_igblast)
@@ -58,6 +62,7 @@ else:
            press anykey to continue"
     raw_input()
 
+#use python site_vax.setup.py --instal-lib ~/python_lib/ --install_script ~/bin/
 setup(name='PyIg',
       version='1.1',
       description='Python Immunoglobulin Analysis Tools',
