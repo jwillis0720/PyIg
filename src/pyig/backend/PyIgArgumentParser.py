@@ -74,8 +74,8 @@ class PyIgArgumentParser():
             title="General Arguments", description="Output and Miscellaneous Arguments")
         general_args.add_argument("-m", "--multi", default=cpu_count(), help="Multiprocess by the amount of CPUs you have. \
             Or you can enter a number or type 0 to turn it off")
-        general_args.add_argument("-o", "--out", default="PyIg_out.json.gz",
-                                  help="Output_file_name")
+        general_args.add_argument("-o", "--out", metavar="inputfile.json.gz",
+                                  help="Output_file_name, defaults to inputfile.json.gz")
         general_args.add_argument("--debug", default=False, action="store_true",
                                   help="Debug mode, this will not delete the temporary blast files and will print some other useful things, like which regions did not parse")
         general_args.add_argument('--additional_field', type=self._additional_field_parse,

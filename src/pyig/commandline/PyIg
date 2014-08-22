@@ -53,7 +53,10 @@ def main(PyIgParse):
     # Grab argments from input dictionary
     fasta_file = PyIgParse['query']
     num_procs = int(PyIgParse['multi'])
-    output_file = PyIgParse['out'].split('.')[0]
+    if PyIgParse['out']:
+        output_file = PyIgParse['out']
+    else:
+        output_file = fasta_file.split('.')[0]
 
     # determine if its multi-procs
     if num_procs > 1:
