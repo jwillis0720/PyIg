@@ -30,7 +30,7 @@ class PyIgArgumentParser():
 
         type_arguments.add_argument(
             '-d', '--database', default="/usr/local/pyig/data_dir/",
-            type=self._validate_path, help="If you used setup.py correctly,\
+            type=str, help="If you used setup.py correctly,\
                 this database should be /usr/local/pyig/database, but if you made custom changes to it, make sure to put in the path here")
 
         type_arguments.add_argument(
@@ -67,7 +67,7 @@ class PyIgArgumentParser():
         blast_arguments.add_argument(
             "-x", '--executable',
             default="/usr/local/bin/igblastn",
-            type=self._validate_executable,
+            type=str,
             help="The location of IGBlastn, default is /usr/local/bin/igblastn if used setup.py")
 
         general_args = self.arg_parse.add_argument_group(
@@ -121,7 +121,10 @@ class PyIgArgumentParser():
                 "comma seperated error with {0}".format(keyvaluestring))
 
     def parse_arguments(self):
-        return self.arg_parse.parse_args().__dict__
+        arguments = self.arg_parse.parse_args()
+        self._validate_path(arguments.database)
+        self._validate_executable(arguments.executable)
+        return arguments.__dict__
 
 
 if __name__ == '__main__':
