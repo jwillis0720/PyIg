@@ -59,7 +59,7 @@ else:
     raw_input()
 
 setup(name='PyIg',
-      version='1.1',
+      version='2.1',
       description='Python Immunoglobulin Analysis Tools',
       author='Jordan Willis',
       author_email='jwillis0720@gmail.com',
