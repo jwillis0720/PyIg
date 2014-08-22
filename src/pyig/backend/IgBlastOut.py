@@ -110,7 +110,7 @@ class IgBlastOut():
 
                 if self.additional_info:
                     Single_Blast_Entry.set_additional_info(self.additional_info)
-                
+
                 Single_Blast_Entry.join_and_translate()
                 out.write(Single_Blast_Entry.get_json_entry())
                 out.write("\n")

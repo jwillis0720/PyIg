@@ -69,7 +69,6 @@ class IgBlastRun():
         self.domain_system = "imgt"
         self.additional_info = arg_dict['additional_field']
 
-
     def set_query(self, file):
         if self.debug:
             print "Setting query for {0}".format(file)
