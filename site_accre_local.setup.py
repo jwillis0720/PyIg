@@ -7,10 +7,22 @@ import sys
 import glob
 import subprocess
 
-#expand my home directory
+# expand my home directory
 home = expanduser("~")
-library_dir = os.path.abspath(home+"/lib/pyig/data_dir")
-bin_path = os.path.abspath(home+"/bin/")
+
+#Hardcode these in
+library_dir = os.path.abspath(home + "/lib/pyig/data_dir")
+bin_path = os.path.abspath(home + "/bin/")
+python_lib = os.path.abspath(home + "/python_lib/")
+
+print "Checking if {0} and {1} exists".format(library_dir, bin_path)
+if not os.path.exists(library_dir):
+    os.makedirs(library_dir)
+if not os.path.exists(bin_path):
+    os.makedirs(bin_path)
+if not os.path.exists(python_lib):
+    os.makedirs(python_lib)
+
 
 print "Checking Permissions for {0} and {1}".format(library_dir, bin_path)
 if not os.access(library_dir, os.W_OK) and not os.access(bin_path, os.W_OK):
@@ -18,7 +30,7 @@ if not os.access(library_dir, os.W_OK) and not os.access(bin_path, os.W_OK):
         library_dir, bin_path))
 
 
-if sys.version_info < (2, 7,5):
+if sys.version_info < (2, 7, 5):
     raise OSError("You need python 2.7.5 or greater")
 
 try:
@@ -41,9 +53,9 @@ def get_igblast():
     igblasts = glob.glob('igblast/igblastn_*')
     for binary in igblasts:
         try:
-		subprocess.check_call([binary, '-h'],
-                                     stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-                return os.path.abspath(binary)
+            subprocess.check_call([binary, '-h'],
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            return os.path.abspath(binary)
         except:
             continue
         return ""
@@ -62,7 +74,7 @@ else:
            press anykey to continue"
     raw_input()
 
-#use python site_vax.setup.py --instal-lib ~/python_lib/ --install_script ~/bin/
+# use python site_acrre.setup.py --instal-lib ~/python_lib/ --install_script ~/bin/
 setup(name='PyIg',
       version='1.1',
       description='Python Immunoglobulin Analysis Tools',
