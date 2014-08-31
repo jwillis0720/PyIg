@@ -10,10 +10,10 @@ import subprocess
 # expand my home directory
 home = expanduser("~")
 
-#Hardcode these in
-library_dir = os.path.abspath(home + "/lib/pyig/data_dir")
-bin_path = os.path.abspath(home + "/bin/")
-python_lib = os.path.abspath(home + "/python_lib/")
+# Hardcode these in
+library_dir = os.path.abspath(os.path.join(home,"/lib/pyig/data_dir"))
+bin_path = os.path.abspath(os.path.join(home,"/bin/"))
+python_lib = os.path.abspath(os.path.join(home,"/python_lib/")
 
 print "Checking if {0} and {1} exists".format(library_dir, bin_path)
 if not os.path.exists(library_dir):
@@ -41,7 +41,7 @@ except Exception:
 
 
 if os.path.exists(library_dir):
-    print "Deleting old copy of".format(library_dir)
+    print "Deleting old copy of {0}".format(library_dir)
     rmtree(library_dir)
     copytree('data_dir', library_dir)
 else:
@@ -63,7 +63,7 @@ def get_igblast():
 # copy igblastn
 igblast = get_igblast()
 if igblast:
-    new_igblast = os.path.abspath(bin_path + "/igblastn")
+    new_igblast = os.path.join(bin_path,"/igblastn")
     print "Copying {0} to {1}".format(igblast, new_igblast)
     copyfile(igblast, new_igblast)
     print "Changing directory permissions of {0}".format(new_igblast)
@@ -74,7 +74,7 @@ else:
            press anykey to continue"
     raw_input()
 
-# use python site_acrre.setup.py --instal-lib ~/python_lib/ --install_script ~/bin/
+#python site_accre_local.setup.py install --install-lib  ~/python_lib/ --install-scripts ~/bin
 setup(name='PyIg',
       version='1.1',
       description='Python Immunoglobulin Analysis Tools',

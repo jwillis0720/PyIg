@@ -9,8 +9,11 @@ import subprocess
 
 #expand my home directory
 home = expanduser("~")
-library_dir = os.path.abspath(home+"/lib/pyig/data_dir")
-bin_path = os.path.abspath(home+"/bin/")
+library_dir = os.path.abspath(os.path.join(home,"/lib/pyig/data_dir"))
+bin_path = os.path.abspath(os.path.join(home,"/bin/"))
+
+print "Default Library Path is {0}".format(library_dir)
+print "Default Bin Path is {0}".format(bin_path)
 
 print "Checking Permissions for {0} and {1}".format(library_dir, bin_path)
 if not os.access(library_dir, os.W_OK) and not os.access(bin_path, os.W_OK):
@@ -29,7 +32,7 @@ except Exception:
 
 
 if os.path.exists(library_dir):
-    print "Deleting old copy of".format(library_dir)
+    print "Deleting old copy of {0}".format(library_dir)
     rmtree(library_dir)
     copytree('data_dir', library_dir)
 else:
@@ -51,7 +54,7 @@ def get_igblast():
 # copy igblastn
 igblast = get_igblast()
 if igblast:
-    new_igblast = os.path.abspath(bin_path + "/igblastn")
+    new_igblast = os.path.join(bin_path + "/igblastn")
     print "Copying {0} to {1}".format(igblast, new_igblast)
     copyfile(igblast, new_igblast)
     print "Changing directory permissions of {0}".format(new_igblast)
