@@ -47,7 +47,7 @@ def get_igblast():
 # copy igblastn
 igblast = get_igblast()
 if igblast:
-    new_igblast = os.path.abspath(bin_path + "igblastn")
+    new_igblast = os.path.abspath(bin_path + "/igblastn")
     print "Copying {0} to {1}".format(igblast, new_igblast)
     copyfile(igblast, new_igblast)
     print "Changing directory permissions of {0}".format(new_igblast)
