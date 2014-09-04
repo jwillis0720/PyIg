@@ -15,8 +15,8 @@ if sys.version_info < (2, 7):
 def files_zipper(list_of_files, outfile):
     '''Gzip multiple fiels together'''
     outfile = outfile.split('.json')[0].split('.json.gz')[0]
+    print "Zipping up file to {0}.json.gz".format(outfile)
     with gzip.open(outfile+".json.gz", 'wb') as final_out:
-        print "Zipping together output..."
         for file in list_of_files:
             with open(file) as finfile:
                 for line in finfile:
@@ -26,8 +26,8 @@ def files_zipper(list_of_files, outfile):
 
 def file_zipper(file, outfile):
     '''zip one file and delete it'''
-    print "Zipping up single file"
     outfile = outfile.split('.json')[0].split('.json.gz')[0]
+    print "Zipping up single file to {0}.json.gz".format(outfile)
     f_in = open(file, 'rb')
     f_out = gzip.open(outfile+".json.gz", 'wb')
     f_out.writelines(f_in)
