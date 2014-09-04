@@ -153,6 +153,11 @@ class IgBlastOutSingle():
     def get_json_entry(self):
         '''Dumps JSON text from this output'''
         #@Todo - Can change around indent if you want, sometimes mongo complains
+        temp_dict = OrderedDict()
+        for k,v in self.output.iteritems():
+          if v != "":
+            temp_dict[k] = v
+        self.output = temp_dict
         self.json = json.dumps(self.output)
         return self.json
 
