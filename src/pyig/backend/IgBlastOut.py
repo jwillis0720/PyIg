@@ -1,7 +1,11 @@
 import os
 import tempfile
+import pymongo
+import sys
 from pyig.backend.IgBlastOutSingle import IgBlastOutSingle
 
+m = pymongo.MongoClient('mongodb://root:Jiffylite42@localhost',port=9998)
+print dir(m)
 
 class IgBlastOut():
 
@@ -112,5 +116,8 @@ class IgBlastOut():
                     Single_Blast_Entry.set_additional_info(self.additional_info)
 
                 Single_Blast_Entry.join_and_translate()
+                to_mongo = Single_Blast_Entry.get_json_entry()
+                print to_mongo
+                sys.exit('exiting')
                 out.write(Single_Blast_Entry.get_json_entry())
                 out.write("\n")
