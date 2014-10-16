@@ -7,5 +7,4 @@ build/
 #optional_file/
 executables/
 mongo_test/
-testing/
 *.pyc
