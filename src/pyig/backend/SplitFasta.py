@@ -29,7 +29,7 @@ def split_fasta(num_procs, fasta_file, suffix=".tmp_fasta", delete=False):
     entry_count = i + 1
     print "{0} {1} in fasta file".format(entry_count, 'entries' if entry_count > 1 else 'entry')
 
-    files_per_temporary_file = float(entry_count) / float(num_procs)
+    records_per_temporary_file = float(entry_count) / float(num_procs)
     list_of_temporary_files = []
 
     # carries all of our records to be written
@@ -41,7 +41,7 @@ def split_fasta(num_procs, fasta_file, suffix=".tmp_fasta", delete=False):
         # append records to our list holder
         joiner.append(">" + replace_non_ascii(record.id) + "\n" + str(record.seq))
         # if we have reached the maximum numbers to be in that file, write
-        if num > files_per_temporary_file:
+        if num > records_per_temporary_file:
             joiner.append("")
             file_name = NamedTemporaryFile(suffix=suffix, delete=delete)
             with open(file_name.name, 'w') as f:
