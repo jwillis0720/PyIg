@@ -61,6 +61,7 @@ def split_fasta(num_procs, fasta_file, suffix=".tmp_fasta", delete=False):
         with open(file_name.name, 'w') as f:
             f.write("\n".join(joiner))
         list_of_temporary_files.append(file_name.name)
+
     return list_of_temporary_files
 
 if __name__ == '__main__':
