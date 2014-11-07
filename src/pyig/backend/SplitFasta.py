@@ -29,7 +29,7 @@ def split_fasta(num_procs, fasta_file, suffix=".tmp_fasta", delete=False):
     entry_count = len(parent_file)
     print "{0} {1} in fasta file".format(entry_count, 'entries' if entry_count > 1 else 'entry')
 
-    files_per_temporary_file = float(len(parent_file)) / float(num_procs)
+    files_per_temporary_file = float(entry_count) / float(num_procs)
     list_of_temporary_files = []
 
     # carries all of our records to be written
