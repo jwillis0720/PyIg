@@ -29,7 +29,7 @@ class IgBlastRun():
     Ig_sr.run_single_process(QueueObject)
     '''
 
-    def __init__(self, arg_dict, sequence_dict):
+    def __init__(self, arg_dict, sequence_dict, query):
         '''
         Constructor takes arguemnt dictionary and sequence dictionary
         '''
@@ -69,11 +69,10 @@ class IgBlastRun():
         self.domain_system = "imgt"
         self.additional_info = arg_dict['additional_field']
 
-    def set_query(self, file):
         if self.debug:
-            print "Setting query for {0}".format(file)
-        self.query = file
-        return
+            print "Setting query for {0}".format(query)
+
+        self.query = query
 
     def _collect(self):
         '''Collect all blast arguments and put them in one list accessible by subproces.Popen'''

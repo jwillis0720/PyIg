@@ -72,8 +72,7 @@ def main(PyIgParse):
             print "Running IgBlast on processor {0}".format(num)
 
             # Set up run class
-            IgBlast = IgBlastRun(PyIgParse, get_seqs_dict(name))
-            IgBlast.set_query(name)
+            IgBlast = IgBlastRun(PyIgParse, get_seqs_dict(name), name)
 
             # P is process class that takes one method and some argument
             p = Process(target=IgBlast.run_single_process, args=(queue, ))
@@ -102,10 +101,14 @@ def main(PyIgParse):
         split_fasta_file_names = split_fasta(
             1, fasta_file, delete=False)
 
+        query = split_fasta_file_names[0]
+
         # set up run instance
-        IgBlast = IgBlastRun(PyIgParse,
-                             get_seqs_dict(split_fasta_file_names[0]))
-        IgBlast.set_query(split_fasta_file_names[0])
+        IgBlast = IgBlastRun(
+            PyIgParse,
+            get_seqs_dict(query),
+            query
+        )
 
         # Running it like multiprocessing, but only using one processor
         p = Process(target=IgBlast.run_single_process,
