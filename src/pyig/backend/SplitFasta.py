@@ -25,7 +25,9 @@ def split_fasta(num_procs, fasta_file, suffix=".tmp_fasta", delete=False):
         if i % 10000 == 0 and i != 0:
             print "counted {0} entries".format(i)
         parent_file.append(j)
-    print "{0} entry in fasta file".format(len(parent_file))
+
+    entry_count = len(parent_file)
+    print "{0} {1} in fasta file".format(entry_count, 'entries' if entry_count > 1 else 'entry')
 
     files_per_temporary_file = float(len(parent_file)) / float(num_procs)
     list_of_temporary_files = []
