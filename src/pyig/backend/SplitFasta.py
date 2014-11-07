@@ -23,7 +23,7 @@ def split_fasta(num_procs, fasta_file, suffix=".tmp_fasta", delete=False):
 
     for i, j in enumerate(SeqIO.parse(fasta_file, 'fasta')):
         if i % 10000 == 0 and i != 0:
-            print "coutned {0} entries".format(i)
+            print "counted {0} entries".format(i)
         parent_file.append(j)
     print "{0} entry in fasta file".format(len(parent_file))
 
