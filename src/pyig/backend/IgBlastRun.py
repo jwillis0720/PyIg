@@ -76,7 +76,8 @@ class IgBlastRun():
 
     def _collect(self):
         '''Collect all blast arguments and put them in one list accessible by subproces.Popen'''
-        arguments = [
+
+        return [
             self.executable,
             '-min_D_match', self.minD,
             '-num_alignments_V', self.numV,
@@ -91,20 +92,22 @@ class IgBlastRun():
             '-outfmt', self.outfmt,
             '-domain_system', self.domain_system,
             '-out', self.temporary_output_file,
-            '-query', self.query]
-        return arguments
+            '-query', self.query
+        ]
 
     def run_single_process(self, queue):
         '''Call this method with a queue object to dump output file names too'''
 
+        collectedArgs = self._collect()
+
         if self.debug:
             print "Running Process for {0}".format(self.query)
-            for arg in self._collect():
+            for arg in collectedArgs:
                 print arg,
             print "\nOutput File for igblastn is {0}".format(
                 self.temporary_output_file)
 
-        p = subprocess.Popen(self._collect(), stderr=subprocess.PIPE)
+        p = subprocess.Popen(collectedArgs, stderr=subprocess.PIPE)
         stderr = p.communicate()
         if stderr[1]:
             raise RuntimeError("Error in calling Igblastn:\n\n {0}".format(stderr[1]))
