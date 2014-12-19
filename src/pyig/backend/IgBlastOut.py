@@ -19,7 +19,7 @@ class IgBlastOut():
     IgBlastOutSingle.get_output_name() - returns the name of the json file after its been parsed
     '''
 
-    def __init__(self, debug=False):
+    def __init__(self, debug=False, out_format="json"):
         # output file to return
         self.parsed_output = tempfile.NamedTemporaryFile(suffix=".json", delete=False).name
 
@@ -29,6 +29,7 @@ class IgBlastOut():
         self.seq_dictionary = {}
         self.species = ""
         self.additional_info = ""
+        self.out_format = out_format
 
     def set_seq_dictionary(self, seq_dictionary):
         self.seq_dictionary = seq_dictionary
@@ -68,7 +69,7 @@ class IgBlastOut():
                     # focus lines is intially entry so lets start filling it
                     if _focus_lines:
                         # Parse each individual entry
-                        Single_Blast_Entry = IgBlastOutSingle(_focus_lines, j_trans, self.species, debug=self.debug)
+                        Single_Blast_Entry = IgBlastOutSingle(_focus_lines, j_trans, self.species, debug=self.debug, out_format=self.out_format)
                         Single_Blast_Entry.parse()
                         Single_Blast_Entry.get_id()
                         # set the actual nucleotide sequence with the lookup dictionary since its
@@ -85,9 +86,13 @@ class IgBlastOut():
                         if self.additional_info:
                             Single_Blast_Entry.set_additional_info(self.additional_info)
 
-                        # get json entry
-                        out.write(Single_Blast_Entry.get_json_entry())
-                        out.write("\n")
+                        # get json or csv entry
+                        if (self.out_format == "csv"):
+                            out.write(Single_Blast_Entry.get_csv_entry())
+                            out.write("\n")
+                        else:
+                            out.write(Single_Blast_Entry.get_json_entry())
+                            out.write("\n")
 
                         # empty focus lines for next entry
                         _focus_lines = []
@@ -100,7 +105,7 @@ class IgBlastOut():
 
             # for last line - that can't be handled by our logic. do the same thing.
             if _focus_lines:
-                Single_Blast_Entry = IgBlastOutSingle(_focus_lines, j_trans, self.species, debug=self.debug)
+                Single_Blast_Entry = IgBlastOutSingle(_focus_lines, j_trans, self.species, debug=self.debug, out_format=self.out_format)
                 Single_Blast_Entry.parse()
                 Single_Blast_Entry.get_id()
                 try:
@@ -112,5 +117,9 @@ class IgBlastOut():
                     Single_Blast_Entry.set_additional_info(self.additional_info)
 
                 Single_Blast_Entry.join_and_translate()
-                out.write(Single_Blast_Entry.get_json_entry())
-                out.write("\n")
+                if (self.out_format == "csv"):
+                    out.write(Single_Blast_Entry.get_csv_entry())
+                    out.write("\n")
+                else:
+                    out.write(Single_Blast_Entry.get_json_entry())
+                    out.write("\n")

@@ -81,6 +81,8 @@ class PyIgArgumentParser():
         general_args.add_argument('--additional_field', type=self._additional_field_parse,
                                   help="A comma key,value pair for an additional field you want to add to the output json. Example \
                                   \n '--additional_field=donor,10` adds a donor field with value 10.")
+        general_args.add_argument("-f", "--out-format", default="json", metavar="json",
+                                  help="Output file format, defaults to json, but csv can be specified")
 
     def _check_d_match_validity(self, amount):
         if int(amount) >= 5:

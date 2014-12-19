@@ -74,6 +74,8 @@ class IgBlastRun():
 
         self.query = query
 
+        self.out_format = arg_dict['out_format']
+
     def _collect(self):
         '''Collect all blast arguments and put them in one list accessible by subproces.Popen'''
 
@@ -116,7 +118,7 @@ class IgBlastRun():
         p.wait()
 
         # The IgBlast output class, set the blast output
-        IgO = IgBlastOut(debug=self.debug)
+        IgO = IgBlastOut(debug=self.debug, out_format=self.out_format)
 
         # Set the name of the blast output file
         # Put it as setters, but could put it in the constructor

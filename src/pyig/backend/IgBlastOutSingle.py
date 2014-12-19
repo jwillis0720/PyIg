@@ -11,7 +11,7 @@ class IgBlastOutSingle():
     The only method you should use is the parse method after using the constructor.
     '''
 
-    def __init__(self, entry, j_trans, species, debug=False):
+    def __init__(self, entry, j_trans, species, debug=False, out_format="json"):
         '''
         entry - an iterator containing the lines from blast output
         j_trans - a dictionary with the end of the cdr3 J gene positions
@@ -150,6 +150,8 @@ class IgBlastOutSingle():
         self.hits_d = []  # to be parsed in another function
         self.hits_j = []  # to be parsed in another function
 
+        self.out_format = out_format
+
     def get_json_entry(self):
         '''Dumps JSON text from this output'''
         #@Todo - Can change around indent if you want, sometimes mongo complains
@@ -160,6 +162,10 @@ class IgBlastOutSingle():
         self.output = temp_dict
         self.json = json.dumps(self.output)
         return self.json
+
+    def get_csv_entry(self):
+        '''Dumps tab separated CSV text from this output'''
+        return "\t".join(str(self.output[x]) for x in self.output)
 
     def get_id(self):
         '''Get the sequence id returned by blast - should match the fasta id'''
@@ -429,7 +435,12 @@ class IgBlastOutSingle():
                     _entry_dict['V-Gene Rank_' + str(
                         rank) + " " + title.strip().capitalize().replace("%", "Percent")] = value
             # Adding a whole dictionary that makes it nested
-            self.output['V-Gene Rank_' + str(rank)] = _entry_dict
+
+            if (self.out_format == "csv"):
+              for k, v in _entry_dict.iteritems():
+                  self.output[k] = v
+            else:
+              self.output['V-Gene Rank_' + str(rank)] = _entry_dict
 
     def _parse_d_hits(self):
         for rank, entry in enumerate(self.hits_d, start=1):
@@ -443,7 +454,12 @@ class IgBlastOutSingle():
                     _entry_dict['D-Gene Rank_' + str(
                         rank) + " " + title.strip().capitalize().replace("%", "Percent")] = value
             # Adding a whole dictionary that makes it nested
-            self.output['D-Gene Rank_' + str(rank)] = _entry_dict
+
+            if (self.out_format == "csv"):
+              for k, v in _entry_dict.iteritems():
+                  self.output[k] = v
+            else:
+              self.output['D-Gene Rank_' + str(rank)] = _entry_dict
 
     def _parse_j_hits(self):
         for rank, entry in enumerate(self.hits_j, start=1):
@@ -457,7 +473,12 @@ class IgBlastOutSingle():
                     _entry_dict['J-Gene Rank_' + str(
                         rank) + " " + title.strip().capitalize().replace("%", "Percent")] = value
              # Adding a whole dictionary that makes it nested
-            self.output['J-Gene Rank_' + str(rank)] = _entry_dict
+
+            if (self.out_format == "csv"):
+              for k, v in _entry_dict.iteritems():
+                  self.output[k] = v
+            else:
+              self.output['J-Gene Rank_' + str(rank)] = _entry_dict
 
     def join_and_translate(self):
         '''
