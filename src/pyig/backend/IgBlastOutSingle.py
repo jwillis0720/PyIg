@@ -437,10 +437,10 @@ class IgBlastOutSingle():
             # Adding a whole dictionary that makes it nested
 
             if (self.out_format == "csv"):
-              for k, v in _entry_dict.iteritems():
-                  self.output[k] = v
+                for k, v in _entry_dict.iteritems():
+                    self.output[k] = v
             else:
-              self.output['V-Gene Rank_' + str(rank)] = _entry_dict
+                self.output['V-Gene Rank_' + str(rank)] = _entry_dict
 
     def _parse_d_hits(self):
         for rank, entry in enumerate(self.hits_d, start=1):
@@ -456,10 +456,10 @@ class IgBlastOutSingle():
             # Adding a whole dictionary that makes it nested
 
             if (self.out_format == "csv"):
-              for k, v in _entry_dict.iteritems():
-                  self.output[k] = v
+                for k, v in _entry_dict.iteritems():
+                    self.output[k] = v
             else:
-              self.output['D-Gene Rank_' + str(rank)] = _entry_dict
+                self.output['D-Gene Rank_' + str(rank)] = _entry_dict
 
     def _parse_j_hits(self):
         for rank, entry in enumerate(self.hits_j, start=1):
@@ -475,10 +475,10 @@ class IgBlastOutSingle():
              # Adding a whole dictionary that makes it nested
 
             if (self.out_format == "csv"):
-              for k, v in _entry_dict.iteritems():
-                  self.output[k] = v
+                for k, v in _entry_dict.iteritems():
+                    self.output[k] = v
             else:
-              self.output['J-Gene Rank_' + str(rank)] = _entry_dict
+                self.output['J-Gene Rank_' + str(rank)] = _entry_dict
 
     def join_and_translate(self):
         '''
