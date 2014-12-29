@@ -110,7 +110,57 @@ class IgBlastOutSingle():
                                    ('D-J Junction', ""),
                                    ('Junction J-Start', ""),
                                    ('D or J Junction', ""),
-                                   ('Junction Merged', "")))
+                                   ('Junction Merged', ""),
+                                   ('V-J Junction', "")))
+
+        if (out_format == "csv"):
+
+            remaining_keys = OrderedDict([
+                ('Stop Codon', ''),
+                ('V-J frame', ''),
+                ('V-Gene Rank_1 Query id', ''),
+                ('V-Gene Rank_1 Subject id', ''),
+                ('V-Gene Rank_1 Percent identity', ''),
+                ('V-Gene Rank_1 Alignment length', ''),
+                ('V-Gene Rank_1 Mismatches', ''),
+                ('V-Gene Rank_1 Gap opens', ''),
+                ('V-Gene Rank_1 Gaps', ''),
+                ('V-Gene Rank_1 Q. start', ''),
+                ('V-Gene Rank_1 Q. end', ''),
+                ('V-Gene Rank_1 S. start', ''),
+                ('V-Gene Rank_1 S. end', ''),
+                ('V-Gene Rank_1 Evalue', ''),
+                ('V-Gene Rank_1 Bit score', ''),
+                ('D-Gene Rank_1 Query id', ''),
+                ('D-Gene Rank_1 Subject id', ''),
+                ('D-Gene Rank_1 Percent identity', ''),
+                ('D-Gene Rank_1 Alignment length', ''),
+                ('D-Gene Rank_1 Mismatches', ''),
+                ('D-Gene Rank_1 Gap opens', ''),
+                ('D-Gene Rank_1 Gaps', ''),
+                ('D-Gene Rank_1 Q. start', ''),
+                ('D-Gene Rank_1 Q. end', ''),
+                ('D-Gene Rank_1 S. start', ''),
+                ('D-Gene Rank_1 S. end', ''),
+                ('D-Gene Rank_1 Evalue', ''),
+                ('D-Gene Rank_1 Bit score', ''),
+                ('J-Gene Rank_1 Query id', ''),
+                ('J-Gene Rank_1 Subject id', ''),
+                ('J-Gene Rank_1 Percent identity', ''),
+                ('J-Gene Rank_1 Alignment length', ''),
+                ('J-Gene Rank_1 Mismatches', ''),
+                ('J-Gene Rank_1 Gap opens', ''),
+                ('J-Gene Rank_1 Gaps', ''),
+                ('J-Gene Rank_1 Q. start', ''),
+                ('J-Gene Rank_1 Q. end', ''),
+                ('J-Gene Rank_1 S. start', ''),
+                ('J-Gene Rank_1 S. end', ''),
+                ('J-Gene Rank_1 Evalue', ''),
+                ('J-Gene Rank_1 Bit score', '')
+            ])
+
+            for k,v in remaining_keys.iteritems():
+                self.output[k] = v
 
         # Title fields, these are the four sections it divides up to.
         # The fields are essentially the header to each section.
@@ -340,6 +390,8 @@ class IgBlastOutSingle():
                 title = "D-J Junction"
             if title.strip() == "J start":
                 title = "Junction J-Start"
+            if title.strip() == "V-J junction":
+                title = "V-J Junction"
             if "(" in value:
                 self.output["D or J Junction"] = value.split(
                     "(")[1].split(")")[0]
