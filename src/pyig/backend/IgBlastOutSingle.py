@@ -117,14 +117,14 @@ class IgBlastOutSingle():
         # We could hard code this, but considering that it will be unique to each entry
         # We should parse it for each entry
         # See the actual blast output file using --debug and it will make a lot more sense
-        self.rearrangment_summary_titles = ""
+        self.rearrangement_summary_titles = ""
         self.junction_detail_titles = ""
         self.alignment_summary_titles = ""
         self.hit_fields = ""
 
         # Here is the meat - all the good stuff goes into here, these are zipped with the
         # titles in the methods
-        self.rearrangment_summary = ""
+        self.rearrangement_summary = ""
         self.junction_detail = ""
         self.cdr1_alignment_summary = ""
         self.cdr2_alignment_summary = ""
@@ -167,7 +167,7 @@ class IgBlastOutSingle():
 
     def set_seq(self, sequence):
         '''
-        Set the sequene from the fasta since
+        Set the sequence from the fasta since
         blast does not keep the input query sequence in the output
         '''
         self.output['Query Sequence'] = str(sequence).upper()
@@ -180,7 +180,7 @@ class IgBlastOutSingle():
         '''The method that iterates through the output lines'''
 
         # tells the iterator when it has reached the end of a certain section
-        _rearrangment_breaker = False
+        _rearrangement_breaker = False
         _junction_breaker = False
         _fields_breaker = False
 
@@ -196,18 +196,19 @@ class IgBlastOutSingle():
 
             if "rearrangement summary" in line:
                 '''Okay we found rearrangement summary fields, that means
-                the next line will be the actually rearrangment summary.
-                So we turn the "breaker on" The rearrangment is just basic info
+                the next line will be the actually rearrangement summary.
+                So we turn the "breaker on" The rearrangement is just basic info
                 returned like the top matches and if was productive etc'''
-                self.rearrangment_summary_titles = line.strip().split("(")[2].split(")")[0].split(",")
-                _rearrangment_breaker = True
+                self.rearrangement_summary_titles = line.strip().split("(")[2].split(")")[0].split(",")
+                _rearrangement_breaker = True
                 continue
 
-            if _rearrangment_breaker:
+            if _rearrangement_breaker:
                 '''the meat of the rearranment, right after the field titles'''
-                self.rearrangment_summary = line.strip().split("\t")
-                # shut off rearrangment breaker to break out of this section
-                _rearrangment_breaker = False
+                self.rearrangement_summary = line.strip().split("\t")
+
+                # shut off rearrangement breaker to break out of this section
+                _rearrangement_breaker = False
 
             if "junction details" in line:
                 '''We found the junction detail line, get the fields,
@@ -300,7 +301,7 @@ class IgBlastOutSingle():
 
     def _parse_rearranment(self):
         '''parse the rearrangement summary (just the basic statistics) portion of the blast hit'''
-        for title, value in zip(self.rearrangment_summary_titles, self.rearrangment_summary):
+        for title, value in zip(self.rearrangement_summary_titles, self.rearrangement_summary):
 
             # Retitle the IgBlast titles to what we like :)
             if title.strip() == "stop codon":
