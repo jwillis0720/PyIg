@@ -17,9 +17,14 @@ class TranslateAndJoin():
         self.IgO = IgO
         self.output = IgO.output
         # We need all these things again
-        self.sequence = self.output['Query Sequence']
         self.seq_id = self.output['Sequence Id']
         self.debug = IgO.debug
+
+        #First things first, let's make sure we get the query in the right orientation.
+        if self.output['Strand'] == '+' :
+            self.sequence = self.output['Query Sequence']
+        elif self.output['Strand'] == '-' :
+            self.sequence = str(Seq(self.output['Query Sequence']).reverse_complement())
 
         #Goes through all 4 frameworks and 3 cdrs to set and translate, if they are empty we simply 
         #pass and leave that part empty in the output
