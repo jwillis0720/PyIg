@@ -361,7 +361,7 @@ class IgBlastOutSingle():
     def _parse_fw2_align(self):
         for title, value in zip(self.alignment_summary_titles, self.fr2_alignment_summary):
             if title.strip() == 'percent identity':
-                title = 'Identity'
+              title = 'Identity'
             try:
                 self.output["FW2 Alignment " + title.strip().capitalize()] = float(value)
             except ValueError:
