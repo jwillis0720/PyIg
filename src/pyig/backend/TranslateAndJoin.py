@@ -21,7 +21,7 @@ class TranslateAndJoin():
         self.debug = IgO.debug
 
         '''The fudge factor simply asks if the V gene started matching in the middle of codon,
-        if it does, then it increases it by one until the first reading frame of a codon can be found. 
+        if it does, then it increases it by one until the first reading frame of a codon can be found.
         It is always smart to start matching at the start of every codon instead of right in the middle,
         that will screw up all the frameworks'''
         self.fudge_factor = 0
@@ -39,20 +39,22 @@ class TranslateAndJoin():
             print "No V Gene Alignment, Skipping"
 
 
-
         #First things first, let's make sure we get the query in the right orientation.
         if self.output['Strand'] == '+' :
             self.sequence = self.output['Query Sequence']
         elif self.output['Strand'] == '-' :
             self.sequence = str(Seq(self.output['Query Sequence']).reverse_complement())
 
-        #Goes through all 4 frameworks and 3 cdrs to set and translate, if they are empty we simply 
+        #Goes through all 4 frameworks and 3 cdrs to set and translate, if they are empty we simply
         #pass and leave that part empty in the output
         try:
             self.framework1_set_and_translate()
         except (KeyError, ValueError):
             if self.debug:
                 print "FW1 does not exist for {0}".format(self.seq_id)
+            pass
+        except AttributeError as e:
+            print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
             pass
 
         try:
@@ -61,12 +63,18 @@ class TranslateAndJoin():
             if self.debug:
                 print "FW2 does not exist for {0}".format(self.seq_id)
             pass
+        except AttributeError as e:
+            print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
+            pass
 
         try:
             self.framework3_set_and_translate()
         except (KeyError, ValueError):
             if self.debug:
                 print "FW3 does not exist for {0}".format(self.seq_id)
+            pass
+        except AttributeError as e:
+            print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
             pass
 
         try:
@@ -75,12 +83,18 @@ class TranslateAndJoin():
             if self.debug:
                 print "CDR1 does not exist for {0}".format(self.seq_id)
             pass
+        except AttributeError as e:
+            print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
+            pass
 
         try:
             self.CDR2_set_and_translate()
         except (KeyError, ValueError):
             if self.debug:
                 print "CDR2 does not exist for {0}".format(self.seq_id)
+            pass
+        except AttributeError as e:
+            print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
             pass
 
         try:
@@ -89,11 +103,18 @@ class TranslateAndJoin():
             if self.debug:
                 print "CDR3 does not exist for {0}".format(self.seq_id)
             pass
+        except AttributeError as e:
+            print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
+            pass
+
         try:
             self.FW4_set_and_translate()
         except (KeyError, ValueError):
             if self.debug:
                 print "FW4 does not exist for {0}".format(self.seq_id)
+            pass
+        except AttributeError as e:
+            print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
             pass
 
     #_from - nucleotide position start
