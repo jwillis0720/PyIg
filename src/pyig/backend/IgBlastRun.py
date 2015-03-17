@@ -1,6 +1,8 @@
 import os
 import subprocess
 import tempfile
+import warnings
+from pprint import pprint
 from pyig.backend.IgBlastOut import IgBlastOut
 
 
@@ -112,7 +114,7 @@ class IgBlastRun():
         p = subprocess.Popen(collectedArgs, stderr=subprocess.PIPE)
         stderr = p.communicate()
         if stderr[1]:
-            raise RuntimeError("Error in calling Igblastn:\n\n {0}".format(stderr[1]))
+            print "Error in calling Igblastn:\n\n {0}".format(stderr[1])
 
         # until process is done until it moves on to the next line
         p.wait()
