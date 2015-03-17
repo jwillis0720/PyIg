@@ -215,7 +215,7 @@ class IgBlastOutSingle():
 
     def get_csv_entry(self):
         '''Dumps tab separated CSV text from this output'''
-        return "\t".join(str(self.output[x]) for x in self.output)
+        return "\t".join(str(self.output[x]) if self.output[x] else "\N" for x in self.output)
 
     def get_id(self):
         '''Get the sequence id returned by blast - should match the fasta id'''
