@@ -41,10 +41,6 @@ class PyIgArgumentParser():
             '-s', '--species', default='human', choices=['human', 'rabbit', 'mouse', 'rat', 'rhesus'],
             help='The Species you are analyzing')
 
-        type_arguments.add_argument(
-            '-c', '--chain', default='heavy', choices=['heavy', 'light'],
-            help="The chain you want to analyze")
-
         blast_arguments = self.arg_parse.add_argument_group(
             title="BLAST Specific Arguments", description="Arguments Specific to IgBlast")
 
