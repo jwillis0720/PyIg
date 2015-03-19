@@ -24,15 +24,15 @@ Required Positional Arguments
 --------
 
 
-The fasta file to be run through PyIg. It defaults to human heavy chain.
+The fasta file to be run through PyIg.
 
     query.fasta
 
     ex.
-    PyIg -q query.fasta 
+    PyIg -q query.fasta
 
 
-Database 
+Database
 --------
 
 The setup script should of placed this in /usr/local/pyig/. If you have it located somewhere else (not recommended), use this option.
@@ -41,7 +41,7 @@ The setup script should of placed this in /usr/local/pyig/. If you have it locat
 
 
 
-Types 
+Types
 --------
 
 Arguments for the database to query
@@ -50,12 +50,6 @@ Arguments for the database to query
                       The receptor you are analyzing, immunoglobulin or T cell Receptor - defaults to Ig
     -s {human,rabbit,mouse,rat,rhesus}, --species {human,rabbit,mouse,rat,rhesus}
                       The Species you are analyzing, defaults to human
-    -c {heavy,light}, --chain {heavy,light}
-                      The chain you want to analyze, defaults to heavy
-                      
-                      ex.
-     /usr/local/bin/PyIg -s mouse -c light mouse_light_chains.fasta
-
 
 BLAST Specific Arguments:
 --------
