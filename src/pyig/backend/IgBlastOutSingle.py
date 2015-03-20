@@ -12,7 +12,7 @@ class IgBlastOutSingle():
     The only method you should use is the parse method after using the constructor.
     '''
 
-    def __init__(self, entry, j_trans, species, debug=False, out_format="json"):
+    def __init__(self, entry, j_trans, species, debug=False):
         '''
         entry - an iterator containing the lines from blast output
         j_trans - a dictionary with the end of the cdr3 J gene positions
@@ -194,8 +194,6 @@ class IgBlastOutSingle():
         self.hits_v = []  # to be parsed in another function
         self.hits_d = []  # to be parsed in another function
         self.hits_j = []  # to be parsed in another function
-
-        self.out_format = out_format
 
     def get_json_entry(self):
         '''Dumps JSON text from this output'''

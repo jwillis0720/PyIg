@@ -69,7 +69,7 @@ class IgBlastOut():
                     # focus lines is intially entry so lets start filling it
                     if _focus_lines:
                         # Parse each individual entry
-                        Single_Blast_Entry = IgBlastOutSingle(_focus_lines, j_trans, self.species, debug=self.debug, out_format=self.out_format)
+                        Single_Blast_Entry = IgBlastOutSingle(_focus_lines, j_trans, self.species, debug=self.debug)
                         Single_Blast_Entry.parse()
                         Single_Blast_Entry.get_id()
                         # set the actual nucleotide sequence with the lookup dictionary since its
@@ -105,7 +105,7 @@ class IgBlastOut():
 
             # for last line - that can't be handled by our logic. do the same thing.
             if _focus_lines:
-                Single_Blast_Entry = IgBlastOutSingle(_focus_lines, j_trans, self.species, debug=self.debug, out_format=self.out_format)
+                Single_Blast_Entry = IgBlastOutSingle(_focus_lines, j_trans, self.species, debug=self.debug)
                 Single_Blast_Entry.parse()
                 Single_Blast_Entry.get_id()
                 try:
