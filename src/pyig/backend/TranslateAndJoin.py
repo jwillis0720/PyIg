@@ -25,8 +25,10 @@ class TranslateAndJoin():
         It is always smart to start matching at the start of every codon instead of right in the middle,
         that will screw up all the frameworks'''
         self.fudge_factor = 0
+
         try:
-            v_gene_start = self.output['V-Gene Rank_1']['V-Gene Rank_1 S. start'] - 1
+            v_gene_start = self.output['V-Gene Rank_1 S. start'] - 1
+
             while True:
                 if v_gene_start % 3 == 0:
                     break
@@ -40,7 +42,7 @@ class TranslateAndJoin():
 
 
         #First things first, let's make sure we get the query in the right orientation.
-        if self.output['Strand'] == '+' :
+        if self.output['Strand'] == '+':
             self.sequence = self.output['Query Sequence']
         elif self.output['Strand'] == '-' :
             self.sequence = str(Seq(self.output['Query Sequence']).reverse_complement())
@@ -168,7 +170,7 @@ class TranslateAndJoin():
     #hard part
     def CDR3_set_and_translate(self):
         #first get the gene first ranked
-        j_gene = self.output['J-Gene Rank_1']['J-Gene Rank_1 Subject id']
+        j_gene = self.output['J-Gene Rank_1 Subject id']
         try:
             #Then find length until it hits end of cdr3 which is defined in a datafile
             j_length = int(self.IgO.j_trans[j_gene])
@@ -179,8 +181,8 @@ class TranslateAndJoin():
 
         #j_begin is where on the sequence the j gene sits
         #j_end is how many nucleotides in on the j gene does it sit
-        j_begin = int(self.output['J-Gene Rank_1']['J-Gene Rank_1 Q. start']) - 1
-        j_end = int(self.output['J-Gene Rank_1']['J-Gene Rank_1 S. start'])
+        j_begin = int(self.output['J-Gene Rank_1 Q. start']) - 1
+        j_end = int(self.output['J-Gene Rank_1 S. start'])
         #do the arithemetic to find the end - see documentation for more help
         j_end = (j_length - j_end) + j_begin
 
@@ -200,7 +202,8 @@ class TranslateAndJoin():
     #same as fw1-3 and cdr1-2
     def FW4_set_and_translate(self):
         _from = self.sequence.index(self.output['CDR3 Nucleotides']) + len(self.output['CDR3 Nucleotides'])
-        _to = int(self.output['J-Gene Rank_1']['J-Gene Rank_1 Q. end'])
+        _to = int(self.output['J-Gene Rank_1 Q. end'])
+
         self.output['Framework 4 Nucleotides'] = self.sequence[_from - 2:_to]
         self.output['Framework 4 AA'] = str(
             Seq(self.output['Framework 4 Nucleotides'], IUPAC.ambiguous_dna).translate())
