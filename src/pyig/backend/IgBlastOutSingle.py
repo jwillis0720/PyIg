@@ -12,26 +12,12 @@ class IgBlastOutSingle():
     The only method you should use is the parse method after using the constructor.
     '''
 
-    def __init__(self, entry, j_trans, species, debug=False):
-        '''
-        entry - an iterator containing the lines from blast output
-        j_trans - a dictionary with the end of the cdr3 J gene positions
-        species - the species we are parsing
-        '''
-        self.entry = entry
-        self.j_trans = j_trans
-        self.species = species
-        self.debug = debug
-
-        # The main output - this should be the __repr__ function when overloading @TODO
-        # Set up with all the arguments you should have except the VDJ hits which are added later
-        # This way the JSON can be pretty consistent
-        self.output = OrderedDict((
+    output_dict = OrderedDict((
             ('Sequence Id',  ""),
             ('Query Sequence', ""),
             ('Chain type', ""),
             ('Format Type', ""),
-            ('Species', self.species),
+            ('Species', ""),
             ('Top V Hit', ""),
             ('Top D Hit', ""),
             ('Top J Hit', ""),
@@ -155,7 +141,21 @@ class IgBlastOutSingle():
             ('J-Gene Rank_1 S. end', ''),
             ('J-Gene Rank_1 Evalue', ''),
             ('J-Gene Rank_1 Bit score', '')
-        ))
+    ))
+
+    def __init__(self, entry, j_trans, species, debug=False):
+        '''
+        entry - an iterator containing the lines from blast output
+        j_trans - a dictionary with the end of the cdr3 J gene positions
+        species - the species we are parsing
+        '''
+        self.entry = entry
+        self.j_trans = j_trans
+        self.species = species
+        self.debug = debug
+        self.output = self.output_dict
+
+        self.output['Species'] = self.species
 
         # Title fields, these are the four sections it divides up to.
         # The fields are essentially the header to each section.
