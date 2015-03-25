@@ -171,13 +171,16 @@ class TranslateAndJoin():
     def CDR3_set_and_translate(self):
         #first get the gene first ranked
         j_gene = self.output['J-Gene Rank_1 Subject id']
+
+        if not j_gene:
+            return
+
         try:
             #Then find length until it hits end of cdr3 which is defined in a datafile
             j_length = int(self.IgO.j_trans[j_gene])
         except KeyError:
-            raise Exception(
-                "Germline Gene {0} not found in CDR3 Lenth Description, this needs to be set to determine when the J reading frame ends for the CDR3, refer to documentation for setting this gene".format(j_gene))
-            sys.exit(1)
+            print("Germline Gene {0} not found for seqid {1} in CDR3 Length Description, this needs to be set to determine when the J reading frame ends for the CDR3, refer to documentation for setting this gene".format(j_gene, self.seq_id))
+            return
 
         #j_begin is where on the sequence the j gene sits
         #j_end is how many nucleotides in on the j gene does it sit
