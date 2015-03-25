@@ -47,9 +47,15 @@ Types
 Arguments for the database to query
 
     -r {Ig,TCR}, --receptor {Ig,TCR}
-                      The receptor you are analyzing, immunoglobulin or T cell Receptor - defaults to Ig
+                    The receptor you are analyzing, immunoglobulin or T cell Receptor - defaults to Ig
     -s {human,rabbit,mouse,rat,rhesus}, --species {human,rabbit,mouse,rat,rhesus}
-                      The Species you are analyzing, defaults to human
+                    The Species you are analyzing, defaults to human
+    -c {heavy,light, mixed}, --chain {heavy,light, mixed}
+                    The chain you want to analyze, defaults to heavy
+
+                    ex.
+
+                    /usr/local/bin/PyIg -s mouse -c light mouse_light_chains.fasta
 
 BLAST Specific Arguments:
 --------

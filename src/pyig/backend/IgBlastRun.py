@@ -54,9 +54,11 @@ class IgBlastRun():
         self.temporary_output_file = tempfile.NamedTemporaryFile(
             suffix='.blast_out', delete=False).name
 
+        self.chain = arg_dict['chain']
+
         # First fetch the path to our data directory
         _path_to_data_base = os.path.join(
-            os.environ['IGDATA'], self.receptor, self.species)
+            os.environ['IGDATA'], self.receptor, self.chain, self.species)
 
         self.germline_v = os.path.join(_path_to_data_base, self.species + "_gl_V")
         self.germline_d = os.path.join(_path_to_data_base, self.species + "_gl_D")
