@@ -1,5 +1,6 @@
 import sys
 import warnings
+import pprint
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 warnings.filterwarnings('ignore')
@@ -122,10 +123,10 @@ class TranslateAndJoin():
     #_from - nucleotide position start
     #_to - nucleotide position end
     def framework1_set_and_translate(self):
-        _from = int(self.output["FW1 Alignment From"]) + self.fudge_factor
+        _from = int(self.output["FW1 Alignment From"]) ##+ self.fudge_factor
         _to = int(self.output["FW1 Alignment To"])
         #make a sequence
-        self.output['Framework 1 Nucleotides'] = self.sequence[_from - 1:_to]
+        self.output['Framework 1 Nucleotides'] = self.sequence[_from - 2:_to]
         #translate
         self.output['Framework 1 AA'] = str(
             Seq(self.output['Framework 1 Nucleotides'], IUPAC.ambiguous_dna).translate())
@@ -136,16 +137,17 @@ class TranslateAndJoin():
     def framework2_set_and_translate(self):
         _from = int(self.output["FW2 Alignment From"]) + self.fudge_factor
         _to = int(self.output["FW2 Alignment To"])
-        self.output['Framework 2 Nucleotides'] = self.sequence[_from - 1:_to]
+        self.output['Framework 2 Nucleotides'] = self.sequence[_from - 3:_to]
         self.output['Framework 2 AA'] = str(
             Seq(self.output['Framework 2 Nucleotides'], IUPAC.ambiguous_dna).translate())
         self.output['Framework 2 AA Length'] = len(self.output['Framework 2 AA'])
+        pprint.pprint(self.fudge_factor);
 
     #same
     def framework3_set_and_translate(self):
         _from = int(self.output["FW3 Alignment From"]) + self.fudge_factor
         _to = int(self.output["FW3 Alignment To"])
-        self.output['Framework 3 Nucleotides'] = self.sequence[_from - 1:_to]
+        self.output['Framework 3 Nucleotides'] = self.sequence[_from - 3:_to]
         self.output['Framework 3 AA'] = str(
             Seq(self.output['Framework 3 Nucleotides'], IUPAC.ambiguous_dna).translate())
         self.output['Framework 3 AA Length'] = len(self.output['Framework 3 AA'])
@@ -154,7 +156,7 @@ class TranslateAndJoin():
     def CDR1_set_and_translate(self):
         _from = int(self.output["CDR1 Alignment From"]) + self.fudge_factor
         _to = int(self.output["CDR1 Alignment To"])
-        self.output['CDR1 Nucleotides'] = self.sequence[_from - 1:_to]
+        self.output['CDR1 Nucleotides'] = self.sequence[_from - 3:_to]
         self.output['CDR1 AA'] = str(
             Seq(self.output['CDR1 Nucleotides'], IUPAC.ambiguous_dna).translate())
         self.output['CDR1 AA Length'] = len(self.output['CDR1 AA'])
@@ -163,7 +165,7 @@ class TranslateAndJoin():
     def CDR2_set_and_translate(self):
         _from = int(self.output["CDR2 Alignment From"]) + self.fudge_factor
         _to = int(self.output["CDR2 Alignment To"])
-        self.output['CDR2 Nucleotides'] = self.sequence[_from - 1:_to]
+        self.output['CDR2 Nucleotides'] = self.sequence[_from - 3:_to]
         self.output['CDR2 AA'] = str(Seq(self.output['CDR2 Nucleotides'], IUPAC.ambiguous_dna).translate())
         self.output['CDR2 AA Length'] = len(self.output['CDR2 AA'])
 
@@ -187,7 +189,7 @@ class TranslateAndJoin():
         j_begin = int(self.output['J-Gene Rank_1 Q. start']) - 1
         j_end = int(self.output['J-Gene Rank_1 S. start'])
         #do the arithemetic to find the end - see documentation for more help
-        j_end = (j_length - j_end) + j_begin
+        j_end = (j_length - j_end) + j_begin - 2
 
         if self.output['CDR3 Alignment From']:
             v_part_from = int(self.output['CDR3 Alignment From']) - 1
@@ -207,7 +209,7 @@ class TranslateAndJoin():
         _from = self.sequence.index(self.output['CDR3 Nucleotides']) + len(self.output['CDR3 Nucleotides'])
         _to = int(self.output['J-Gene Rank_1 Q. end'])
 
-        self.output['Framework 4 Nucleotides'] = self.sequence[_from - 2:_to]
+        self.output['Framework 4 Nucleotides'] = self.sequence[_from:_to]
         self.output['Framework 4 AA'] = str(
             Seq(self.output['Framework 4 Nucleotides'], IUPAC.ambiguous_dna).translate())
         self.output['Framework 4 AA Length'] = len(self.output['Framework 4 AA'])
