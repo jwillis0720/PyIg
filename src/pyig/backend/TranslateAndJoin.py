@@ -33,9 +33,9 @@ class TranslateAndJoin():
                     break
                 else:
                     if self.debug:
-                        print "Increasing Fudge Factor by 1, total {}".format(self.fudge_factor)
-                    v_gene_start += 1
-                    self.fudge_factor += 1
+                        print "Decreasing Fudge Factor by 1, total {}".format(self.fudge_factor)
+                    v_gene_start -= 1
+                    self.fudge_factor -= 1
         except:
             print "No V Gene Alignment, Skipping"
 
