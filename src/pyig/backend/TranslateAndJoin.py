@@ -110,8 +110,8 @@ class TranslateAndJoin():
     def framework1_set_and_translate(self):
         _from = int(self.output["FW1 Alignment From"])
         if self.fudge_factor_add:
-           if self.debug:
-            print "Adding fudge factor to FW1"
+            if self.debug:
+                print "Adding fudge factor to FW1"
             _from += self.fudge_factor
         _to = int(self.output["FW1 Alignment To"])
         #make a sequence
