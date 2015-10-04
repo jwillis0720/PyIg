@@ -25,28 +25,14 @@ class TranslateAndJoin():
         if it does, then it increases it by one until the first reading frame of a codon can be found.
         It is always smart to start matching at the start of every codon instead of right in the middle,
         that will screw up all the frameworks'''
-        self.fudge_factor = 0
-
-        try:
-            v_gene_start = self.output['V-Gene Rank_1 S. start'] - 1
-
-            while True:
-                if v_gene_start % 3 == 0:
-                    break
-                else:
-                    if self.debug:
-                        print "Increasing Fudge Factor by 1, total {}".format(self.fudge_factor)
-                    v_gene_start += 1
-                    self.fudge_factor += 1
-        except:
-            print "No V Gene Alignment, Skipping"
-
 
         #First things first, let's make sure we get the query in the right orientation.
         if self.output['Strand'] == '+':
             self.sequence = self.output['Query Sequence']
         elif self.output['Strand'] == '-' :
             self.sequence = str(Seq(self.output['Query Sequence']).reverse_complement())
+
+        self.query_sequence_translate()
 
         #Goes through all 4 frameworks and 3 cdrs to set and translate, if they are empty we simply
         #pass and leave that part empty in the output
@@ -127,6 +113,20 @@ class TranslateAndJoin():
             print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
             pass
 
+    def query_sequence_translate(self):
+
+        _translate_from = 0;
+        while True:
+            if (len(self.sequence) - _translate_from) % 3 == 0:
+                break;
+            else:
+                _translate_from += 1
+
+        self.output['AA'] = str(
+            Seq(self.sequence[_translate_from:], IUPAC.ambiguous_dna).translate()
+        )
+
+
     #_from - nucleotide position start
     #_to - nucleotide position end
     def framework1_set_and_translate(self):
@@ -135,7 +135,7 @@ class TranslateAndJoin():
         _nucleotide_from = 0
         _translate_from = 0;
         while True:
-            if (len(self.output['Query Sequence']) - _translate_from) % 3 == 0:
+            if (len(self.sequence) - _translate_from) % 3 == 0:
                 break;
             else:
                 _translate_from += 1
@@ -157,7 +157,7 @@ class TranslateAndJoin():
             _nucleotide_from = 0
             _translate_from = 0;
             while True:
-                if (len(self.output['Query Sequence']) - _translate_from) % 3 == 0:
+                if (len(self.sequence) - _translate_from) % 3 == 0:
                     break;
                 else:
                     _translate_from += 1
@@ -180,7 +180,7 @@ class TranslateAndJoin():
             _nucleotide_from = 0
             _translate_from = 0;
             while True:
-                if (len(self.output['Query Sequence']) - _translate_from) % 3 == 0:
+                if (len(self.sequence) - _translate_from) % 3 == 0:
                     break;
                 else:
                     _translate_from += 1
@@ -203,7 +203,7 @@ class TranslateAndJoin():
             _nucleotide_from = 0
             _translate_from = 0;
             while True:
-                if (len(self.output['Query Sequence']) - _translate_from) % 3 == 0:
+                if (len(self.sequence) - _translate_from) % 3 == 0:
                     break;
                 else:
                     _translate_from += 1
@@ -225,7 +225,7 @@ class TranslateAndJoin():
             _nucleotide_from = 0
             _translate_from = 0;
             while True:
-                if (len(self.output['Query Sequence']) - _translate_from) % 3 == 0:
+                if (len(self.sequence) - _translate_from) % 3 == 0:
                     break;
                 else:
                     _translate_from += 1
