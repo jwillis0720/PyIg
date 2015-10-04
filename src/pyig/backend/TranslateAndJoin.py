@@ -25,18 +25,6 @@ class TranslateAndJoin():
         if it does, then it increases it by one until the first reading frame of a codon can be found.
         It is always smart to start matching at the start of every codon instead of right in the middle,
         that will screw up all the frameworks'''
-        # try:
-        #     v_gene_start = self.output['V-Gene Rank_1']['V-Gene Rank_1 S. start'] - 1
-        #     while True:
-        #         if v_gene_start % 3 == 0:
-        #             break
-        #         else:
-        #             if self.debug:
-        #                 print "Increasing Fudge Factor by 1, total {}".format(self.fudge_factor)
-        #             v_gene_start += 1
-        #             self.fudge_factor += 1
-        # except:
-        #     print "No V Gene Alignment, Skipping"
 
         #First things first, let's make sure we get the query in the right orientation.
         if self.output['Strand'] == '+' :
