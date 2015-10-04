@@ -13,6 +13,7 @@ class TranslateAndJoin():
 
     def __init__(self, IgO):
         '''Takes in superclass instance IgO'''
+        self.fudge_factor_add = True
         self.species = 'human'
         self.IgO = IgO
         self.output = IgO.output
@@ -51,6 +52,7 @@ class TranslateAndJoin():
         #pass and leave that part empty in the output
         try:
             self.framework1_set_and_translate()
+            self.fudge_factor_add = False
         except (KeyError, ValueError):
             if self.debug:
                 print "FW1 does not exist for {0}".format(self.seq_id)
@@ -60,27 +62,8 @@ class TranslateAndJoin():
             pass
 
         try:
-            self.framework2_set_and_translate()
-        except (KeyError, ValueError):
-            if self.debug:
-                print "FW2 does not exist for {0}".format(self.seq_id)
-            pass
-        except AttributeError as e:
-            print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
-            pass
-
-        try:
-            self.framework3_set_and_translate()
-        except (KeyError, ValueError):
-            if self.debug:
-                print "FW3 does not exist for {0}".format(self.seq_id)
-            pass
-        except AttributeError as e:
-            print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
-            pass
-
-        try:
             self.CDR1_set_and_translate()
+            self.fudge_factor_add = False
         except (KeyError, ValueError):
             if self.debug:
                 print "CDR1 does not exist for {0}".format(self.seq_id)
@@ -90,7 +73,19 @@ class TranslateAndJoin():
             pass
 
         try:
+            self.framework2_set_and_translate()
+            self.fudge_factor_add = False
+        except (KeyError, ValueError):
+            if self.debug:
+                print "FW2 does not exist for {0}".format(self.seq_id)
+            pass
+        except AttributeError as e:
+            print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
+            pass
+
+        try:
             self.CDR2_set_and_translate()
+            self.fudge_factor_add = False
         except (KeyError, ValueError):
             if self.debug:
                 print "CDR2 does not exist for {0}".format(self.seq_id)
@@ -100,7 +95,19 @@ class TranslateAndJoin():
             pass
 
         try:
+            self.framework3_set_and_translate()
+            self.fudge_factor_add = False
+        except (KeyError, ValueError):
+            if self.debug:
+                print "FW3 does not exist for {0}".format(self.seq_id)
+            pass
+        except AttributeError as e:
+            print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
+            pass
+
+        try:
             self.CDR3_set_and_translate()
+            self.fudge_factor_add = False
         except (KeyError, ValueError):
             if self.debug:
                 print "CDR3 does not exist for {0}".format(self.seq_id)
@@ -111,6 +118,7 @@ class TranslateAndJoin():
 
         try:
             self.FW4_set_and_translate()
+            self.fudge_factor_add = False
         except (KeyError, ValueError):
             if self.debug:
                 print "FW4 does not exist for {0}".format(self.seq_id)
@@ -122,7 +130,11 @@ class TranslateAndJoin():
     #_from - nucleotide position start
     #_to - nucleotide position end
     def framework1_set_and_translate(self):
-        _from = int(self.output["FW1 Alignment From"]) + self.fudge_factor
+        _from = int(self.output["FW1 Alignment From"])
+        if self.fudge_factor_add:
+            if self.debug:
+                print "Adding fudge factor to FW1"
+            _from += self.fudge_factor
         _to = int(self.output["FW1 Alignment To"])
         #make a sequence
         self.output['Framework 1 Nucleotides'] = self.sequence[_from - 1:_to]
@@ -134,7 +146,11 @@ class TranslateAndJoin():
 
     #same
     def framework2_set_and_translate(self):
-        _from = int(self.output["FW2 Alignment From"]) + self.fudge_factor
+        _from = int(self.output["FW2 Alignment From"])
+        if self.fudge_factor_add:
+            if self.debug:
+                print "Adding fudge factor to FW2"
+            _from += self.fudge_factor
         _to = int(self.output["FW2 Alignment To"])
         self.output['Framework 2 Nucleotides'] = self.sequence[_from - 1:_to]
         self.output['Framework 2 AA'] = str(
@@ -143,7 +159,11 @@ class TranslateAndJoin():
 
     #same
     def framework3_set_and_translate(self):
-        _from = int(self.output["FW3 Alignment From"]) + self.fudge_factor
+        _from = int(self.output["FW3 Alignment From"])
+        if self.fudge_factor_add:
+            if self.debug:
+                print "Adding fudge factor to FW3"
+            _from += self.fudge_factor
         _to = int(self.output["FW3 Alignment To"])
         self.output['Framework 3 Nucleotides'] = self.sequence[_from - 1:_to]
         self.output['Framework 3 AA'] = str(
@@ -152,7 +172,11 @@ class TranslateAndJoin():
 
     #same
     def CDR1_set_and_translate(self):
-        _from = int(self.output["CDR1 Alignment From"]) + self.fudge_factor
+        _from = int(self.output["CDR1 Alignment From"])
+        if self.fudge_factor_add:
+            if self.debug:
+                print "Adding fudge factor to CDR1"
+            _from += self.fudge_factor
         _to = int(self.output["CDR1 Alignment To"])
         self.output['CDR1 Nucleotides'] = self.sequence[_from - 1:_to]
         self.output['CDR1 AA'] = str(
@@ -161,7 +185,11 @@ class TranslateAndJoin():
 
     #same
     def CDR2_set_and_translate(self):
-        _from = int(self.output["CDR2 Alignment From"]) + self.fudge_factor
+        _from = int(self.output["CDR2 Alignment From"])
+        if self.fudge_factor_add:
+            if self.debug:
+                print "Adding fudge factor to CDR2"
+            _from += self.fudge_factor
         _to = int(self.output["CDR2 Alignment To"])
         self.output['CDR2 Nucleotides'] = self.sequence[_from - 1:_to]
         self.output['CDR2 AA'] = str(Seq(self.output['CDR2 Nucleotides'], IUPAC.ambiguous_dna).translate())
