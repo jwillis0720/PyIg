@@ -140,7 +140,7 @@ class IgBlastOutSingle():
             ('J-Gene Rank_1 S. start', ''),
             ('J-Gene Rank_1 S. end', ''),
             ('J-Gene Rank_1 Evalue', ''),
-            ('J-Gene Rank_1 Bit score', '')
+            ('J-Gene Rank_1 Bit score', ''),
             ('AA', '')
     ))
 
