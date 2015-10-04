@@ -141,6 +141,7 @@ class IgBlastOutSingle():
             ('J-Gene Rank_1 S. end', ''),
             ('J-Gene Rank_1 Evalue', ''),
             ('J-Gene Rank_1 Bit score', '')
+            ('AA', '')
     ))
 
     def __init__(self, entry, j_trans, species, debug=False):
