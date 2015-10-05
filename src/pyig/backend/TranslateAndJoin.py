@@ -255,7 +255,7 @@ class TranslateAndJoin():
     def FW4_set_and_translate(self):
         _from = self.sequence.index(self.output['CDR3 Nucleotides']) + len(self.output['CDR3 Nucleotides'])
         _to = int(self.output['J-Gene Rank_1']['J-Gene Rank_1 Q. end'])
-        self.output['Framework 4 Nucleotides'] = self.sequence[_from - 2:_to]
+        self.output['Framework 4 Nucleotides'] = self.sequence[_from:_to]
         self.output['Framework 4 AA'] = str(
             Seq(self.output['Framework 4 Nucleotides'], IUPAC.ambiguous_dna).translate())
         self.output['Framework 4 AA Length'] = len(self.output['Framework 4 AA'])
