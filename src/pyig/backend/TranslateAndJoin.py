@@ -32,7 +32,12 @@ class TranslateAndJoin():
         elif self.output['Strand'] == '-' :
             self.sequence = str(Seq(self.output['Query Sequence']).reverse_complement())
 
-        self.query_sequence_translate()
+        try:
+            self.query_sequence_translate()
+        except AttributeError as e:
+            if self.debug:
+                print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
+            pass
 
         #Goes through all 4 frameworks and 3 cdrs to set and translate, if they are empty we simply
         #pass and leave that part empty in the output
