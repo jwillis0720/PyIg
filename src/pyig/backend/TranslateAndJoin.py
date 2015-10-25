@@ -20,6 +20,8 @@ class TranslateAndJoin():
         # We need all these things again
         self.seq_id = self.output['Sequence Id']
         self.debug = IgO.debug
+        self.sequence_translate_start = 0
+        self.cdr3_end = 0
 
         '''The fudge factor simply asks if the V gene started matching in the middle of codon,
         if it does, then it increases it by one until the first reading frame of a codon can be found.
@@ -44,13 +46,6 @@ class TranslateAndJoin():
             self.sequence = self.output['Query Sequence']
         elif self.output['Strand'] == '-' :
             self.sequence = str(Seq(self.output['Query Sequence']).reverse_complement())
-
-        try:
-            self.query_sequence_translate()
-        except AttributeError as e:
-            if self.debug:
-                print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
-            pass
 
         #Goes through all 4 frameworks and 3 cdrs to set and translate, if they are empty we simply
         #pass and leave that part empty in the output
@@ -131,18 +126,49 @@ class TranslateAndJoin():
             print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
             pass
 
+        try:
+            self.query_sequence_translate()
+        except AttributeError as e:
+            if self.debug:
+                print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
+            pass
+
+        self.validate_translation()
+
+    # translate the full sequence from the first codon possible
     def query_sequence_translate(self):
 
-        _translate_from = 0;
-        while True:
-            if (len(self.sequence) - _translate_from) % 3 == 0:
-                break;
-            else:
-                _translate_from += 1
+        _translate_from = self.sequence_translate_start
+        while (_translate_from - 3) > 0:
+            _translate_from -= 3
 
         self.output['AA'] = str(
-            Seq(self.sequence[_translate_from:], IUPAC.ambiguous_dna).translate()
+            Seq(self.sequence[_translate_from:self.sequence_translate_end], IUPAC.ambiguous_dna).translate()
         )
+
+    # validate that all cdr and framework translations are contained in the full translation
+    def validate_translation (self):
+
+        if self.output['Framework 1 AA'] and not self.output['Framework 1 AA'] in self.output['AA']:
+            raise Exception('Framework 1 AA {0} not contained in full translation {1}'.format(self.output['Framework 1 AA'], self.output['AA']))
+
+        if self.output['Framework 2 AA'] and not self.output['Framework 2 AA'] in self.output['AA']:
+            raise Exception('Framework 2 AA {0} not contained in full translation {1}'.format(self.output['Framework 2 AA'], self.output['AA']))
+
+        if self.output['Framework 3 AA'] and not self.output['Framework 3 AA'] in self.output['AA']:
+            raise Exception('Framework 3 AA {0} not contained in full translation {1}'.format(self.output['Framework 3 AA'], self.output['AA']))
+
+        if self.output['Framework 4 AA'] and not self.output['Framework 4 AA'] in self.output['AA']:
+            raise Exception('Framework 4 AA {0} not contained in full translation {1}'.format(self.output['Framework 4 AA'], self.output['AA']))
+
+        if self.output['CDR1 AA'] and not self.output['CDR1 AA'] in self.output['AA']:
+            raise Exception('CDR 1 AA {0} not contained in full translation {1}'.format(self.output['CDR1 AA'], self.output['AA']))
+
+        if self.output['CDR2 AA'] and not self.output['CDR2 AA'] in self.output['AA']:
+            raise Exception('CDR 2 AA {0} not contained in full translation {1}'.format(self.output['CDR2 AA'], self.output['AA']))
+
+        if self.output['CDR3 AA'] and not self.output['CDR3 AA'] in self.output['AA']:
+            raise Exception('CDR 3 AA {0} not contained in full translation {1}'.format(self.output['CDR3 AA'], self.output['AA']))
 
     #_from - nucleotide position start
     #_to - nucleotide position end
@@ -152,6 +178,7 @@ class TranslateAndJoin():
             if self.debug:
                 print "Adding fudge factor to FW1"
             _from += self.fudge_factor
+            self.sequence_translate_start = _from - 1;
         _to = int(self.output["FW1 Alignment To"])
         #make a sequence
         self.output['Framework 1 Nucleotides'] = self.sequence[_from - 1:_to]
@@ -168,6 +195,7 @@ class TranslateAndJoin():
             if self.debug:
                 print "Adding fudge factor to FW2"
             _from += self.fudge_factor
+            self.sequence_translate_start = _from - 1;
         _to = int(self.output["FW2 Alignment To"])
         self.output['Framework 2 Nucleotides'] = self.sequence[_from - 1:_to]
         self.output['Framework 2 AA'] = str(
@@ -181,6 +209,7 @@ class TranslateAndJoin():
             if self.debug:
                 print "Adding fudge factor to FW3"
             _from += self.fudge_factor
+            self.sequence_translate_start = _from - 1;
         _to = int(self.output["FW3 Alignment To"])
         self.output['Framework 3 Nucleotides'] = self.sequence[_from - 1:_to]
         self.output['Framework 3 AA'] = str(
@@ -194,6 +223,7 @@ class TranslateAndJoin():
             if self.debug:
                 print "Adding fudge factor to CDR1"
             _from += self.fudge_factor
+            self.sequence_translate_start = _from - 1;
         _to = int(self.output["CDR1 Alignment To"])
         self.output['CDR1 Nucleotides'] = self.sequence[_from - 1:_to]
         self.output['CDR1 AA'] = str(
@@ -207,6 +237,7 @@ class TranslateAndJoin():
             if self.debug:
                 print "Adding fudge factor to CDR2"
             _from += self.fudge_factor
+            self.sequence_translate_start = _from - 1;
         _to = int(self.output["CDR2 Alignment To"])
         self.output['CDR2 Nucleotides'] = self.sequence[_from - 1:_to]
         self.output['CDR2 AA'] = str(Seq(self.output['CDR2 Nucleotides'], IUPAC.ambiguous_dna).translate())
@@ -240,7 +271,8 @@ class TranslateAndJoin():
         else:
             v_part_from = self.sequence.index(self.IgO.junction_merged[5:]) - 1
 
-        self.output['CDR3 Nucleotides'] = self.sequence[v_part_from:j_end - 2]
+        self.cdr3_end = j_end - 2
+        self.output['CDR3 Nucleotides'] = self.sequence[v_part_from:self.cdr3_end]
         self.output['CDR3 AA'] = str(Seq(self.output['CDR3 Nucleotides'], IUPAC.ambiguous_dna).translate())
         self.output['CDR3 AA Length'] = len(self.output['CDR3 AA'])
 
@@ -248,6 +280,11 @@ class TranslateAndJoin():
     def FW4_set_and_translate(self):
         _from = self.sequence.index(self.output['CDR3 Nucleotides']) + len(self.output['CDR3 Nucleotides'])
         _to = int(self.output['J-Gene Rank_1 Q. end'])
+        self.sequence_translate_end = _to
+
+        if _from == _to + 2:
+            self.sequence_translate_end = self.cdr3_end
+
         self.output['Framework 4 Nucleotides'] = self.sequence[_from:_to]
         self.output['Framework 4 AA'] = str(
             Seq(self.output['Framework 4 Nucleotides'], IUPAC.ambiguous_dna).translate())
