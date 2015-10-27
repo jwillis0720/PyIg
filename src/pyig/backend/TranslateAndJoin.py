@@ -133,7 +133,12 @@ class TranslateAndJoin():
                 print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
             pass
 
-        self.validate_translation()
+        try:
+            self.validate_translation()
+        except Exception as e:
+            if self.debug:
+                print("Translation error, {0} for query sequence {1}".format(e.message, self.output['Query Sequence']))
+            pass
 
     # translate the full sequence from the first codon possible
     def query_sequence_translate(self):
