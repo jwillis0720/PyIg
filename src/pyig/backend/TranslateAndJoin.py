@@ -28,18 +28,19 @@ class TranslateAndJoin():
         It is always smart to start matching at the start of every codon instead of right in the middle,
         that will screw up all the frameworks'''
         self.fudge_factor = 0
-        try:
-            v_gene_start = self.output['V-Gene Rank_1 S. start'] - 1
-            while True:
-                if v_gene_start % 3 == 0:
-                    break
-                else:
-                    if self.debug:
-                        print "Increasing Fudge Factor by 1, total {}".format(self.fudge_factor)
-                    v_gene_start += 1
-                    self.fudge_factor += 1
-        except:
-            print "No V Gene Alignment, Skipping"
+        if (self.output['Stop Codon'] == 'Yes' and self.output['V-Gene Rank_1 S. start'] % 3 != 0) or self.output['Stop Codon'] == 'No':
+            try:
+                v_gene_start = self.output['V-Gene Rank_1 S. start'] - 1
+                while True:
+                    if v_gene_start % 3 == 0:
+                        break
+                    else:
+                        v_gene_start += 1
+                        self.fudge_factor += 1
+                        if self.debug:
+                            print "Increasing Fudge Factor by 1, total {}".format(self.fudge_factor)
+            except:
+                print "No V Gene Alignment, Skipping"
 
         #First things first, let's make sure we get the query in the right orientation.
         if self.output['Strand'] == '+':
@@ -114,6 +115,9 @@ class TranslateAndJoin():
         except AttributeError as e:
             print("Attribute error, {0} for seqid {1}:".format(e.message, self.seq_id))
             pass
+        except Exception as e:
+            print("Exception, {0} for seqid {1}:".format(e.message, self.seq_id))
+            pass
 
         try:
             self.FW4_set_and_translate()
@@ -144,8 +148,12 @@ class TranslateAndJoin():
     def query_sequence_translate(self):
 
         _translate_from = self.sequence_translate_start
+
         while (_translate_from - 3) > 0:
             _translate_from -= 3
+
+        if not hasattr(self, 'sequence_translate_end'):
+            self.sequence_translate_end = len(self.sequence)
 
         self.output['AA'] = str(
             Seq(self.sequence[_translate_from:self.sequence_translate_end], IUPAC.ambiguous_dna).translate()
@@ -184,7 +192,9 @@ class TranslateAndJoin():
                 print "Adding fudge factor to FW1"
             _from += self.fudge_factor
             self.sequence_translate_start = _from - 1;
+
         _to = int(self.output["FW1 Alignment To"])
+
         #make a sequence
         self.output['Framework 1 Nucleotides'] = self.sequence[_from - 1:_to]
         #translate
@@ -201,7 +211,13 @@ class TranslateAndJoin():
                 print "Adding fudge factor to FW2"
             _from += self.fudge_factor
             self.sequence_translate_start = _from - 1;
+        else:
+            # make sure we are in the correct frame
+            while (_from - self.fudge_factor - self.output['V-Gene Rank_1 Q. start']) % 3 != 0:
+                _from += 1
+
         _to = int(self.output["FW2 Alignment To"])
+
         self.output['Framework 2 Nucleotides'] = self.sequence[_from - 1:_to]
         self.output['Framework 2 AA'] = str(
             Seq(self.output['Framework 2 Nucleotides'], IUPAC.ambiguous_dna).translate())
@@ -215,7 +231,13 @@ class TranslateAndJoin():
                 print "Adding fudge factor to FW3"
             _from += self.fudge_factor
             self.sequence_translate_start = _from - 1;
+        else:
+            # make sure we are in the correct frame
+            while (_from - self.fudge_factor - self.output['V-Gene Rank_1 Q. start']) % 3 != 0:
+                _from += 1
+
         _to = int(self.output["FW3 Alignment To"])
+
         self.output['Framework 3 Nucleotides'] = self.sequence[_from - 1:_to]
         self.output['Framework 3 AA'] = str(
             Seq(self.output['Framework 3 Nucleotides'], IUPAC.ambiguous_dna).translate())
@@ -229,7 +251,13 @@ class TranslateAndJoin():
                 print "Adding fudge factor to CDR1"
             _from += self.fudge_factor
             self.sequence_translate_start = _from - 1;
+        else:
+            # make sure we are in the correct frame
+            while (_from - self.fudge_factor - self.output['V-Gene Rank_1 Q. start']) % 3 != 0:
+                _from += 1
+
         _to = int(self.output["CDR1 Alignment To"])
+
         self.output['CDR1 Nucleotides'] = self.sequence[_from - 1:_to]
         self.output['CDR1 AA'] = str(
             Seq(self.output['CDR1 Nucleotides'], IUPAC.ambiguous_dna).translate())
@@ -243,7 +271,13 @@ class TranslateAndJoin():
                 print "Adding fudge factor to CDR2"
             _from += self.fudge_factor
             self.sequence_translate_start = _from - 1;
+        else:
+            # make sure we are in the correct frame
+            while (_from - self.fudge_factor - self.output['V-Gene Rank_1 Q. start']) % 3 != 0:
+                _from += 1
+
         _to = int(self.output["CDR2 Alignment To"])
+
         self.output['CDR2 Nucleotides'] = self.sequence[_from - 1:_to]
         self.output['CDR2 AA'] = str(Seq(self.output['CDR2 Nucleotides'], IUPAC.ambiguous_dna).translate())
         self.output['CDR2 AA Length'] = len(self.output['CDR2 AA'])
@@ -276,7 +310,15 @@ class TranslateAndJoin():
         else:
             v_part_from = self.sequence.index(self.IgO.junction_merged[5:]) - 1
 
+        # make sure we are in the correct frame
+        while (v_part_from + 1 - self.fudge_factor - self.output['V-Gene Rank_1 Q. start']) % 3 != 0:
+            v_part_from += 1
+
+        if self.fudge_factor_add:
+            self.sequence_translate_start = v_part_from
+
         self.cdr3_end = j_end - 2
+
         self.output['CDR3 Nucleotides'] = self.sequence[v_part_from:self.cdr3_end]
         self.output['CDR3 AA'] = str(Seq(self.output['CDR3 Nucleotides'], IUPAC.ambiguous_dna).translate())
         self.output['CDR3 AA Length'] = len(self.output['CDR3 AA'])
@@ -287,8 +329,14 @@ class TranslateAndJoin():
         _to = int(self.output['J-Gene Rank_1 Q. end'])
         self.sequence_translate_end = _to
 
-        if _from == _to + 2:
+        if _from > _to:
             self.sequence_translate_end = self.cdr3_end
+
+        # make sure we are in the correct frame
+        # add 1 due to using sequence.index
+        # make sure we are in the correct frame
+        while (_from + 1 - self.fudge_factor - self.output['V-Gene Rank_1 Q. start']) % 3 != 0:
+            _from += 1
 
         self.output['Framework 4 Nucleotides'] = self.sequence[_from:_to]
         self.output['Framework 4 AA'] = str(

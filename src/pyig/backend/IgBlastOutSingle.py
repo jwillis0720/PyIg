@@ -156,6 +156,9 @@ class IgBlastOutSingle():
         self.debug = debug
         self.output = self.output_dict
 
+        for x in self.output:
+            self.output[x] = ""
+
         self.output['Species'] = self.species
 
         # Title fields, these are the four sections it divides up to.
