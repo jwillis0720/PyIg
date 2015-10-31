@@ -38,8 +38,8 @@ def get_igblast():
     igblasts = glob.glob('igblast/igblastn_*')
     for binary in igblasts:
         try:
-		subprocess.call([binary, '-h'],stdout=subprocess.PIPE)
-		return os.path.abspath(binary)
+            subprocess.check_call([binary, '-h'],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            return os.path.abspath(binary)
         except:
             continue
         return ""

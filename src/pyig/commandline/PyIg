@@ -5,6 +5,7 @@ import sys
 from Bio import SeqIO
 from pyig.backend.PyIgArgumentParser import PyIgArgumentParser
 from pyig.backend.SplitFasta import split_fasta
+from pyig.backend.IgBlastOutSingle import IgBlastOutSingle
 from pyig.backend.IgBlastRun import IgBlastRun
 from multiprocessing import Process, Queue
 
@@ -12,11 +13,16 @@ if sys.version_info < (2, 7):
     raise OSError("You need python 2.7.5 or higher, rerun with \%python2.7 /path/to/PyIg")
 
 
-def files_zipper(list_of_files, outfile):
+def files_zipper(list_of_files, outfile, out_format="json"):
     '''Gzip multiple fiels together'''
-    outfile = outfile.split('.json')[0].split('.json.gz')[0]
-    print "Zipping up file to {0}.json.gz".format(outfile)
-    with gzip.open(outfile+".json.gz", 'wb') as final_out:
+    outfile = outfile.split('.{0}'.format(out_format))[0].split('.{0}.gz'.format(out_format))[0]
+    print "Zipping up file to {0}.{1}.gz".format(outfile, out_format)
+    with gzip.open(outfile+".{0}.gz".format(out_format), 'wb') as final_out:
+
+        if (out_format == "csv"):
+            final_out.write("\t".join(str(x) for x in IgBlastOutSingle.output_dict))
+            final_out.write("\n")
+
         for file in list_of_files:
             with open(file) as finfile:
                 for line in finfile:
@@ -24,12 +30,17 @@ def files_zipper(list_of_files, outfile):
             os.remove(file)
 
 
-def file_zipper(file, outfile):
+def file_zipper(file, outfile, out_format="json"):
     '''zip one file and delete it'''
-    outfile = outfile.split('.json')[0].split('.json.gz')[0]
-    print "Zipping up single file to {0}.json.gz".format(outfile)
+    outfile = outfile.split('.{0}'.format(out_format))[0].split('.{0}.gz'.format(out_format))[0]
+    print "Zipping up single file to {0}.{1}.gz".format(outfile, out_format)
     f_in = open(file, 'rb')
-    f_out = gzip.open(outfile+".json.gz", 'wb')
+    f_out = gzip.open(outfile+".{0}.gz".format(out_format), 'wb')
+
+    if (out_format == "csv"):
+        f_out.write("\t".join(str(x) for x in IgBlastOutSingle.output_dict))
+        f_out.write("\n")
+
     f_out.writelines(f_in)
     f_out.close()
     f_in.close()
@@ -72,8 +83,7 @@ def main(PyIgParse):
             print "Running IgBlast on processor {0}".format(num)
 
             # Set up run class
-            IgBlast = IgBlastRun(PyIgParse, get_seqs_dict(name))
-            IgBlast.set_query(name)
+            IgBlast = IgBlastRun(PyIgParse, get_seqs_dict(name), name)
 
             # P is process class that takes one method and some argument
             p = Process(target=IgBlast.run_single_process, args=(queue, ))
@@ -92,7 +102,7 @@ def main(PyIgParse):
             to_join.append(queue.get())
 
         # and finally zip up files that come back
-        files_zipper(to_join, output_file)
+        files_zipper(to_join, output_file, PyIgParse['out_format'])
 
     else:  # single processor
         print "Running IgBlast on single processor"
@@ -102,10 +112,14 @@ def main(PyIgParse):
         split_fasta_file_names = split_fasta(
             1, fasta_file, delete=False)
 
+        query = split_fasta_file_names[0]
+
         # set up run instance
-        IgBlast = IgBlastRun(PyIgParse,
-                             get_seqs_dict(split_fasta_file_names[0]))
-        IgBlast.set_query(split_fasta_file_names[0])
+        IgBlast = IgBlastRun(
+            PyIgParse,
+            get_seqs_dict(query),
+            query
+        )
 
         # Running it like multiprocessing, but only using one processor
         p = Process(target=IgBlast.run_single_process,
@@ -115,7 +129,7 @@ def main(PyIgParse):
         p.join()
 
         # zip up the one file at the end
-        file_zipper(queue.get(), output_file)
+        file_zipper(queue.get(), output_file, PyIgParse['out_format'])
 
 
 if __name__ == '__main__':

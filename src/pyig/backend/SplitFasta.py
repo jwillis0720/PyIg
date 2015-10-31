@@ -23,11 +23,13 @@ def split_fasta(num_procs, fasta_file, suffix=".tmp_fasta", delete=False):
 
     for i, j in enumerate(SeqIO.parse(fasta_file, 'fasta')):
         if i % 10000 == 0 and i != 0:
-            print "coutned {0} entries".format(i)
+            print "counted {0} entries".format(i)
         parent_file.append(j)
-    print "{0} entry in fasta file".format(len(parent_file))
 
-    files_per_temporary_file = float(len(parent_file)) / float(num_procs)
+    entry_count = i + 1
+    print "{0} {1} in fasta file".format(entry_count, 'entries' if entry_count > 1 else 'entry')
+
+    records_per_temporary_file = float(entry_count) / float(num_procs)
     list_of_temporary_files = []
 
     # carries all of our records to be written
@@ -39,7 +41,7 @@ def split_fasta(num_procs, fasta_file, suffix=".tmp_fasta", delete=False):
         # append records to our list holder
         joiner.append(">" + replace_non_ascii(record.id) + "\n" + str(record.seq))
         # if we have reached the maximum numbers to be in that file, write
-        if num > files_per_temporary_file:
+        if num > records_per_temporary_file:
             joiner.append("")
             file_name = NamedTemporaryFile(suffix=suffix, delete=delete)
             with open(file_name.name, 'w') as f:
@@ -59,6 +61,7 @@ def split_fasta(num_procs, fasta_file, suffix=".tmp_fasta", delete=False):
         with open(file_name.name, 'w') as f:
             f.write("\n".join(joiner))
         list_of_temporary_files.append(file_name.name)
+
     return list_of_temporary_files
 
 if __name__ == '__main__':

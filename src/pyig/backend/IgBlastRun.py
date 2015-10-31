@@ -1,6 +1,8 @@
 import os
 import subprocess
 import tempfile
+import warnings
+from pprint import pprint
 from pyig.backend.IgBlastOut import IgBlastOut
 
 
@@ -29,7 +31,7 @@ class IgBlastRun():
     Ig_sr.run_single_process(QueueObject)
     '''
 
-    def __init__(self, arg_dict, sequence_dict):
+    def __init__(self, arg_dict, sequence_dict, query):
         '''
         Constructor takes arguemnt dictionary and sequence dictionary
         '''
@@ -52,7 +54,6 @@ class IgBlastRun():
         self.temporary_output_file = tempfile.NamedTemporaryFile(
             suffix='.blast_out', delete=False).name
 
-        # Database specific
         self.chain = arg_dict['chain']
 
         # First fetch the path to our data directory
@@ -69,15 +70,17 @@ class IgBlastRun():
         self.domain_system = "imgt"
         self.additional_info = arg_dict['additional_field']
 
-    def set_query(self, file):
         if self.debug:
-            print "Setting query for {0}".format(file)
-        self.query = file
-        return
+            print "Setting query for {0}".format(query)
+
+        self.query = query
+
+        self.out_format = arg_dict['out_format']
 
     def _collect(self):
         '''Collect all blast arguments and put them in one list accessible by subproces.Popen'''
-        arguments = [
+
+        return [
             self.executable,
             '-min_D_match', self.minD,
             '-num_alignments_V', self.numV,
@@ -92,29 +95,31 @@ class IgBlastRun():
             '-outfmt', self.outfmt,
             '-domain_system', self.domain_system,
             '-out', self.temporary_output_file,
-            '-query', self.query]
-        return arguments
+            '-query', self.query
+        ]
 
     def run_single_process(self, queue):
         '''Call this method with a queue object to dump output file names too'''
 
+        collectedArgs = self._collect()
+
         if self.debug:
             print "Running Process for {0}".format(self.query)
-            for arg in self._collect():
+            for arg in collectedArgs:
                 print arg,
             print "\nOutput File for igblastn is {0}".format(
                 self.temporary_output_file)
 
-        p = subprocess.Popen(self._collect(), stderr=subprocess.PIPE)
+        p = subprocess.Popen(collectedArgs, stderr=subprocess.PIPE)
         stderr = p.communicate()
         if stderr[1]:
-            raise RuntimeError("Error in calling Igblastn:\n\n {0}".format(stderr[1]))
+            print "Error in calling Igblastn:\n\n {0}".format(stderr[1])
 
         # until process is done until it moves on to the next line
         p.wait()
 
         # The IgBlast output class, set the blast output
-        IgO = IgBlastOut(debug=self.debug)
+        IgO = IgBlastOut(debug=self.debug, out_format=self.out_format)
 
         # Set the name of the blast output file
         # Put it as setters, but could put it in the constructor
