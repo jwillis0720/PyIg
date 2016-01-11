@@ -180,7 +180,8 @@ class IgBlastOutSingle():
 
     def set_additional_info(self, additional_info):
         'Set tuple as additional info'
-        self.output[additional_info[0]] = additional_info[1]
+        for field in xrange(0,len(additional_info),2):
+          self.output[additional_info[field]] = additional_info[field+1]
 
     def parse(self):
         '''The method that iterates through the output lines'''
