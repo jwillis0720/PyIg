@@ -115,7 +115,7 @@ class PyIgArgumentParser():
         '''
         try:
             keyvalue_split = keyvaluestring.split(',')
-            return (keyvalue_split[0], keyvalue_split[1])
+            return keyvalue_split
         except:
             raise argparse.ArgumentTypeError(
                 "comma seperated error with {0}".format(keyvaluestring))
