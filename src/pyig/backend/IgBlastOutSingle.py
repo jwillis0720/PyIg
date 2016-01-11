@@ -25,14 +25,19 @@ class IgBlastOutSingle():
         # The main output - this should be the __repr__ function when overloading @TODO
         # Set up with all the arguments you should have except the VDJ hits which are added later
         # This way the JSON can be pretty consistent
-        self.output = OrderedDict((('Sequence Id',  ""),
+        self.output = OrderedDict((('Sequence Id', ""),
                                    ('Query Sequence', ""),
                                    ('Chain type', ""),
                                    ('Format Type', ""),
                                    ('Species', self.species),
                                    ('Top V Hit', ""),
+                                   ('Top V Family', ""),
+                                   ('Top V Gene', ""),
                                    ('Top D Hit', ""),
+                                   ('Top D Family', ""),
+                                   ('Top D Gene', ""),
                                    ('Top J Hit', ""),
+                                   ('Top J Gene', ""),
                                    ('Productive', "False"),
                                    ('Productive CDR3', 'False'),
                                    ('Strand', ""),
@@ -110,7 +115,8 @@ class IgBlastOutSingle():
                                    ('D-J Junction', ""),
                                    ('Junction J-Start', ""),
                                    ('D or J Junction', ""),
-                                   ('Junction Merged', "")))
+                                   ('Junction Merged', ""),
+                                   ('Isotype', "")))
 
         # Title fields, these are the four sections it divides up to.
         # The fields are essentially the header to each section.
@@ -154,11 +160,11 @@ class IgBlastOutSingle():
         '''Dumps JSON text from this output'''
         #@Todo - Can change around indent if you want, sometimes mongo complains
         temp_dict = OrderedDict()
-        for k,v in self.output.iteritems():
-          if v != "":
-            temp_dict[k] = v
+        for k, v in self.output.iteritems():
+            if v != "":
+                temp_dict[k] = v
         self.output = temp_dict
-        self.json = json.dumps(self.output)
+        self.json = json.dumps(self.output, indent=4)
         return self.json
 
     def get_id(self):
@@ -186,7 +192,7 @@ class IgBlastOutSingle():
 
         # Query Name
         for line in self.entry:
-            # Starting to iterate
+                # Starting to iterate
             if "Query" in line:
                 self.output['Sequence Id'] = line.split(":")[1].strip()
 
@@ -298,6 +304,15 @@ class IgBlastOutSingle():
         self._parse_v_hits()
         self._parse_d_hits()
         self._parse_j_hits()
+        self._get_families_and_genes()
+
+    def _get_families_and_genes(self):
+        '''parse the top v hits into familes and genes'''
+        self.output['Top V Family'] = self.output['Top V Hit'].split('-')[0]
+        self.output['Top V Gene'] = self.output['Top V Hit'].split('*')[0]
+        self.output['Top D Family'] = self.output['Top D Hit'].split('-')[0]
+        self.output['Top D Gene'] = self.output['Top D Hit'].split('*')[0]
+        self.output['Top J Gene'] = self.output['Top D Hit'].split('*')[0]
 
     def _parse_rearranment(self):
         '''parse the rearrangement summary (just the basic statistics) portion of the blast hit'''
@@ -306,6 +321,7 @@ class IgBlastOutSingle():
             # Retitle the IgBlast titles to what we like :)
             if title.strip() == "stop codon":
                 title = "Stop Codon"
+
             if title.strip() == "Top V gene match":
                 title = "Top V Hit"
             if title.strip() == "Top D gene match":
@@ -318,6 +334,7 @@ class IgBlastOutSingle():
             if len(value.split(',')) > 1:
                 # sometimes there are multiple values for the rearranment values
                 self.output[title.strip()] = tuple(value.split(','))
+
             else:
                 self.output[title.strip()] = value
 
@@ -361,7 +378,7 @@ class IgBlastOutSingle():
     def _parse_fw2_align(self):
         for title, value in zip(self.alignment_summary_titles, self.fr2_alignment_summary):
             if title.strip() == 'percent identity':
-              title = 'Identity'
+                title = 'Identity'
             try:
                 self.output["FW2 Alignment " + title.strip().capitalize()] = float(value)
             except ValueError:
