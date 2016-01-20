@@ -2,6 +2,7 @@
 import os
 import gzip
 import sys
+import time
 from Bio import SeqIO
 from pyig.backend.PyIgArgumentParser import PyIgArgumentParser
 from pyig.backend.SplitFasta import split_fasta
@@ -16,7 +17,7 @@ def files_zipper(list_of_files, outfile):
     '''Gzip multiple fiels together'''
     outfile = outfile.split('.json')[0].split('.json.gz')[0]
     print "Zipping up file to {0}.json.gz".format(outfile)
-    with gzip.open(outfile+".json.gz", 'wb') as final_out:
+    with gzip.open(outfile + ".json.gz", 'wb') as final_out:
         for file in list_of_files:
             with open(file) as finfile:
                 for line in finfile:
@@ -29,7 +30,7 @@ def file_zipper(file, outfile):
     outfile = outfile.split('.json')[0].split('.json.gz')[0]
     print "Zipping up single file to {0}.json.gz".format(outfile)
     f_in = open(file, 'rb')
-    f_out = gzip.open(outfile+".json.gz", 'wb')
+    f_out = gzip.open(outfile + ".json.gz", 'wb')
     f_out.writelines(f_in)
     f_out.close()
     f_in.close()
@@ -68,6 +69,7 @@ def main(PyIgParse):
         # iterate through each new fasta file name
         # giving it to a new process instance that is the length of how
         # many processors we have. So number of processors = how many fasta files
+        print "Running IgBlast"
         for num, name in enumerate(split_fasta_file_names, start=1):
             print "Running IgBlast on processor {0}".format(num)
 
@@ -76,7 +78,7 @@ def main(PyIgParse):
             IgBlast.set_query(name)
 
             # P is process class that takes one method and some argument
-            p = Process(target=IgBlast.run_single_process, args=(queue, ))
+            p = Process(target=IgBlast.run_single_process, args=(queue, num, ))
 
             # add job to list
             jobs.append(p)
@@ -86,7 +88,7 @@ def main(PyIgParse):
 
         for job, temp_file in zip(jobs, split_fasta_file_names):
             # join method actually starts the job
-            job.join()
+            #job.join()
 
             # now we can fetch the output from the Queue class we gave to the instance
             to_join.append(queue.get())
@@ -121,4 +123,6 @@ def main(PyIgParse):
 if __name__ == '__main__':
     # grab the command line arguments and call main with the dictonary
     PyIg_ParseDict = PyIgArgumentParser().parse_arguments()
+    pre_time = time.time()
     main(PyIg_ParseDict)
+    print "Done with PyIg in {} seconds".format(time.time() - pre_time)

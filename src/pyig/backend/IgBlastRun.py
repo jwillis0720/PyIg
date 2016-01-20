@@ -1,6 +1,7 @@
 import os
 import subprocess
 import tempfile
+import time
 from pyig.backend.IgBlastOut import IgBlastOut
 
 
@@ -95,7 +96,7 @@ class IgBlastRun():
             '-query', self.query]
         return arguments
 
-    def run_single_process(self, queue):
+    def run_single_process(self, queue, process_number):
         '''Call this method with a queue object to dump output file names too'''
 
         if self.debug:
@@ -104,14 +105,17 @@ class IgBlastRun():
                 print arg,
             print "\nOutput File for igblastn is {0}".format(
                 self.temporary_output_file)
-
-        p = subprocess.Popen(self._collect(), stderr=subprocess.PIPE)
-        stderr = p.communicate()
-        if stderr[1]:
+        pre_time = time.time()
+        p = subprocess.Popen(self._collect(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        if stderr:
             raise RuntimeError("Error in calling Igblastn:\n\n {0}".format(stderr[1]))
 
         # until process is done until it moves on to the next line
         p.wait()
+        # if self.debug:
+        print "Done with Blast on processor {} - took {} seconds".format(
+            process_number, time.time() - pre_time)
 
         # The IgBlast output class, set the blast output
         IgO = IgBlastOut(debug=self.debug)

@@ -484,7 +484,10 @@ class IgBlastOutSingle():
         join and translate have access to all the member
         variables
         '''
-        TranslateAndJoin(self)
+        try:
+          TranslateAndJoin(self)
+        except AttributeError:
+          print "Problem with {}".format(self.output['Sequence Id'])
         # Finally
         # Find out if the join is productive by seeing if a stop codon (*) is in there
         if "*" not in self.output['CDR3 AA']:
